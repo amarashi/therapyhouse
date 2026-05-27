@@ -2074,6 +2074,7 @@
       const effectiveImageHeight = 540 - 8 - 28;
       const stageRatio = rect.width / rect.height;
       const imageRatio = effectiveImageWidth / effectiveImageHeight;
+      const isMobilePortrait = window.matchMedia("(max-width: 720px) and (orientation: portrait)").matches;
       let width = rect.width;
       let height = rect.height;
 
@@ -2085,7 +2086,7 @@
 
       return {
         x: (rect.width - width) / 2,
-        y: rect.height - height,
+        y: isMobilePortrait ? (rect.height - height) / 2 : rect.height - height,
         width,
         height
       };
