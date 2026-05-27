@@ -250,7 +250,12 @@
       position: absolute;
       inset: 0;
       display: none;
-      background: #ffffff;
+      background:
+        linear-gradient(to bottom, #000000, var(--inside-edge-top-color, #34231a)) top / 100% var(--inside-frame-top, 0px) no-repeat,
+        linear-gradient(to top, #000000, var(--inside-edge-bottom-color, #24170f)) bottom / 100% var(--inside-frame-bottom, 0px) no-repeat,
+        linear-gradient(to right, #000000, var(--inside-edge-left-color, #31231b)) left / var(--inside-frame-left, 0px) 100% no-repeat,
+        linear-gradient(to left, #000000, var(--inside-edge-right-color, #2d211a)) right / var(--inside-frame-right, 0px) 100% no-repeat,
+        #000000;
       opacity: 0;
       overflow: hidden;
       transition: opacity 1100ms ease;
@@ -2099,6 +2104,12 @@
     const loadedFrameIndexes = new Set();
     let remainingFrameLoadTimer = 0;
     const insideImageSize = { width: 1672, height: 940 };
+    const insideEdgeFallbackColors = {
+      top: "#34231a",
+      right: "#2d211a",
+      bottom: "#24170f",
+      left: "#31231b"
+    };
     const signPositionStorageKey = "therapyHouse.signPositions.v1";
     const signPositionDownloadName = "therapyhouse-button-positions.json";
     const signPositionFields = [
@@ -2488,6 +2499,92 @@
       return image.naturalHeight || image.height || 1;
     }
 
+    function colorChannelToHex(value) {
+      return clamp(Math.round(value), 0, 255).toString(16).padStart(2, "0");
+    }
+
+    function rgbToHex(red, green, blue) {
+      return `#${colorChannelToHex(red)}${colorChannelToHex(green)}${colorChannelToHex(blue)}`;
+    }
+
+    function getAverageEdgeColor(image, edge) {
+      const sourceWidth = getImageWidth(image);
+      const sourceHeight = getImageHeight(image);
+      const sampleWidth = 256;
+      const sampleHeight = Math.max(1, Math.round(sampleWidth * sourceHeight / sourceWidth));
+      const sampleCanvas = document.createElement("canvas");
+      sampleCanvas.width = sampleWidth;
+      sampleCanvas.height = sampleHeight;
+
+      const sampleContext = sampleCanvas.getContext("2d", { willReadFrequently: true });
+      if (!sampleContext) return null;
+
+      sampleContext.drawImage(image, 0, 0, sampleWidth, sampleHeight);
+
+      const edgeDepth = Math.max(1, Math.round(Math.min(sampleWidth, sampleHeight) * 0.035));
+      let x = 0;
+      let y = 0;
+      let width = sampleWidth;
+      let height = sampleHeight;
+
+      if (edge === "top") {
+        height = edgeDepth;
+      } else if (edge === "bottom") {
+        y = sampleHeight - edgeDepth;
+        height = edgeDepth;
+      } else if (edge === "left") {
+        width = edgeDepth;
+      } else if (edge === "right") {
+        x = sampleWidth - edgeDepth;
+        width = edgeDepth;
+      }
+
+      const pixels = sampleContext.getImageData(x, y, width, height).data;
+      let red = 0;
+      let green = 0;
+      let blue = 0;
+      let weight = 0;
+
+      for (let index = 0; index < pixels.length; index += 4) {
+        const alpha = pixels[index + 3] / 255;
+        red += pixels[index] * alpha;
+        green += pixels[index + 1] * alpha;
+        blue += pixels[index + 2] * alpha;
+        weight += alpha;
+      }
+
+      if (weight <= 0) return null;
+      return rgbToHex(red / weight, green / weight, blue / weight);
+    }
+
+    function applyInsideEdgeColors(colors) {
+      if (!insideView) return;
+
+      Object.entries(colors).forEach(([edge, color]) => {
+        insideView.style.setProperty(`--inside-edge-${edge}-color`, color);
+      });
+    }
+
+    async function updateInsideEdgeColors() {
+      const baseLayer = insideParallaxLayers[0];
+      applyInsideEdgeColors(insideEdgeFallbackColors);
+      if (!baseLayer) return;
+
+      try {
+        if (!baseLayer.complete && typeof baseLayer.decode === "function") {
+          await baseLayer.decode();
+        }
+
+        const sampledColors = {};
+        ["top", "right", "bottom", "left"].forEach((edge) => {
+          sampledColors[edge] = getAverageEdgeColor(baseLayer, edge) || insideEdgeFallbackColors[edge];
+        });
+        applyInsideEdgeColors(sampledColors);
+      } catch (error) {
+        applyInsideEdgeColors(insideEdgeFallbackColors);
+      }
+    }
+
     function getSceneRectCss() {
       const rect = stage.getBoundingClientRect();
       const effectiveImageWidth = 960 - 8 - 28;
@@ -2558,6 +2655,10 @@
       const frameRight = Math.max(0, viewRect.width - imageRect.x - imageRect.width);
       const frameBottom = Math.max(0, viewRect.height - imageRect.y - imageRect.height);
 
+      insideView.style.setProperty("--inside-frame-left", `${frameLeft}px`);
+      insideView.style.setProperty("--inside-frame-top", `${frameTop}px`);
+      insideView.style.setProperty("--inside-frame-right", `${frameRight}px`);
+      insideView.style.setProperty("--inside-frame-bottom", `${frameBottom}px`);
       insideParallax.style.setProperty("--inside-frame-left", `${frameLeft}px`);
       insideParallax.style.setProperty("--inside-frame-top", `${frameTop}px`);
       insideParallax.style.setProperty("--inside-frame-right", `${frameRight}px`);
@@ -3426,6 +3527,7 @@
     contactModal.inert = true;
 
     applyStoredSignPositions();
+    updateInsideEdgeColors();
     initDebugPanel();
     window.addEventListener("resize", scheduleResize);
     if (window.visualViewport) {
