@@ -1,0 +1,1422 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>Therapy House</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #ffffff;
+    }
+
+    .stage {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background: #ffffff;
+      overflow: hidden;
+      touch-action: none;
+      user-select: none;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: #ffffff;
+      transition: opacity 520ms ease;
+    }
+
+    .door-hotspot {
+      position: absolute;
+      display: block;
+      border: 0;
+      padding: 0;
+      background: transparent;
+      cursor: pointer;
+      touch-action: manipulation;
+      isolation: isolate;
+      z-index: 3;
+    }
+
+    .door-hotspot::before {
+      content: "";
+      position: absolute;
+      inset: 18% 22%;
+      border-radius: 999px;
+      background:
+        radial-gradient(circle, rgba(255, 238, 170, 0.7) 0%, rgba(255, 210, 84, 0.2) 44%, transparent 72%);
+      box-shadow:
+        0 0 22px rgba(255, 210, 84, 0.42),
+        0 0 46px rgba(255, 190, 68, 0.22);
+      opacity: 0.54;
+      transform: scale(0.88);
+      animation: doorGlow 2.8s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    .door-hotspot::after {
+      content: "";
+      position: absolute;
+      inset: 12% 18%;
+      border: 1px solid rgba(255, 229, 151, 0.58);
+      border-radius: 999px;
+      opacity: 0.42;
+      transform: scale(0.8);
+      animation: doorPulse 2.8s ease-out infinite;
+      pointer-events: none;
+    }
+
+    .door-hotspot:hover::before,
+    .door-hotspot:focus-visible::before {
+      opacity: 0.78;
+      box-shadow:
+        0 0 30px rgba(255, 219, 104, 0.52),
+        0 0 66px rgba(255, 190, 68, 0.3);
+    }
+
+    .sparkle {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #fff2ad;
+      box-shadow:
+        0 0 8px rgba(255, 232, 139, 0.95),
+        0 0 16px rgba(255, 192, 78, 0.52);
+      opacity: 0;
+      pointer-events: none;
+      animation: sparkleFloat 3.4s ease-in-out infinite;
+    }
+
+    .sparkle:nth-child(1) {
+      left: 24%;
+      top: 28%;
+      animation-delay: 0s;
+    }
+
+    .sparkle:nth-child(2) {
+      left: 70%;
+      top: 31%;
+      width: 5px;
+      height: 5px;
+      animation-delay: 0.7s;
+    }
+
+    .sparkle:nth-child(3) {
+      left: 62%;
+      top: 72%;
+      width: 4px;
+      height: 4px;
+      animation-delay: 1.4s;
+    }
+
+    .sparkle:nth-child(4) {
+      left: 33%;
+      top: 68%;
+      width: 4px;
+      height: 4px;
+      animation-delay: 2.1s;
+    }
+
+    .door-hotspot:focus-visible {
+      outline: 2px solid rgba(0, 0, 0, 0.2);
+      outline-offset: 4px;
+      border-radius: 999px;
+    }
+
+    .transition-video {
+      position: absolute;
+      inset: 0;
+      display: none;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #ffffff;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 520ms ease;
+    }
+
+    .stage.is-playing canvas,
+    .stage.is-playing .door-hotspot {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .stage.is-playing .transition-video {
+      display: block;
+      opacity: 1;
+    }
+
+    .inside-view {
+      position: absolute;
+      inset: 0;
+      display: none;
+      background: #ffffff url("inside_wide.png") center / contain no-repeat;
+      opacity: 0;
+      overflow: hidden;
+      transition: opacity 1100ms ease;
+    }
+
+    .inside-view::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: #000000;
+      opacity: 1;
+      transition: opacity 1500ms ease;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    /*
+    Archived dog-eye cursor-follow experiment. Kept here so it can be restored later.
+    .dog-eye-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 700ms ease;
+    }
+
+    .stage.is-inside.inside-visible .dog-eye-layer {
+      opacity: 1;
+    }
+
+    .dog-eye {
+      position: absolute;
+      width: var(--eye-width, 14px);
+      height: var(--eye-height, 14px);
+      border-radius: 50%;
+      overflow: hidden;
+      transform: translate3d(-50%, -50%, 0);
+      will-change: left, top;
+    }
+
+    .dog-eye::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: var(--pupil-size, 12px);
+      height: var(--pupil-size, 12px);
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 68% 28%, rgba(255, 255, 255, 0.95) 0 10%, transparent 12%),
+        radial-gradient(circle at 50% 50%, #150d08 0 62%, #2b170d 100%);
+      box-shadow:
+        inset 0 0 2px rgba(255, 255, 255, 0.25),
+        0 1px 2px rgba(0, 0, 0, 0.3);
+      transform: translate3d(calc(-50% + var(--pupil-x, 0px)), calc(-50% + var(--pupil-y, 0px)), 0);
+      will-change: transform;
+    }
+    */
+
+    .scene-sign-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 750ms ease 260ms;
+    }
+
+    .stage.is-inside.inside-visible .scene-sign-layer {
+      opacity: 1;
+    }
+
+    .scene-sign {
+      position: absolute;
+      left: var(--sign-x, 50%);
+      top: var(--sign-y, 50%);
+      min-width: 142px;
+      max-width: min(210px, 32vw);
+      padding: var(--sign-padding, 12px 15px);
+      border: 1px solid rgba(255, 255, 255, 0.48);
+      border-radius: var(--sign-radius, 18px);
+      color: rgba(58, 38, 18, 0.94);
+      font: 700 15px/1.15 Georgia, "Times New Roman", serif;
+      letter-spacing: 0;
+      text-align: left;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.58), rgba(255, 246, 218, 0.24)),
+        rgba(255, 255, 255, 0.18);
+      box-shadow:
+        0 16px 36px rgba(48, 25, 8, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.52),
+        inset 0 -1px 0 rgba(88, 50, 16, 0.12);
+      backdrop-filter: blur(14px) saturate(1.18);
+      -webkit-backdrop-filter: blur(14px) saturate(1.18);
+      transform:
+        translate3d(-50%, -50%, 0)
+        rotate(var(--sign-rotate, 0deg))
+        skew(var(--sign-skew-x, 0deg), var(--sign-skew-y, 0deg))
+        scale(var(--sign-scale, 1));
+      transform-origin: var(--sign-origin, 50% 50%);
+      pointer-events: auto;
+      cursor: pointer;
+      appearance: none;
+    }
+
+    .scene-sign--table,
+    .scene-sign--notebook {
+      text-align: center;
+      background:
+        linear-gradient(155deg, rgba(255, 255, 255, 0.52), rgba(255, 242, 205, 0.2)),
+        rgba(239, 205, 144, 0.18);
+    }
+
+    .scene-sign--door {
+      color: rgba(46, 29, 14, 0.96);
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.5), rgba(219, 181, 115, 0.2)),
+        rgba(255, 245, 219, 0.18);
+    }
+
+    .scene-sign::before {
+      content: "";
+      position: absolute;
+      inset: 5px;
+      border-radius: 13px;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      pointer-events: none;
+    }
+
+    .scene-sign:hover,
+    .scene-sign:focus-visible {
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.68), rgba(255, 248, 225, 0.3)),
+        rgba(255, 255, 255, 0.22);
+      box-shadow:
+        0 18px 42px rgba(48, 25, 8, 0.23),
+        0 0 28px rgba(255, 234, 172, 0.26),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+
+    .scene-sign:focus-visible {
+      outline: 2px solid rgba(80, 49, 14, 0.42);
+      outline-offset: 3px;
+    }
+
+    .scene-sign__eyebrow {
+      display: block;
+      margin-bottom: 4px;
+      color: rgba(116, 78, 27, 0.78);
+      font: 700 9px/1.1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .scene-sign__title {
+      display: block;
+      white-space: normal;
+    }
+
+    .team-carousel {
+      position: absolute;
+      inset: 0;
+      z-index: 8;
+      display: grid;
+      place-items: center;
+      padding: clamp(14px, 3vw, 34px);
+      background:
+        radial-gradient(circle at 50% 42%, rgba(255, 246, 224, 0.16), transparent 44%),
+        rgba(34, 21, 10, 0.38);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 260ms ease;
+    }
+
+    .team-carousel.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .team-carousel__panel {
+      position: relative;
+      width: min(980px, 100%);
+      max-height: min(760px, calc(100vh - 28px));
+      display: grid;
+      grid-template-columns: minmax(260px, 0.88fr) minmax(300px, 1.12fr);
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 22px;
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.64), rgba(255, 244, 218, 0.36)),
+        rgba(255, 255, 255, 0.18);
+      box-shadow:
+        0 26px 68px rgba(33, 18, 6, 0.34),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(18px) saturate(1.18);
+      -webkit-backdrop-filter: blur(18px) saturate(1.18);
+    }
+
+    .team-carousel__media {
+      min-height: 420px;
+      background:
+        linear-gradient(180deg, rgba(98, 66, 24, 0.16), rgba(45, 26, 8, 0.1)),
+        rgba(255, 255, 255, 0.12);
+    }
+
+    .team-carousel__photo {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      object-position: center top;
+    }
+
+    .team-carousel__body {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 14px;
+      min-height: 0;
+      padding: clamp(22px, 3vw, 34px);
+      color: rgba(46, 30, 14, 0.96);
+    }
+
+    .team-carousel__close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 2;
+      width: 38px;
+      height: 38px;
+      border: 1px solid rgba(88, 59, 22, 0.22);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.58);
+      color: rgba(48, 30, 12, 0.92);
+      font: 700 19px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      cursor: pointer;
+    }
+
+    .team-carousel__eyebrow {
+      margin: 0 0 7px;
+      color: rgba(117, 78, 28, 0.74);
+      font: 800 11px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .team-carousel__name {
+      margin: 0;
+      font: 700 clamp(27px, 4vw, 48px)/1.02 Georgia, "Times New Roman", serif;
+      letter-spacing: 0;
+    }
+
+    .team-carousel__role {
+      margin: 8px 0 0;
+      color: rgba(76, 51, 22, 0.88);
+      font: 700 clamp(14px, 1.6vw, 18px)/1.35 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .team-carousel__summary,
+    .team-carousel__bio {
+      margin: 0;
+      color: rgba(55, 36, 18, 0.9);
+      font: 500 15px/1.58 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .team-carousel__bio {
+      display: none;
+      max-height: 210px;
+      overflow: auto;
+      padding: 13px 15px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.34);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+    }
+
+    .team-carousel.is-expanded .team-carousel__bio {
+      display: block;
+    }
+
+    .team-carousel__content {
+      display: grid;
+      align-content: start;
+      gap: 12px;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .team-carousel__actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-top: 4px;
+    }
+
+    .team-carousel__nav {
+      display: flex;
+      gap: 8px;
+    }
+
+    .team-carousel__button {
+      min-height: 42px;
+      border: 1px solid rgba(88, 59, 22, 0.22);
+      border-radius: 999px;
+      padding: 0 16px;
+      background: rgba(255, 255, 255, 0.5);
+      color: rgba(48, 30, 12, 0.96);
+      font: 800 13px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .team-carousel__button:hover,
+    .team-carousel__button:focus-visible,
+    .team-carousel__close:hover,
+    .team-carousel__close:focus-visible {
+      background: rgba(255, 255, 255, 0.72);
+      outline: 2px solid rgba(80, 49, 14, 0.28);
+      outline-offset: 2px;
+    }
+
+    .team-carousel__count {
+      color: rgba(76, 51, 22, 0.78);
+      font: 800 12px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .cursor-sparkle-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      overflow: hidden;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 650ms ease;
+    }
+
+    .stage.is-inside.inside-visible .cursor-sparkle-layer {
+      opacity: 1;
+    }
+
+    .cursor-sparkle {
+      position: absolute;
+      left: var(--sparkle-x, 50%);
+      top: var(--sparkle-y, 50%);
+      width: var(--sparkle-size, 9px);
+      height: var(--sparkle-size, 9px);
+      border-radius: 50%;
+      background: rgba(255, 246, 184, 0.95);
+      box-shadow:
+        0 0 8px rgba(255, 246, 184, 0.92),
+        0 0 18px rgba(255, 196, 82, 0.62),
+        0 0 30px rgba(166, 226, 255, 0.34);
+      transform: translate3d(-50%, -50%, 0) scale(0.4);
+      animation: cursorSparkle 920ms ease-out forwards;
+    }
+
+    .cursor-sparkle::before,
+    .cursor-sparkle::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 165%;
+      height: 1px;
+      border-radius: 999px;
+      background: rgba(255, 248, 207, 0.85);
+      transform: translate3d(-50%, -50%, 0) rotate(var(--sparkle-rotate, 0deg));
+    }
+
+    .cursor-sparkle::after {
+      transform: translate3d(-50%, -50%, 0) rotate(calc(var(--sparkle-rotate, 0deg) + 90deg));
+    }
+
+    .stage.is-inside canvas,
+    .stage.is-inside .door-hotspot,
+    .stage.is-inside .transition-video {
+      display: none;
+    }
+
+    .stage.is-inside .inside-view {
+      display: block;
+    }
+
+    .stage.is-inside.inside-visible .inside-view {
+      opacity: 1;
+    }
+
+    .stage.is-inside.inside-visible .inside-view::before {
+      opacity: 0;
+    }
+
+    @media (max-width: 720px) {
+      .scene-sign {
+        min-width: 112px;
+        max-width: 154px;
+        padding: 9px 11px;
+        border-radius: 15px;
+        font-size: 13px;
+      }
+
+      .scene-sign__eyebrow {
+        font-size: 8px;
+      }
+
+      .team-carousel {
+        padding: 10px;
+      }
+
+      .team-carousel__panel {
+        grid-template-columns: 1fr;
+        width: min(430px, 100%);
+        max-height: calc(100vh - 20px);
+        overflow: auto;
+        border-radius: 18px;
+      }
+
+      .team-carousel__media {
+        min-height: 0;
+        height: min(46vh, 330px);
+      }
+
+      .team-carousel__body {
+        padding: 20px;
+      }
+
+      .team-carousel__actions {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .team-carousel__nav {
+        width: 100%;
+      }
+
+      .team-carousel__button {
+        flex: 1;
+      }
+    }
+
+    @keyframes doorGlow {
+      0%,
+      100% {
+        transform: scale(0.88);
+        opacity: 0.38;
+      }
+
+      50% {
+        transform: scale(1.08);
+        opacity: 0.68;
+      }
+    }
+
+    @keyframes doorPulse {
+      0% {
+        transform: scale(0.72);
+        opacity: 0;
+      }
+
+      28% {
+        opacity: 0.5;
+      }
+
+      100% {
+        transform: scale(1.22);
+        opacity: 0;
+      }
+    }
+
+    @keyframes sparkleFloat {
+      0%,
+      100% {
+        opacity: 0;
+        transform: translate3d(0, 8px, 0) scale(0.55);
+      }
+
+      35% {
+        opacity: 0.95;
+      }
+
+      60% {
+        opacity: 0.55;
+        transform: translate3d(7px, -7px, 0) scale(1);
+      }
+
+      82% {
+        opacity: 0;
+        transform: translate3d(12px, -18px, 0) scale(0.65);
+      }
+    }
+
+    @keyframes cursorSparkle {
+      0% {
+        opacity: 0;
+        transform:
+          translate3d(-50%, -50%, 0)
+          translate3d(0, 0, 0)
+          rotate(var(--sparkle-rotate, 0deg))
+          scale(0.35);
+      }
+
+      18% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0;
+        transform:
+          translate3d(-50%, -50%, 0)
+          translate3d(var(--sparkle-drift-x, 0px), var(--sparkle-drift-y, -24px), 0)
+          rotate(calc(var(--sparkle-rotate, 0deg) + 65deg))
+          scale(1.15);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .door-hotspot::before,
+      .door-hotspot::after,
+      .sparkle {
+        animation: none;
+      }
+
+      .door-hotspot::before {
+        opacity: 0.46;
+      }
+
+      .sparkle {
+        opacity: 0.5;
+      }
+
+      .cursor-sparkle-layer {
+        transition: none;
+      }
+
+      .cursor-sparkle {
+        animation-duration: 1ms;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="stage" id="stage" aria-label="Rotating Therapy House scene">
+    <canvas id="viewerCanvas" aria-label="Therapy House scene"></canvas>
+    <button class="door-hotspot" id="doorHotspot" type="button" aria-label="Open the entrance">
+      <span class="sparkle" aria-hidden="true"></span>
+      <span class="sparkle" aria-hidden="true"></span>
+      <span class="sparkle" aria-hidden="true"></span>
+      <span class="sparkle" aria-hidden="true"></span>
+    </button>
+    <video class="transition-video" id="doorVideo" playsinline preload="auto">
+      <source src="motion_2.0-fast_A_slow_camera_push-in_toward_the_cottage_s_main_door_the_door_swinging_open_and_-0.mp4" type="video/mp4">
+    </video>
+    <div class="inside-view" id="insideView" aria-label="Inside Therapy House">
+      <div class="scene-sign-layer" id="sceneSignLayer" aria-hidden="false">
+        <button class="scene-sign scene-sign--table" type="button" data-action="about" data-x="840" data-y="570" data-rotate="0" data-skew-x="0" data-skew-y="0" data-scale="0.78" aria-label="About Us">
+          <span class="scene-sign__eyebrow">Meet</span>
+          <span class="scene-sign__title">About Us</span>
+        </button>
+        <button class="scene-sign scene-sign--wall" type="button" data-x="520" data-y="150" data-rotate="-4" data-skew-x="-4" data-skew-y="1" data-scale="0.84" aria-label="Our Philosophy">
+          <span class="scene-sign__eyebrow">Care</span>
+          <span class="scene-sign__title">Our Philosophy</span>
+        </button>
+        <button class="scene-sign scene-sign--notebook" type="button" data-x="1230" data-y="790" data-rotate="-16" data-skew-x="-10" data-skew-y="2" data-scale="0.8" aria-label="Contact Us">
+          <span class="scene-sign__eyebrow">Reach</span>
+          <span class="scene-sign__title">Contact Us</span>
+        </button>
+        <button class="scene-sign scene-sign--door" type="button" data-action="back" data-x="1325" data-y="255" data-rotate="1" data-skew-x="2" data-skew-y="-1" data-scale="0.74" aria-label="Back">
+          <span class="scene-sign__eyebrow">Door</span>
+          <span class="scene-sign__title">Back</span>
+        </button>
+      </div>
+      <div class="team-carousel" id="teamCarousel" role="dialog" aria-modal="true" aria-label="Therapy House team" aria-hidden="true">
+        <div class="team-carousel__panel">
+          <button class="team-carousel__close" id="teamCarouselClose" type="button" aria-label="Close team carousel">x</button>
+          <div class="team-carousel__media">
+            <img class="team-carousel__photo" id="teamCarouselPhoto" src="" alt="">
+          </div>
+          <div class="team-carousel__body">
+            <header>
+              <p class="team-carousel__eyebrow">Therapy House team</p>
+              <h2 class="team-carousel__name" id="teamCarouselName"></h2>
+              <p class="team-carousel__role" id="teamCarouselRole"></p>
+            </header>
+            <div class="team-carousel__content">
+              <p class="team-carousel__summary" id="teamCarouselSummary"></p>
+              <p class="team-carousel__bio" id="teamCarouselBio"></p>
+            </div>
+            <div class="team-carousel__actions">
+              <button class="team-carousel__button" id="teamCarouselReadMore" type="button">Read more</button>
+              <span class="team-carousel__count" id="teamCarouselCount"></span>
+              <div class="team-carousel__nav">
+                <button class="team-carousel__button" id="teamCarouselPrev" type="button">Previous</button>
+                <button class="team-carousel__button" id="teamCarouselNext" type="button">Next</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="cursor-sparkle-layer" id="cursorSparkleLayer" aria-hidden="true"></div>
+      <!--
+      Archived dog-eye cursor-follow experiment. Kept here so it can be restored later.
+      <div class="dog-eye-layer" id="dogEyeLayer" aria-hidden="true">
+        <span class="dog-eye" data-eye-index="0"></span>
+        <span class="dog-eye" data-eye-index="1"></span>
+        <span class="dog-eye" data-eye-index="2"></span>
+        <span class="dog-eye" data-eye-index="3"></span>
+      </div>
+      -->
+    </div>
+  </main>
+
+  <script>
+    const frameCount = 48;
+    const frames = Array.from({ length: frameCount }, (_, index) => {
+      const number = String(index + 1).padStart(3, "0");
+      return `optimised-rotation-frames/turntable_${number}.webp`;
+    });
+
+    const stage = document.getElementById("stage");
+    const canvas = document.getElementById("viewerCanvas");
+    const context = canvas.getContext("2d", { alpha: false });
+    const doorHotspot = document.getElementById("doorHotspot");
+    const doorVideo = document.getElementById("doorVideo");
+    const insideView = document.getElementById("insideView");
+    const sceneSigns = Array.from(document.querySelectorAll(".scene-sign"));
+    const teamCarousel = document.getElementById("teamCarousel");
+    const teamCarouselPhoto = document.getElementById("teamCarouselPhoto");
+    const teamCarouselName = document.getElementById("teamCarouselName");
+    const teamCarouselRole = document.getElementById("teamCarouselRole");
+    const teamCarouselSummary = document.getElementById("teamCarouselSummary");
+    const teamCarouselBio = document.getElementById("teamCarouselBio");
+    const teamCarouselCount = document.getElementById("teamCarouselCount");
+    const teamCarouselReadMore = document.getElementById("teamCarouselReadMore");
+    const teamCarouselPrev = document.getElementById("teamCarouselPrev");
+    const teamCarouselNext = document.getElementById("teamCarouselNext");
+    const teamCarouselClose = document.getElementById("teamCarouselClose");
+    const cursorSparkleLayer = document.getElementById("cursorSparkleLayer");
+    const dogEyeElements = [];
+
+    const imageCache = new Array(frameCount);
+    const insideImageSize = { width: 1672, height: 940 };
+    const hoverMaxFramesPerSecond = 22;
+    const hoverMinimumStrength = 0.22;
+    const angleEase = 0.34;
+    const teamMembers = [
+      {
+        name: "Dr Amelia Shay",
+        role: "Director, Developmental Psychologist",
+        image: "https://www.therapyhouse.com.au/wp-content/uploads/2024/11/Ameneh.png",
+        summary: "Amelia works with adults and brings long experience across private clinics, hospitals, universities, research and public education.",
+        bio: "Amelia has worked in psychology since the early 2000s and holds several psychology qualifications, including a PhD in Developmental Psychology. Her therapy work includes individual therapy, couples counselling, EMDR-informed trauma work, and support in English and Persian/Farsi."
+      },
+      {
+        name: "Dr Kaya Beinke",
+        role: "Clinical Psychologist, Chief Clinical Officer",
+        image: "https://www.therapyhouse.com.au/wp-content/uploads/2022/12/Kaya.jpg",
+        summary: "Kaya supports children, young people and families, with strong experience in clinical psychology, supervision and complex health and developmental presentations.",
+        bio: "Kaya trained as a clinical psychologist and is a board approved supervisor. Her practice draws on approaches including CBT, trauma-focused CBT, ACT, DBT and Dyadic Developmental Psychotherapy, with experience across chronic health, developmental delay, assessment and family support."
+      },
+      {
+        name: "Letitia McVey",
+        role: "Psychologist, Educational and Developmental Registrar, Chief Operating Officer",
+        image: "https://www.therapyhouse.com.au/wp-content/uploads/2022/09/Letitia.png",
+        summary: "Letitia is a warm, collaborative practitioner who works with children, adolescents and adults, with a focus on resilience, strengths and hope.",
+        bio: "Letitia supports neurodevelopmental differences, learning difficulties, autism, ADHD, anxiety, depression, trauma and specific phobias. Her style is attachment-informed, creative and non-judgemental, with parents involved where useful for wrap-around support."
+      },
+      {
+        name: "Sahar Fattahi",
+        role: "Psychologist",
+        image: "https://www.therapyhouse.com.au/wp-content/uploads/2022/12/Sarah.jpg",
+        summary: "Sahar works across the lifespan and brings cross-cultural clinical experience from Australia, Iran and the Philippines.",
+        bio: "Sahar has experience with mood and anxiety concerns, diagnostic assessment, neurodevelopmental conditions, emotional and behavioural dysregulation, and parent coaching. She uses approaches such as CBT, ACT and DBT, and can work in English, Persian/Farsi and Filipino/Tagalog."
+      },
+      {
+        name: "Rani Banks",
+        role: "Clinical Psychologist",
+        image: "https://www.therapyhouse.com.au/wp-content/uploads/2025/04/processed-84C0F6B1-8B4B-4879-9F35-CD374D52B350-e1746601619666.jpeg",
+        summary: "Rani works with people across the lifespan and has experience in regional and rural communities.",
+        bio: "Rani provides assessment and therapy for concerns including anxiety, low mood, trauma, learning difficulties, ADHD, autism, relationship and family challenges, anger, bullying and identity questions. Their practice is neuroaffirming, trauma-informed and attentive to wider cultural and social context."
+      },
+      {
+        name: "Jazmin Squire",
+        role: "Psychologist",
+        image: "https://www.therapyhouse.com.au/wp-content/uploads/2023/05/Jazmin.png",
+        summary: "Jazmin is a warm and engaging clinician who works flexibly with people of all ages.",
+        bio: "Jazmin values safe therapeutic relationships and believes people can build insight, skills and more fulfilling ways of living. She has experience with children, young people, parents and couples, including complex trauma, grief, domestic and family violence, depression, anxiety and emotional dysregulation."
+      },
+      {
+        name: "Laura Storey",
+        role: "Counsellor",
+        image: "https://www.therapyhouse.com.au/wp-content/uploads/2025/05/TH-Instagram-Posts-2.png",
+        summary: "Laura works in a person-centred, trauma-informed and neuroaffirming way, particularly with adolescents and young adults.",
+        bio: "Laura has worked in mental health since 2011 and also practices in the eating disorder field. Her work draws on developmental psychology, narrative therapy, schema therapy, feminist frameworks, ACT, grief and loss frameworks, and a strong commitment to safety, trust and humour."
+      },
+      {
+        name: "Genevieve Hussey",
+        role: "Provisional Psychologist",
+        image: "https://www.therapyhouse.com.au/wp-content/uploads/2026/02/TH-Instagram-Posts-32.png",
+        summary: "Genevieve is a warm clinician focused on supporting young people and families through early intervention.",
+        bio: "Gen has experience supporting children with autism-related needs and brings a background in nursing and psychology. She has worked as a Mental Health Registered Nurse in a private psychiatric hospital and values multidisciplinary, compassionate care."
+      },
+      {
+        name: "Natasha",
+        role: "Client Support and Marketing Coordinator",
+        image: "https://www.therapyhouse.com.au/wp-content/uploads/2023/05/Natasha.png",
+        summary: "Natasha is part of the client support team and helps create a warm welcome into the clinic.",
+        bio: "Natasha has backgrounds in business, creative industries, public relations and marketing. She supports Therapy House clients and contributes to print, digital and community marketing while also studying psychological science."
+      },
+      {
+        name: "Josie",
+        role: "Administrative Support",
+        image: "https://www.therapyhouse.com.au/wp-content/uploads/2023/05/josie.png",
+        summary: "Josie supports the administrative side of Therapy House.",
+        bio: "Josie is listed by Therapy House as administrative support. Her role helps the broader team keep the clinic experience organised and welcoming."
+      },
+      {
+        name: "Reea",
+        role: "Therapy House dog",
+        image: "https://www.therapyhouse.com.au/wp-content/uploads/2022/09/Reaa-2.png",
+        summary: "Reea brings calm energy and a friendly presence to the Therapy House team.",
+        bio: "Reea previously travelled as a show dog and is now on the path to becoming a therapy dog. Therapy House notes that she is not a certified therapy dog and asks visitors to speak with reception if they have any concerns."
+      },
+      {
+        name: "Samson",
+        role: "Retired Therapy House dog",
+        image: "https://www.therapyhouse.com.au/wp-content/uploads/2021/11/Samson.jpg",
+        summary: "Samson is remembered by Therapy House as a much-loved presence who helped visitors feel safe.",
+        bio: "Therapy House describes Samson as calm, attentive and non-judgemental, with many years of experience charming visitors and children at the clinic. The team honours him warmly on the site."
+      }
+    ];
+    /*
+    Archived dog-eye cursor-follow experiment. Kept here so it can be restored later.
+    const dogEyes = [
+      { x: 484, y: 800, maskX: 484, maskY: 796, maskWidth: 14, maskHeight: 11, pupilSize: 30, range: 5, leftRange: 7, rightRange: 5, upRange: 7, downRange: 0 },
+      { x: 540, y: 809, maskX: 540, maskY: 805, maskWidth: 14, maskHeight: 11, pupilSize: 30, range: 5, leftRange: 7, rightRange: 5, upRange: 7, downRange: 0 },
+      { x: 855, y: 746, maskX: 855, maskY: 746, maskWidth: 15, maskHeight: 15, pupilSize: 28, range: 6, rightRange: 8, upRange: 8 },
+      { x: 892, y: 759, maskX: 892, maskY: 759, maskWidth: 15, maskHeight: 15, pupilSize: 28, range: 6, rightRange: 8, upRange: 8 }
+    ];
+    */
+    const centreAngle = (frameCount - 1) / 2;
+    let targetAngle = (frameCount - 1) / 2;
+    let displayAngle = targetAngle;
+    let hoverVelocity = 0;
+    let hoverActive = false;
+    let videoPlaying = false;
+    let insideActive = false;
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartAngle = 0;
+    let lastSparkleTime = 0;
+    let lastAnimationTime = performance.now();
+    let lastRenderedFrame = "";
+    let activeTeamIndex = 0;
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function resizeCanvas() {
+      const rect = stage.getBoundingClientRect();
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      const width = Math.max(1, Math.round(rect.width * ratio));
+      const height = Math.max(1, Math.round(rect.height * ratio));
+
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+        canvas.style.width = `${rect.width}px`;
+        canvas.style.height = `${rect.height}px`;
+        renderFrame(displayAngle, true);
+      }
+      updateHotspot();
+    }
+
+    function getImageWidth(image) {
+      return image.naturalWidth || image.width || 1;
+    }
+
+    function getImageHeight(image) {
+      return image.naturalHeight || image.height || 1;
+    }
+
+    function getSceneRectCss() {
+      const rect = stage.getBoundingClientRect();
+      const effectiveImageWidth = 960 - 8 - 28;
+      const effectiveImageHeight = 540 - 8 - 28;
+      const stageRatio = rect.width / rect.height;
+      const imageRatio = effectiveImageWidth / effectiveImageHeight;
+      let width = rect.width;
+      let height = rect.height;
+
+      if (imageRatio > stageRatio) {
+        height = width / imageRatio;
+      } else {
+        width = height * imageRatio;
+      }
+
+      return {
+        x: (rect.width - width) / 2,
+        y: rect.height - height,
+        width,
+        height
+      };
+    }
+
+    function updateHotspot() {
+      const scene = getSceneRectCss();
+      const progress = targetAngle / (frameCount - 1);
+      const doorX = 0.56 - (progress - 0.5) * 0.14;
+      const doorY = 0.53;
+      const doorWidth = 0.16;
+      const doorHeight = 0.28;
+
+      doorHotspot.style.left = `${scene.x + scene.width * (doorX - doorWidth / 2)}px`;
+      doorHotspot.style.top = `${scene.y + scene.height * (doorY - doorHeight / 2)}px`;
+      doorHotspot.style.width = `${scene.width * doorWidth}px`;
+      doorHotspot.style.height = `${scene.height * doorHeight}px`;
+    }
+
+    function getInsideImageRect() {
+      const rect = insideView.getBoundingClientRect();
+      const viewRatio = rect.width / rect.height;
+      const imageRatio = insideImageSize.width / insideImageSize.height;
+      let width = rect.width;
+      let height = rect.height;
+
+      if (imageRatio > viewRatio) {
+        width = rect.width;
+        height = width / imageRatio;
+      } else {
+        height = rect.height;
+        width = height * imageRatio;
+      }
+
+      return {
+        x: (rect.width - width) / 2,
+        y: (rect.height - height) / 2,
+        width,
+        height
+      };
+    }
+
+    function updateSceneSigns() {
+      const imageRect = getInsideImageRect();
+      const viewRect = insideView.getBoundingClientRect();
+      const margin = 12;
+
+      sceneSigns.forEach((sign) => {
+        const imageX = Number(sign.dataset.x);
+        const imageY = Number(sign.dataset.y);
+        if (!Number.isFinite(imageX) || !Number.isFinite(imageY)) return;
+
+        const width = sign.offsetWidth || 160;
+        const height = sign.offsetHeight || 58;
+        const x = imageRect.x + imageRect.width * imageX / insideImageSize.width;
+        const y = imageRect.y + imageRect.height * imageY / insideImageSize.height;
+        const clampedX = clamp(x, margin + width / 2, Math.max(margin + width / 2, viewRect.width - margin - width / 2));
+        const clampedY = clamp(y, margin + height / 2, Math.max(margin + height / 2, viewRect.height - margin - height / 2));
+
+        sign.style.setProperty("--sign-x", `${clampedX}px`);
+        sign.style.setProperty("--sign-y", `${clampedY}px`);
+        sign.style.setProperty("--sign-rotate", `${Number(sign.dataset.rotate) || 0}deg`);
+        sign.style.setProperty("--sign-skew-x", `${Number(sign.dataset.skewX) || 0}deg`);
+        sign.style.setProperty("--sign-skew-y", `${Number(sign.dataset.skewY) || 0}deg`);
+        sign.style.setProperty("--sign-scale", `${Number(sign.dataset.scale) || 1}`);
+      });
+    }
+
+    function updateDogEyes() {
+      /*
+      Archived dog-eye cursor-follow experiment. Kept here so it can be restored later.
+      */
+    }
+
+    function spawnCursorSparkle(clientX, clientY) {
+      if (!insideActive || !stage.classList.contains("inside-visible") || !cursorSparkleLayer) return;
+
+      const now = performance.now();
+      if (now - lastSparkleTime < 24) return;
+      lastSparkleTime = now;
+
+      const rect = insideView.getBoundingClientRect();
+      const sparkle = document.createElement("span");
+      const size = 5 + Math.random() * 8;
+      const driftX = (Math.random() - 0.5) * 36;
+      const driftY = -18 - Math.random() * 34;
+      const rotate = Math.random() * 180;
+
+      sparkle.className = "cursor-sparkle";
+      sparkle.style.setProperty("--sparkle-x", `${clientX - rect.left}px`);
+      sparkle.style.setProperty("--sparkle-y", `${clientY - rect.top}px`);
+      sparkle.style.setProperty("--sparkle-size", `${size}px`);
+      sparkle.style.setProperty("--sparkle-drift-x", `${driftX}px`);
+      sparkle.style.setProperty("--sparkle-drift-y", `${driftY}px`);
+      sparkle.style.setProperty("--sparkle-rotate", `${rotate}deg`);
+
+      cursorSparkleLayer.appendChild(sparkle);
+      window.setTimeout(() => sparkle.remove(), 1000);
+    }
+
+    function drawImageContain(image) {
+      if (!image) return;
+
+      const canvasRatio = canvas.width / canvas.height;
+      const imageRatio = getImageWidth(image) / getImageHeight(image);
+      let drawWidth = canvas.width;
+      let drawHeight = canvas.height;
+
+      if (imageRatio > canvasRatio) {
+        drawHeight = drawWidth / imageRatio;
+      } else {
+        drawWidth = drawHeight * imageRatio;
+      }
+
+      const x = (canvas.width - drawWidth) / 2;
+      const y = (canvas.height - drawHeight) / 2;
+      const cropLeft = 8;
+      const cropTop = 8;
+      const cropRight = 28;
+      const cropBottom = 28;
+      const sourceWidth = Math.max(1, getImageWidth(image) - cropLeft - cropRight);
+      const sourceHeight = Math.max(1, getImageHeight(image) - cropTop - cropBottom);
+      context.drawImage(image, cropLeft, cropTop, sourceWidth, sourceHeight, x, y, drawWidth, drawHeight);
+    }
+
+    function renderFrame(value, force = false) {
+      const frameIndex = Math.round(clamp(value, 0, frameCount - 1));
+      const renderKey = `${frameIndex}:${canvas.width}x${canvas.height}`;
+
+      if (!force && renderKey === lastRenderedFrame) return;
+      lastRenderedFrame = renderKey;
+
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      drawImageContain(imageCache[frameIndex]);
+    }
+
+    function setTargetAngle(nextAngle, immediate = false) {
+      targetAngle = clamp(nextAngle, 0, frameCount - 1);
+      if (immediate) {
+        displayAngle = targetAngle;
+        renderFrame(displayAngle, true);
+      }
+      updateHotspot();
+    }
+
+    function animate(now = performance.now()) {
+      const elapsed = Math.min(48, now - lastAnimationTime);
+      lastAnimationTime = now;
+
+      if (!videoPlaying && !insideActive && !isDragging && hoverActive && hoverVelocity !== 0) {
+        setTargetAngle(targetAngle + hoverVelocity * hoverMaxFramesPerSecond * elapsed / 1000);
+      }
+
+      const delta = targetAngle - displayAngle;
+      if (Math.abs(delta) > 0.015) {
+        displayAngle += delta * angleEase;
+      } else {
+        displayAngle = targetAngle;
+      }
+
+      renderFrame(displayAngle);
+      requestAnimationFrame(animate);
+    }
+
+    async function loadBitmap(src) {
+      const image = new Image();
+      image.decoding = "async";
+      image.src = src;
+
+      try {
+        await image.decode();
+      } catch (error) {
+        await new Promise((resolve) => {
+          image.onload = resolve;
+          image.onerror = resolve;
+        });
+      }
+
+      if ("createImageBitmap" in window && image.complete && image.naturalWidth > 0) {
+        try {
+          return await createImageBitmap(image);
+        } catch (error) {
+          return image;
+        }
+      }
+
+      return image;
+    }
+
+    async function preloadFrames() {
+      await Promise.all(frames.map(async (src, index) => {
+        imageCache[index] = await loadBitmap(src);
+      }));
+      setTargetAngle(targetAngle, true);
+    }
+
+    stage.addEventListener("pointerdown", (event) => {
+      if (videoPlaying || insideActive) return;
+      if (event.target.closest(".door-hotspot")) return;
+
+      isDragging = true;
+      dragStartX = event.clientX;
+      dragStartAngle = targetAngle;
+      hoverActive = false;
+      hoverVelocity = 0;
+
+      try {
+        stage.setPointerCapture(event.pointerId);
+      } catch (error) {
+        // Synthetic pointer events in automated tests may not have an active pointer.
+      }
+    });
+
+    stage.addEventListener("pointermove", (event) => {
+      if (videoPlaying || insideActive) return;
+
+      const rect = stage.getBoundingClientRect();
+
+      if (isDragging) {
+        const dx = event.clientX - dragStartX;
+        const sensitivity = frameCount / Math.max(rect.width, 1);
+        setTargetAngle(dragStartAngle - dx * sensitivity);
+        return;
+      }
+
+      const position = clamp((event.clientX - rect.left) / Math.max(rect.width, 1), 0, 1);
+      const centred = position * 2 - 1;
+      const deadZone = 0.18;
+
+      hoverActive = true;
+      if (Math.abs(centred) <= deadZone) {
+        hoverVelocity = 0;
+      } else {
+        const direction = Math.sign(centred);
+        const strength = clamp((Math.abs(centred) - deadZone) / (1 - deadZone), 0, 1);
+        const easedStrength = hoverMinimumStrength + (1 - hoverMinimumStrength) * Math.pow(strength, 0.8);
+        hoverVelocity = direction * easedStrength;
+      }
+    });
+
+    function endDrag(event) {
+      isDragging = false;
+      if (event.pointerId !== undefined && stage.hasPointerCapture(event.pointerId)) {
+        stage.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    stage.addEventListener("pointerup", endDrag);
+    stage.addEventListener("pointercancel", endDrag);
+
+    stage.addEventListener("pointerleave", () => {
+      isDragging = false;
+      hoverActive = false;
+      hoverVelocity = 0;
+    });
+
+    stage.addEventListener("wheel", (event) => {
+      event.preventDefault();
+      if (videoPlaying || insideActive) return;
+
+      hoverActive = false;
+      hoverVelocity = 0;
+
+      const wheelAmount = Math.abs(event.deltaY) > Math.abs(event.deltaX) ? event.deltaY : event.deltaX;
+      const wheelStep = clamp(wheelAmount / 80, -3, 3);
+      setTargetAngle(targetAngle + wheelStep);
+    }, { passive: false });
+
+    window.addEventListener("keydown", (event) => {
+      if (videoPlaying || insideActive) return;
+
+      if (event.key === "ArrowLeft") {
+        setTargetAngle(targetAngle - 4);
+      } else if (event.key === "ArrowRight") {
+        setTargetAngle(targetAngle + 4);
+      } else if (event.key === "Home") {
+        setTargetAngle(0);
+      } else if (event.key === "End") {
+        setTargetAngle(frameCount - 1);
+      }
+    });
+
+    function waitForCentre() {
+      return new Promise((resolve) => {
+        const startedAt = performance.now();
+        const check = () => {
+          const closeEnough = Math.abs(displayAngle - centreAngle) < 0.08;
+          const timedOut = performance.now() - startedAt > 900;
+          if (closeEnough || timedOut) {
+            setTargetAngle(centreAngle, true);
+            resolve();
+          } else {
+            requestAnimationFrame(check);
+          }
+        };
+        check();
+      });
+    }
+
+    function enterInsideView() {
+      if (insideActive) return;
+
+      videoPlaying = false;
+      insideActive = true;
+      hoverActive = false;
+      hoverVelocity = 0;
+      doorVideo.pause();
+      doorVideo.currentTime = 0;
+      stage.classList.remove("is-playing");
+      stage.classList.add("is-inside");
+      updateSceneSigns();
+      requestAnimationFrame(() => {
+        updateSceneSigns();
+        requestAnimationFrame(() => {
+          updateSceneSigns();
+          stage.classList.add("inside-visible");
+        });
+      });
+    }
+
+    function returnToExteriorView() {
+      if (!insideActive) return;
+
+      closeTeamCarousel();
+      insideActive = false;
+      videoPlaying = false;
+      hoverActive = false;
+      hoverVelocity = 0;
+      doorVideo.pause();
+      doorVideo.currentTime = 0;
+      stage.classList.remove("inside-visible", "is-inside", "is-playing");
+      if (cursorSparkleLayer) {
+        cursorSparkleLayer.replaceChildren();
+      }
+      resizeCanvas();
+    }
+
+    function renderTeamMember() {
+      const member = teamMembers[activeTeamIndex];
+      if (!member) return;
+
+      teamCarousel.classList.remove("is-expanded");
+      teamCarouselPhoto.src = member.image;
+      teamCarouselPhoto.alt = member.name;
+      teamCarouselName.textContent = member.name;
+      teamCarouselRole.textContent = member.role;
+      teamCarouselSummary.textContent = member.summary;
+      teamCarouselBio.textContent = member.bio;
+      teamCarouselReadMore.textContent = "Read more";
+      teamCarouselCount.textContent = `${activeTeamIndex + 1} of ${teamMembers.length}`;
+    }
+
+    function openTeamCarousel() {
+      if (!insideActive || !teamCarousel) return;
+
+      activeTeamIndex = 0;
+      renderTeamMember();
+      teamCarousel.classList.add("is-open");
+      teamCarousel.setAttribute("aria-hidden", "false");
+      teamCarouselClose.focus({ preventScroll: true });
+    }
+
+    function closeTeamCarousel() {
+      if (!teamCarousel) return;
+
+      teamCarousel.classList.remove("is-open", "is-expanded");
+      teamCarousel.setAttribute("aria-hidden", "true");
+    }
+
+    function showTeamMember(offset) {
+      activeTeamIndex = (activeTeamIndex + offset + teamMembers.length) % teamMembers.length;
+      renderTeamMember();
+    }
+
+    function toggleTeamBio() {
+      const expanded = teamCarousel.classList.toggle("is-expanded");
+      teamCarouselReadMore.textContent = expanded ? "Show less" : "Read more";
+    }
+
+    function skipEntranceVideo() {
+      if (!videoPlaying || insideActive) return;
+      enterInsideView();
+    }
+
+    doorHotspot.addEventListener("click", async () => {
+      if (videoPlaying || insideActive) return;
+
+      hoverActive = false;
+      hoverVelocity = 0;
+      videoPlaying = true;
+      setTargetAngle(centreAngle);
+      await waitForCentre();
+
+      doorVideo.currentTime = 0;
+      stage.classList.add("is-playing");
+
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 360));
+        if (!videoPlaying || insideActive) return;
+        await doorVideo.play();
+      } catch (error) {
+        videoPlaying = false;
+        stage.classList.remove("is-playing");
+      }
+    });
+
+    doorVideo.addEventListener("dblclick", skipEntranceVideo);
+    doorVideo.addEventListener("ended", enterInsideView);
+    sceneSigns.forEach((sign) => {
+      if (sign.dataset.action === "back") {
+        sign.addEventListener("click", returnToExteriorView);
+      } else if (sign.dataset.action === "about") {
+        sign.addEventListener("click", openTeamCarousel);
+      }
+    });
+    teamCarouselPrev.addEventListener("click", () => showTeamMember(-1));
+    teamCarouselNext.addEventListener("click", () => showTeamMember(1));
+    teamCarouselReadMore.addEventListener("click", toggleTeamBio);
+    teamCarouselClose.addEventListener("click", closeTeamCarousel);
+    teamCarousel.addEventListener("click", (event) => {
+      if (event.target === teamCarousel) {
+        closeTeamCarousel();
+      }
+    });
+
+    window.addEventListener("keydown", (event) => {
+      if (!teamCarousel.classList.contains("is-open")) return;
+
+      if (event.key === "Escape") {
+        closeTeamCarousel();
+      } else if (event.key === "ArrowLeft") {
+        showTeamMember(-1);
+      } else if (event.key === "ArrowRight") {
+        showTeamMember(1);
+      }
+    });
+
+    stage.addEventListener("pointermove", (event) => {
+      spawnCursorSparkle(event.clientX, event.clientY);
+    });
+
+    window.addEventListener("resize", () => {
+      resizeCanvas();
+      updateSceneSigns();
+    });
+    resizeCanvas();
+    preloadFrames();
+    animate();
+  </script>
+</body>
+</html>
