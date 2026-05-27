@@ -22,6 +22,10 @@
       background: #ffffff;
     }
 
+    body.debug-mode {
+      overflow-y: auto;
+    }
+
     .stage {
       position: relative;
       width: 100vw;
@@ -30,6 +34,11 @@
       overflow: hidden;
       touch-action: none;
       user-select: none;
+    }
+
+    body.debug-mode .stage {
+      height: min(62vh, calc(100vh - 340px));
+      min-height: 360px;
     }
 
     canvas {
@@ -166,7 +175,7 @@
       position: absolute;
       inset: 0;
       display: none;
-      background: #ffffff url("inside_wide.png") center / contain no-repeat;
+      background: #ffffff url("assets/media/inside-wide.webp") center / contain no-repeat;
       opacity: 0;
       overflow: hidden;
       transition: opacity 1100ms ease;
@@ -260,13 +269,15 @@
         0 16px 36px rgba(48, 25, 8, 0.18),
         inset 0 1px 0 rgba(255, 255, 255, 0.52),
         inset 0 -1px 0 rgba(88, 50, 16, 0.12);
-      backdrop-filter: blur(14px) saturate(1.18);
-      -webkit-backdrop-filter: blur(14px) saturate(1.18);
+      backdrop-filter: blur(6px) saturate(1.08);
+      -webkit-backdrop-filter: blur(6px) saturate(1.08);
       transform:
         translate3d(-50%, -50%, 0)
         rotate(var(--sign-rotate, 0deg))
         skew(var(--sign-skew-x, 0deg), var(--sign-skew-y, 0deg))
-        scale(var(--sign-scale, 1));
+        scale(var(--sign-scale, 1))
+        scaleX(var(--sign-scale-x, 1))
+        scaleY(var(--sign-scale-y, 1));
       transform-origin: var(--sign-origin, 50% 50%);
       pointer-events: auto;
       cursor: pointer;
@@ -313,6 +324,15 @@
       outline-offset: 3px;
     }
 
+    .scene-sign.is-debug-selected {
+      outline: 3px solid rgba(46, 100, 142, 0.78);
+      outline-offset: 5px;
+      box-shadow:
+        0 0 0 8px rgba(255, 255, 255, 0.48),
+        0 18px 42px rgba(31, 68, 101, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+
     .scene-sign__eyebrow {
       display: block;
       margin-bottom: 4px;
@@ -325,6 +345,136 @@
     .scene-sign__title {
       display: block;
       white-space: normal;
+    }
+
+    .debug-panel {
+      display: none;
+      min-height: 270px;
+      padding: 18px clamp(16px, 3vw, 34px) 24px;
+      border-top: 1px solid rgba(54, 48, 39, 0.18);
+      color: #302a22;
+      background: #f7f2e9;
+      font: 14px/1.45 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body.debug-mode .debug-panel:not([hidden]) {
+      display: block;
+    }
+
+    .debug-panel__inner {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+    }
+
+    .debug-panel__header {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 14px;
+    }
+
+    .debug-panel__title {
+      margin: 0;
+      font: 700 18px/1.2 Georgia, "Times New Roman", serif;
+    }
+
+    .debug-panel__status {
+      min-height: 20px;
+      margin: 0;
+      color: #5f5242;
+      text-align: right;
+    }
+
+    .debug-panel__row {
+      display: grid;
+      grid-template-columns: minmax(190px, 260px) 1fr auto;
+      gap: 16px;
+      align-items: end;
+    }
+
+    .debug-panel__field {
+      display: grid;
+      gap: 6px;
+      font-weight: 700;
+    }
+
+    .debug-panel__select,
+    .debug-panel__number {
+      width: 100%;
+      border: 1px solid rgba(69, 58, 43, 0.28);
+      border-radius: 6px;
+      padding: 8px 9px;
+      color: #2c261f;
+      background: #fffdf8;
+      font: inherit;
+    }
+
+    .debug-panel__controls {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(190px, 1fr));
+      gap: 12px 16px;
+    }
+
+    .debug-control {
+      display: grid;
+      grid-template-columns: 1fr 82px;
+      gap: 7px 10px;
+      align-items: center;
+    }
+
+    .debug-control__label {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: #4a4034;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .debug-control__range {
+      width: 100%;
+      accent-color: #4b7796;
+    }
+
+    .debug-panel__button {
+      min-width: 150px;
+      border: 1px solid rgba(45, 66, 79, 0.26);
+      border-radius: 6px;
+      padding: 10px 14px;
+      color: #fffdf8;
+      background: #375f78;
+      font: 800 13px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      cursor: pointer;
+    }
+
+    .debug-panel__button:hover,
+    .debug-panel__button:focus-visible {
+      background: #2e526a;
+    }
+
+    .debug-panel__output {
+      margin-top: 12px;
+    }
+
+    .debug-panel__output summary {
+      cursor: pointer;
+      font-weight: 800;
+    }
+
+    .debug-panel__json {
+      max-height: 180px;
+      margin: 10px 0 0;
+      overflow: auto;
+      border: 1px solid rgba(69, 58, 43, 0.18);
+      border-radius: 6px;
+      padding: 10px;
+      background: #fffdf8;
+      font: 12px/1.45 Consolas, "Liberation Mono", monospace;
+      white-space: pre;
     }
 
     .team-carousel {
@@ -394,8 +544,8 @@
         0 28px 72px rgba(33, 18, 6, 0.28),
         inset 0 1px 0 rgba(255, 255, 255, 0.82),
         inset 0 -1px 0 rgba(255, 255, 255, 0.22);
-      backdrop-filter: blur(30px) saturate(1.32);
-      -webkit-backdrop-filter: blur(30px) saturate(1.32);
+      backdrop-filter: blur(10px) saturate(1.08);
+      -webkit-backdrop-filter: blur(10px) saturate(1.08);
       opacity: 0;
       pointer-events: none;
       transform: translate3d(-50%, -50%, -360px) scale(0.62);
@@ -440,28 +590,32 @@
     .team-card.is-prev {
       z-index: 3;
       opacity: 0.62;
-      filter: saturate(0.86) brightness(0.9);
+      pointer-events: auto;
+      cursor: pointer;
+      filter: brightness(0.94);
       transform: translate3d(-78%, -50%, -180px) rotateY(32deg) scale(0.78);
     }
 
     .team-card.is-next {
       z-index: 3;
       opacity: 0.62;
-      filter: saturate(0.86) brightness(0.9);
+      pointer-events: auto;
+      cursor: pointer;
+      filter: brightness(0.94);
       transform: translate3d(-22%, -50%, -180px) rotateY(-32deg) scale(0.78);
     }
 
     .team-card.is-far-prev {
       z-index: 1;
       opacity: 0.2;
-      filter: saturate(0.72) brightness(0.82);
+      filter: brightness(0.88);
       transform: translate3d(-102%, -50%, -300px) rotateY(42deg) scale(0.62);
     }
 
     .team-card.is-far-next {
       z-index: 1;
       opacity: 0.2;
-      filter: saturate(0.72) brightness(0.82);
+      filter: brightness(0.88);
       transform: translate3d(2%, -50%, -300px) rotateY(-42deg) scale(0.62);
     }
 
@@ -540,8 +694,8 @@
       background: rgba(255, 255, 255, 0.14);
       border: 1px solid rgba(255, 255, 255, 0.42);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.48);
-      backdrop-filter: blur(12px) saturate(1.16);
-      -webkit-backdrop-filter: blur(12px) saturate(1.16);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
     }
 
     .team-card.is-expanded .team-card__bio {
@@ -559,14 +713,13 @@
     .team-card__actions {
       display: flex;
       align-items: center;
-      justify-content: flex-start;
-      gap: 12px;
+      justify-content: center;
+      gap: 10px;
       padding-top: 4px;
     }
 
     .team-carousel__nav {
       display: flex;
-      gap: 8px;
       justify-content: center;
       width: 100%;
     }
@@ -600,6 +753,7 @@
       letter-spacing: 0.08em;
       text-transform: uppercase;
       text-align: center;
+      min-height: 18px;
     }
 
     .team-card__read-more {
@@ -650,8 +804,8 @@
         0 30px 72px rgba(25, 13, 5, 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.86),
         inset 0 -1px 0 rgba(255, 255, 255, 0.24);
-      backdrop-filter: blur(30px) saturate(1.32);
-      -webkit-backdrop-filter: blur(30px) saturate(1.32);
+      backdrop-filter: blur(10px) saturate(1.08);
+      -webkit-backdrop-filter: blur(10px) saturate(1.08);
       color: rgba(42, 55, 22, 0.96);
     }
 
@@ -744,8 +898,8 @@
       box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.56),
         0 10px 22px rgba(60, 35, 12, 0.08);
-      backdrop-filter: blur(12px) saturate(1.14);
-      -webkit-backdrop-filter: blur(12px) saturate(1.14);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
     }
 
     .philosophy-modal__item:last-child:nth-child(odd) {
@@ -809,8 +963,8 @@
         0 30px 72px rgba(25, 13, 5, 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.86),
         inset 0 -1px 0 rgba(255, 255, 255, 0.24);
-      backdrop-filter: blur(30px) saturate(1.32);
-      -webkit-backdrop-filter: blur(30px) saturate(1.32);
+      backdrop-filter: blur(10px) saturate(1.08);
+      -webkit-backdrop-filter: blur(10px) saturate(1.08);
       color: rgba(42, 55, 22, 0.96);
     }
 
@@ -843,7 +997,7 @@
       width: min(330px, 100%);
       height: auto;
       display: block;
-      filter: drop-shadow(0 24px 26px rgba(80, 43, 10, 0.18));
+      filter: drop-shadow(0 14px 18px rgba(80, 43, 10, 0.14));
     }
 
     .contact-modal__body {
@@ -922,8 +1076,8 @@
       box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.56),
         0 10px 22px rgba(60, 35, 12, 0.08);
-      backdrop-filter: blur(12px) saturate(1.14);
-      -webkit-backdrop-filter: blur(12px) saturate(1.14);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
     }
 
     .contact-modal__detail dt {
@@ -1026,6 +1180,11 @@
     }
 
     @media (max-width: 720px) {
+      body.debug-mode .stage {
+        height: 56vh;
+        min-height: 330px;
+      }
+
       .scene-sign {
         min-width: 112px;
         max-width: 154px;
@@ -1036,6 +1195,20 @@
 
       .scene-sign__eyebrow {
         font-size: 8px;
+      }
+
+      .debug-panel__header,
+      .debug-panel__row {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .debug-panel__status {
+        text-align: left;
+      }
+
+      .debug-panel__controls {
+        grid-template-columns: 1fr;
       }
 
       .team-carousel {
@@ -1260,24 +1433,24 @@
       <span class="sparkle" aria-hidden="true"></span>
       <span class="sparkle" aria-hidden="true"></span>
     </button>
-    <video class="transition-video" id="doorVideo" playsinline preload="auto">
-      <source src="motion_2.0-fast_A_slow_camera_push-in_toward_the_cottage_s_main_door_the_door_swinging_open_and_-0.mp4" type="video/mp4">
+    <video class="transition-video" id="doorVideo" playsinline preload="metadata">
+      <source src="assets/media/door-transition.mp4" type="video/mp4">
     </video>
     <div class="inside-view" id="insideView" aria-label="Inside Therapy House">
       <div class="scene-sign-layer" id="sceneSignLayer" aria-hidden="false">
-        <button class="scene-sign scene-sign--table" type="button" data-action="about" data-x="840" data-y="570" data-rotate="0" data-skew-x="0" data-skew-y="0" data-scale="0.78" aria-label="About Us">
+        <button class="scene-sign scene-sign--table" type="button" data-action="about" data-x="840" data-y="570" data-rotate="0" data-skew-x="0" data-skew-y="0" data-scale="0.78" data-scale-x="1" data-scale-y="1" aria-label="About Us">
           <span class="scene-sign__eyebrow">Meet</span>
           <span class="scene-sign__title">About Us</span>
         </button>
-        <button class="scene-sign scene-sign--wall" type="button" data-action="philosophy" data-x="520" data-y="150" data-rotate="-4" data-skew-x="-4" data-skew-y="1" data-scale="0.84" aria-label="Our Philosophy">
+        <button class="scene-sign scene-sign--wall" type="button" data-action="philosophy" data-x="520" data-y="150" data-rotate="-4" data-skew-x="-4" data-skew-y="1" data-scale="0.84" data-scale-x="1" data-scale-y="1" aria-label="Our Philosophy">
           <span class="scene-sign__eyebrow">Care</span>
           <span class="scene-sign__title">Our Philosophy</span>
         </button>
-        <button class="scene-sign scene-sign--notebook" type="button" data-action="contact" data-x="1230" data-y="790" data-rotate="-16" data-skew-x="-10" data-skew-y="2" data-scale="0.8" aria-label="Contact Us">
+        <button class="scene-sign scene-sign--notebook" type="button" data-action="contact" data-x="1230" data-y="790" data-rotate="-16" data-skew-x="-10" data-skew-y="2" data-scale="0.8" data-scale-x="1" data-scale-y="1" aria-label="Contact Us">
           <span class="scene-sign__eyebrow">Reach</span>
           <span class="scene-sign__title">Contact Us</span>
         </button>
-        <button class="scene-sign scene-sign--door" type="button" data-action="back" data-x="1325" data-y="255" data-rotate="1" data-skew-x="2" data-skew-y="-1" data-scale="0.74" aria-label="Back">
+        <button class="scene-sign scene-sign--door" type="button" data-action="back" data-x="1325" data-y="255" data-rotate="1" data-skew-x="2" data-skew-y="-1" data-scale="0.74" data-scale-x="1" data-scale-y="1" aria-label="Back">
           <span class="scene-sign__eyebrow">Door</span>
           <span class="scene-sign__title">Back</span>
         </button>
@@ -1287,9 +1460,7 @@
           <button class="team-carousel__close" id="teamCarouselClose" type="button" aria-label="Close team carousel">x</button>
           <div class="team-carousel__deck" id="teamCarouselDeck" aria-live="polite"></div>
           <div class="team-carousel__nav">
-            <button class="team-carousel__button" id="teamCarouselPrev" type="button">Previous</button>
             <span class="team-carousel__count" id="teamCarouselCount"></span>
-            <button class="team-carousel__button" id="teamCarouselNext" type="button">Next</button>
           </div>
         </div>
       </div>
@@ -1330,7 +1501,7 @@
         <section class="contact-modal__panel">
           <button class="contact-modal__close" id="contactModalClose" type="button" aria-label="Close contact window">&times;</button>
           <div class="contact-modal__art" aria-hidden="true">
-            <img src="phone.png" alt="">
+            <img src="assets/media/phone.webp" alt="" width="660" height="660" loading="lazy" decoding="async">
           </div>
           <div class="contact-modal__body">
             <p class="contact-modal__eyebrow">Visit or call</p>
@@ -1375,11 +1546,32 @@
     </div>
   </main>
 
+  <section class="debug-panel" id="debugPanel" aria-label="Button position debug controls" hidden>
+    <div class="debug-panel__inner">
+      <div class="debug-panel__header">
+        <h2 class="debug-panel__title">Button Position Debugger</h2>
+        <p class="debug-panel__status" id="debugStatus" role="status">Open with ?debug=1 to adjust sign positions.</p>
+      </div>
+      <div class="debug-panel__row">
+        <label class="debug-panel__field" for="debugSignSelect">
+          Button
+          <select class="debug-panel__select" id="debugSignSelect"></select>
+        </label>
+        <div class="debug-panel__controls" id="debugControls"></div>
+        <button class="debug-panel__button" id="debugConfirm" type="button">Confirm positions</button>
+      </div>
+      <details class="debug-panel__output">
+        <summary>Stored position JSON</summary>
+        <pre class="debug-panel__json" id="debugOutput">{}</pre>
+      </details>
+    </div>
+  </section>
+
   <script>
     const frameCount = 48;
     const frames = Array.from({ length: frameCount }, (_, index) => {
       const number = String(index + 1).padStart(3, "0");
-      return `optimised-rotation-frames/turntable_${number}.webp`;
+      return `assets/turntable/turntable_${number}.webp`;
     });
 
     const stage = document.getElementById("stage");
@@ -1392,103 +1584,123 @@
     const teamCarousel = document.getElementById("teamCarousel");
     const teamCarouselDeck = document.getElementById("teamCarouselDeck");
     const teamCarouselCount = document.getElementById("teamCarouselCount");
-    const teamCarouselPrev = document.getElementById("teamCarouselPrev");
-    const teamCarouselNext = document.getElementById("teamCarouselNext");
     const teamCarouselClose = document.getElementById("teamCarouselClose");
     const philosophyModal = document.getElementById("philosophyModal");
     const philosophyModalClose = document.getElementById("philosophyModalClose");
     const contactModal = document.getElementById("contactModal");
     const contactModalClose = document.getElementById("contactModalClose");
     const cursorSparkleLayer = document.getElementById("cursorSparkleLayer");
+    const debugPanel = document.getElementById("debugPanel");
+    const debugSignSelect = document.getElementById("debugSignSelect");
+    const debugControls = document.getElementById("debugControls");
+    const debugConfirm = document.getElementById("debugConfirm");
+    const debugStatus = document.getElementById("debugStatus");
+    const debugOutput = document.getElementById("debugOutput");
     const dogEyeElements = [];
 
     const imageCache = new Array(frameCount);
+    const imageLoadPromises = new Array(frameCount);
+    const loadedFrameIndexes = new Set();
+    let remainingFrameLoadTimer = 0;
     const insideImageSize = { width: 1672, height: 940 };
+    const signPositionStorageKey = "therapyHouse.signPositions.v1";
+    const signPositionDownloadName = "therapyhouse-button-positions.json";
+    const signPositionFields = [
+      { key: "x", datasetKey: "x", label: "data-x", min: 0, max: insideImageSize.width, step: 1 },
+      { key: "y", datasetKey: "y", label: "data-y", min: 0, max: insideImageSize.height, step: 1 },
+      { key: "rotate", datasetKey: "rotate", label: "data-rotate", min: -45, max: 45, step: 0.1 },
+      { key: "skewX", datasetKey: "skewX", label: "data-skew-x", min: -35, max: 35, step: 0.1 },
+      { key: "skewY", datasetKey: "skewY", label: "data-skew-y", min: -35, max: 35, step: 0.1 },
+      { key: "scale", datasetKey: "scale", label: "data-scale", min: 0.3, max: 1.6, step: 0.01 },
+      { key: "scaleX", datasetKey: "scaleX", label: "data-scale-x", min: 0.3, max: 1.8, step: 0.01 },
+      { key: "scaleY", datasetKey: "scaleY", label: "data-scale-y", min: 0.3, max: 1.8, step: 0.01 }
+    ];
     const hoverMaxFramesPerSecond = 22;
     const hoverMinimumStrength = 0.22;
     const angleEase = 0.34;
+    const cursorSparklesEnabled = false;
     const teamMembers = [
       {
         name: "Dr Amelia Shay",
         role: "Director, Developmental Psychologist",
-        image: "https://www.therapyhouse.com.au/wp-content/uploads/2024/11/Ameneh.png",
+        image: "assets/team/amelia-shay.webp",
         summary: "Amelia works with adults and brings long experience across private clinics, hospitals, universities, research and public education.",
         bio: "Amelia has worked in psychology since the early 2000s and holds several psychology qualifications, including a PhD in Developmental Psychology. Her therapy work includes individual therapy, couples counselling, EMDR-informed trauma work, and support in English and Persian/Farsi."
       },
       {
         name: "Dr Kaya Beinke",
         role: "Clinical Psychologist, Chief Clinical Officer",
-        image: "https://www.therapyhouse.com.au/wp-content/uploads/2022/12/Kaya.jpg",
+        image: "assets/team/kaya-beinke.webp",
         summary: "Kaya supports children, young people and families, with strong experience in clinical psychology, supervision and complex health and developmental presentations.",
         bio: "Kaya trained as a clinical psychologist and is a board approved supervisor. Her practice draws on approaches including CBT, trauma-focused CBT, ACT, DBT and Dyadic Developmental Psychotherapy, with experience across chronic health, developmental delay, assessment and family support."
       },
       {
         name: "Letitia McVey",
         role: "Psychologist, Educational and Developmental Registrar, Chief Operating Officer",
-        image: "https://www.therapyhouse.com.au/wp-content/uploads/2022/09/Letitia.png",
+        image: "assets/team/letitia-mcvey.webp",
         summary: "Letitia is a warm, collaborative practitioner who works with children, adolescents and adults, with a focus on resilience, strengths and hope.",
         bio: "Letitia supports neurodevelopmental differences, learning difficulties, autism, ADHD, anxiety, depression, trauma and specific phobias. Her style is attachment-informed, creative and non-judgemental, with parents involved where useful for wrap-around support."
       },
       {
         name: "Sahar Fattahi",
         role: "Psychologist",
-        image: "https://www.therapyhouse.com.au/wp-content/uploads/2022/12/Sarah.jpg",
+        image: "assets/team/sahar-fattahi.webp",
         summary: "Sahar works across the lifespan and brings cross-cultural clinical experience from Australia, Iran and the Philippines.",
         bio: "Sahar has experience with mood and anxiety concerns, diagnostic assessment, neurodevelopmental conditions, emotional and behavioural dysregulation, and parent coaching. She uses approaches such as CBT, ACT and DBT, and can work in English, Persian/Farsi and Filipino/Tagalog."
       },
       {
         name: "Rani Banks",
         role: "Clinical Psychologist",
-        image: "https://www.therapyhouse.com.au/wp-content/uploads/2025/04/processed-84C0F6B1-8B4B-4879-9F35-CD374D52B350-e1746601619666.jpeg",
+        image: "assets/team/rani-banks.webp",
         summary: "Rani works with people across the lifespan and has experience in regional and rural communities.",
         bio: "Rani provides assessment and therapy for concerns including anxiety, low mood, trauma, learning difficulties, ADHD, autism, relationship and family challenges, anger, bullying and identity questions. Their practice is neuroaffirming, trauma-informed and attentive to wider cultural and social context."
       },
       {
         name: "Jazmin Squire",
         role: "Psychologist",
-        image: "https://www.therapyhouse.com.au/wp-content/uploads/2023/05/Jazmin.png",
+        image: "assets/team/jazmin-squire.webp",
         summary: "Jazmin is a warm and engaging clinician who works flexibly with people of all ages.",
         bio: "Jazmin values safe therapeutic relationships and believes people can build insight, skills and more fulfilling ways of living. She has experience with children, young people, parents and couples, including complex trauma, grief, domestic and family violence, depression, anxiety and emotional dysregulation."
       },
       {
         name: "Laura Storey",
         role: "Counsellor",
-        image: "https://www.therapyhouse.com.au/wp-content/uploads/2025/05/TH-Instagram-Posts-2.png",
+        image: "assets/team/laura-storey.webp",
         summary: "Laura works in a person-centred, trauma-informed and neuroaffirming way, particularly with adolescents and young adults.",
         bio: "Laura has worked in mental health since 2011 and also practices in the eating disorder field. Her work draws on developmental psychology, narrative therapy, schema therapy, feminist frameworks, ACT, grief and loss frameworks, and a strong commitment to safety, trust and humour."
       },
       {
         name: "Genevieve Hussey",
         role: "Provisional Psychologist",
-        image: "https://www.therapyhouse.com.au/wp-content/uploads/2026/02/TH-Instagram-Posts-32.png",
+        image: "assets/team/genevieve-hussey.webp",
         summary: "Genevieve is a warm clinician focused on supporting young people and families through early intervention.",
         bio: "Gen has experience supporting children with autism-related needs and brings a background in nursing and psychology. She has worked as a Mental Health Registered Nurse in a private psychiatric hospital and values multidisciplinary, compassionate care."
       },
       {
         name: "Natasha",
         role: "Client Support and Marketing Coordinator",
-        image: "https://www.therapyhouse.com.au/wp-content/uploads/2023/05/Natasha.png",
+        image: "assets/team/natasha.webp",
         summary: "Natasha is part of the client support team and helps create a warm welcome into the clinic.",
         bio: "Natasha has backgrounds in business, creative industries, public relations and marketing. She supports Therapy House clients and contributes to print, digital and community marketing while also studying psychological science."
       },
       {
         name: "Josie",
         role: "Administrative Support",
-        image: "https://www.therapyhouse.com.au/wp-content/uploads/2023/05/josie.png",
+        image: "assets/team/josie.webp",
         summary: "Josie supports the administrative side of Therapy House.",
         bio: "Josie is listed by Therapy House as administrative support. Her role helps the broader team keep the clinic experience organised and welcoming."
       },
       {
         name: "Reea",
         role: "Therapy House dog",
-        image: "https://www.therapyhouse.com.au/wp-content/uploads/2022/09/Reaa-2.png",
+        image: "assets/team/reea.webp",
         summary: "Reea brings calm energy and a friendly presence to the Therapy House team.",
         bio: "Reea previously travelled as a show dog and is now on the path to becoming a therapy dog. Therapy House notes that she is not a certified therapy dog and asks visitors to speak with reception if they have any concerns."
       },
       {
         name: "Samson",
         role: "Retired Therapy House dog",
-        image: "https://www.therapyhouse.com.au/wp-content/uploads/2021/11/Samson.jpg",
+        image: "assets/team/samson.webp",
         summary: "Samson is remembered by Therapy House as a much-loved presence who helped visitors feel safe.",
         bio: "Therapy House describes Samson as calm, attentive and non-judgemental, with many years of experience charming visitors and children at the clinic. The team honours him warmly on the site."
       }
@@ -1516,9 +1728,223 @@
     let lastAnimationTime = performance.now();
     let lastRenderedFrame = "";
     let activeTeamIndex = 0;
+    let expandedTeamIndex = -1;
+    let animationFrameId = 0;
+    let resizeFrameId = 0;
+    let teamCardsBuilt = false;
+    let lastTeamTrigger = null;
+    let lastPhilosophyTrigger = null;
+    let lastContactTrigger = null;
+    let lastHoverInputTime = 0;
 
     function clamp(value, min, max) {
       return Math.max(min, Math.min(max, value));
+    }
+
+    function formatSignPositionNumber(value) {
+      const number = Number(value);
+      if (!Number.isFinite(number) || Math.abs(number) < 0.0005) return "0";
+      return number.toFixed(3).replace(/\.?0+$/, "");
+    }
+
+    function isDebugModeRequested() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get("debug") === "1" || window.location.hash.toLowerCase().includes("debug");
+    }
+
+    function getSignKey(sign) {
+      return sign.dataset.action || sign.getAttribute("aria-label") || "button";
+    }
+
+    function getSignLabel(sign) {
+      return sign.getAttribute("aria-label") || sign.querySelector(".scene-sign__title")?.textContent?.trim() || getSignKey(sign);
+    }
+
+    function getSignPositionValue(sign, field) {
+      const value = Number(sign.dataset[field.datasetKey]);
+      if (Number.isFinite(value)) return value;
+      return field.key === "scale" || field.key === "scaleX" || field.key === "scaleY" ? 1 : 0;
+    }
+
+    function setSignPositionValue(sign, field, value) {
+      const boundedValue = clamp(Number(value), field.min, field.max);
+      sign.dataset[field.datasetKey] = formatSignPositionNumber(boundedValue);
+    }
+
+    function collectSignPositionDocument() {
+      const positions = {};
+      const sortedSigns = [...sceneSigns].sort((first, second) => getSignKey(first).localeCompare(getSignKey(second)));
+
+      sortedSigns.forEach((sign) => {
+        const key = getSignKey(sign);
+        positions[key] = { label: getSignLabel(sign) };
+        signPositionFields.forEach((field) => {
+          positions[key][field.key] = getSignPositionValue(sign, field);
+        });
+      });
+
+      return {
+        generatedAt: new Date().toISOString(),
+        insideImageSize,
+        positions
+      };
+    }
+
+    function applySignPositionDocument(documentValue) {
+      if (!documentValue || typeof documentValue !== "object" || !documentValue.positions) return false;
+
+      sceneSigns.forEach((sign) => {
+        const signPosition = documentValue.positions[getSignKey(sign)];
+        if (!signPosition) return;
+
+        signPositionFields.forEach((field) => {
+          const value = Number(signPosition[field.key]);
+          if (Number.isFinite(value)) {
+            setSignPositionValue(sign, field, value);
+          }
+        });
+      });
+
+      updateSceneSigns();
+      return true;
+    }
+
+    function readStoredSignPositions() {
+      try {
+        const storedValue = window.localStorage.getItem(signPositionStorageKey);
+        return storedValue ? JSON.parse(storedValue) : null;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function applyStoredSignPositions() {
+      applySignPositionDocument(readStoredSignPositions());
+    }
+
+    function updateDebugOutput(documentValue = collectSignPositionDocument()) {
+      if (!debugOutput) return;
+      debugOutput.textContent = JSON.stringify(documentValue, null, 2);
+    }
+
+    function getActiveDebugSign() {
+      if (!debugSignSelect) return sceneSigns[0] || null;
+      return sceneSigns.find((sign) => getSignKey(sign) === debugSignSelect.value) || sceneSigns[0] || null;
+    }
+
+    function setDebugStatus(message) {
+      if (debugStatus) {
+        debugStatus.textContent = message;
+      }
+    }
+
+    function syncDebugField(field, value) {
+      const control = debugControls?.querySelector(`[data-debug-field="${field.key}"]`);
+      if (!control) return;
+
+      const formattedValue = formatSignPositionNumber(value);
+      const rangeInput = control.querySelector("input[type='range']");
+      const numberInput = control.querySelector("input[type='number']");
+      const output = control.querySelector("output");
+
+      if (rangeInput) rangeInput.value = formattedValue;
+      if (numberInput) numberInput.value = formattedValue;
+      if (output) output.value = formattedValue;
+    }
+
+    function syncDebugControls() {
+      const activeSign = getActiveDebugSign();
+      if (!activeSign) return;
+
+      sceneSigns.forEach((sign) => {
+        sign.classList.toggle("is-debug-selected", sign === activeSign);
+      });
+
+      signPositionFields.forEach((field) => {
+        syncDebugField(field, getSignPositionValue(activeSign, field));
+      });
+
+      updateDebugOutput();
+    }
+
+    function updateDebugSignPosition(field, rawValue) {
+      const activeSign = getActiveDebugSign();
+      if (!activeSign) return;
+
+      setSignPositionValue(activeSign, field, rawValue);
+      syncDebugField(field, getSignPositionValue(activeSign, field));
+      updateSceneSigns();
+      updateDebugOutput();
+    }
+
+    function downloadSignPositionDocument(documentValue) {
+      const blob = new Blob([`${JSON.stringify(documentValue, null, 2)}\n`], { type: "application/json" });
+      const link = document.createElement("a");
+      const objectUrl = URL.createObjectURL(blob);
+
+      link.href = objectUrl;
+      link.download = signPositionDownloadName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+    }
+
+    function confirmDebugPositions() {
+      const documentValue = collectSignPositionDocument();
+
+      try {
+        window.localStorage.setItem(signPositionStorageKey, JSON.stringify(documentValue));
+        downloadSignPositionDocument(documentValue);
+        setDebugStatus(`Saved to browser storage and downloaded ${signPositionDownloadName}.`);
+      } catch (error) {
+        setDebugStatus("Could not write to browser storage; downloaded the JSON snapshot instead.");
+        downloadSignPositionDocument(documentValue);
+      }
+
+      updateDebugOutput(documentValue);
+    }
+
+    function initDebugPanel() {
+      if (!debugPanel || !debugSignSelect || !debugControls || !debugConfirm || !isDebugModeRequested()) return;
+
+      document.body.classList.add("debug-mode");
+      debugPanel.hidden = false;
+      debugSignSelect.replaceChildren();
+      debugControls.replaceChildren();
+
+      sceneSigns.forEach((sign) => {
+        const option = document.createElement("option");
+        option.value = getSignKey(sign);
+        option.textContent = getSignLabel(sign);
+        debugSignSelect.appendChild(option);
+      });
+
+      signPositionFields.forEach((field) => {
+        const control = document.createElement("label");
+        control.className = "debug-control";
+        control.dataset.debugField = field.key;
+        control.innerHTML = `
+          <span class="debug-control__label">
+            <span>${field.label}</span>
+            <output></output>
+          </span>
+          <input class="debug-control__range" type="range" min="${field.min}" max="${field.max}" step="${field.step}">
+          <input class="debug-panel__number" type="number" min="${field.min}" max="${field.max}" step="${field.step}">
+        `;
+
+        const rangeInput = control.querySelector("input[type='range']");
+        const numberInput = control.querySelector("input[type='number']");
+        rangeInput.addEventListener("input", () => updateDebugSignPosition(field, rangeInput.value));
+        numberInput.addEventListener("input", () => updateDebugSignPosition(field, numberInput.value));
+        debugControls.appendChild(control);
+      });
+
+      debugSignSelect.addEventListener("change", syncDebugControls);
+      debugConfirm.addEventListener("click", confirmDebugPositions);
+      setDebugStatus("Adjust sliders live, then confirm to save and export.");
+      syncDebugControls();
     }
 
     function resizeCanvas() {
@@ -1628,6 +2054,8 @@
         sign.style.setProperty("--sign-skew-x", `${Number(sign.dataset.skewX) || 0}deg`);
         sign.style.setProperty("--sign-skew-y", `${Number(sign.dataset.skewY) || 0}deg`);
         sign.style.setProperty("--sign-scale", `${Number(sign.dataset.scale) || 1}`);
+        sign.style.setProperty("--sign-scale-x", `${Number(sign.dataset.scaleX) || 1}`);
+        sign.style.setProperty("--sign-scale-y", `${Number(sign.dataset.scaleY) || 1}`);
       });
     }
 
@@ -1638,6 +2066,7 @@
     }
 
     function spawnCursorSparkle(clientX, clientY) {
+      if (!cursorSparklesEnabled) return;
       if (!insideActive || !stage.classList.contains("inside-visible") || !cursorSparkleLayer) return;
 
       const now = performance.now();
@@ -1665,6 +2094,7 @@
 
     function drawImageContain(image) {
       if (!image) return;
+      if (image instanceof HTMLImageElement && image.naturalWidth === 0) return;
 
       const canvasRatio = canvas.width / canvas.height;
       const imageRatio = getImageWidth(image) / getImageHeight(image);
@@ -1697,7 +2127,10 @@
 
       context.fillStyle = "#ffffff";
       context.fillRect(0, 0, canvas.width, canvas.height);
-      drawImageContain(imageCache[frameIndex]);
+      if (!imageCache[frameIndex]) {
+        loadFrame(frameIndex);
+      }
+      drawImageContain(imageCache[frameIndex] || getNearestLoadedFrame(frameIndex));
     }
 
     function setTargetAngle(nextAngle, immediate = false) {
@@ -1705,16 +2138,36 @@
       if (immediate) {
         displayAngle = targetAngle;
         renderFrame(displayAngle, true);
+      } else {
+        ensureAnimation();
       }
       updateHotspot();
     }
 
+    function needsAnimation() {
+      const hoverNeedsFrame = !videoPlaying && !insideActive && !isDragging && hoverActive && hoverVelocity !== 0;
+      return hoverNeedsFrame || isDragging || Math.abs(targetAngle - displayAngle) > 0.015;
+    }
+
+    function ensureAnimation() {
+      if (animationFrameId) return;
+      lastAnimationTime = performance.now();
+      animationFrameId = requestAnimationFrame(animate);
+    }
+
     function animate(now = performance.now()) {
+      animationFrameId = 0;
       const elapsed = Math.min(48, now - lastAnimationTime);
       lastAnimationTime = now;
 
+      if (hoverActive && now - lastHoverInputTime > 420) {
+        hoverActive = false;
+        hoverVelocity = 0;
+      }
+
       if (!videoPlaying && !insideActive && !isDragging && hoverActive && hoverVelocity !== 0) {
-        setTargetAngle(targetAngle + hoverVelocity * hoverMaxFramesPerSecond * elapsed / 1000);
+        targetAngle = clamp(targetAngle + hoverVelocity * hoverMaxFramesPerSecond * elapsed / 1000, 0, frameCount - 1);
+        updateHotspot();
       }
 
       const delta = targetAngle - displayAngle;
@@ -1725,7 +2178,9 @@
       }
 
       renderFrame(displayAngle);
-      requestAnimationFrame(animate);
+      if (needsAnimation()) {
+        animationFrameId = requestAnimationFrame(animate);
+      }
     }
 
     async function loadBitmap(src) {
@@ -1753,11 +2208,87 @@
       return image;
     }
 
-    async function preloadFrames() {
-      await Promise.all(frames.map(async (src, index) => {
-        imageCache[index] = await loadBitmap(src);
-      }));
-      setTargetAngle(targetAngle, true);
+    function getNearestLoadedFrame(frameIndex) {
+      if (loadedFrameIndexes.size === 0) return null;
+
+      let nearestIndex = null;
+      let nearestDistance = Infinity;
+      loadedFrameIndexes.forEach((index) => {
+        const distance = Math.abs(index - frameIndex);
+        if (distance < nearestDistance) {
+          nearestIndex = index;
+          nearestDistance = distance;
+        }
+      });
+
+      return nearestIndex === null ? null : imageCache[nearestIndex];
+    }
+
+    function loadFrame(index) {
+      const frameIndex = Math.round(clamp(index, 0, frameCount - 1));
+      if (imageCache[frameIndex]) return Promise.resolve(imageCache[frameIndex]);
+      if (imageLoadPromises[frameIndex]) return imageLoadPromises[frameIndex];
+
+      imageLoadPromises[frameIndex] = loadBitmap(frames[frameIndex]).then((image) => {
+        imageCache[frameIndex] = image;
+        loadedFrameIndexes.add(frameIndex);
+        imageLoadPromises[frameIndex] = null;
+        if (Math.round(displayAngle) === frameIndex) {
+          renderFrame(displayAngle, true);
+        }
+        return image;
+      });
+
+      return imageLoadPromises[frameIndex];
+    }
+
+    function requestIdleTask(callback) {
+      if ("requestIdleCallback" in window) {
+        window.requestIdleCallback(callback, { timeout: 1600 });
+      } else {
+        window.setTimeout(callback, 80);
+      }
+    }
+
+    function stageFrameLoads() {
+      const centreIndex = Math.round(centreAngle);
+      const nearbyIndexes = [];
+      for (let offset = 1; offset <= 4; offset += 1) {
+        nearbyIndexes.push(centreIndex - offset, centreIndex + offset);
+      }
+
+      const remainingIndexes = frames
+        .map((_, index) => index)
+        .filter((index) => index !== centreIndex && !nearbyIndexes.includes(index));
+
+      loadFrame(centreIndex).then(() => {
+        setTargetAngle(centreAngle, true);
+        nearbyIndexes.forEach((index) => {
+          if (index >= 0 && index < frameCount) {
+            loadFrame(index);
+          }
+        });
+        loadRemainingFrames(remainingIndexes);
+      });
+    }
+
+    function loadRemainingFrames(indexes) {
+      let cursor = 0;
+      const loadChunk = () => {
+        const chunkSize = 2;
+        const chunk = indexes.slice(cursor, cursor + chunkSize);
+        cursor += chunkSize;
+        chunk.forEach((index) => loadFrame(index));
+        if (cursor < indexes.length) {
+          remainingFrameLoadTimer = window.setTimeout(loadChunk, 180);
+        } else {
+          remainingFrameLoadTimer = 0;
+        }
+      };
+
+      remainingFrameLoadTimer = window.setTimeout(() => {
+        requestIdleTask(loadChunk);
+      }, 2200);
     }
 
     stage.addEventListener("pointerdown", (event) => {
@@ -1794,6 +2325,7 @@
       const deadZone = 0.18;
 
       hoverActive = true;
+      lastHoverInputTime = performance.now();
       if (Math.abs(centred) <= deadZone) {
         hoverVelocity = 0;
       } else {
@@ -1802,6 +2334,7 @@
         const easedStrength = hoverMinimumStrength + (1 - hoverMinimumStrength) * Math.pow(strength, 0.8);
         hoverVelocity = direction * easedStrength;
       }
+      ensureAnimation();
     });
 
     function endDrag(event) {
@@ -1809,6 +2342,7 @@
       if (event.pointerId !== undefined && stage.hasPointerCapture(event.pointerId)) {
         stage.releasePointerCapture(event.pointerId);
       }
+      ensureAnimation();
     }
 
     stage.addEventListener("pointerup", endDrag);
@@ -1903,20 +2437,58 @@
       resizeCanvas();
     }
 
+    function buildTeamCards() {
+      if (!teamCarouselDeck || teamCardsBuilt) return;
+
+      const cards = teamMembers.map((teamMember, index) => {
+        const card = document.createElement("article");
+        card.className = "team-card";
+        card.dataset.index = String(index);
+        card.innerHTML = `
+          <div class="team-card__media">
+            <img class="team-card__photo" src="${teamMember.image}" alt="${teamMember.name}" width="720" height="900" loading="lazy" decoding="async">
+          </div>
+          <div class="team-card__body">
+            <header>
+              <p class="team-card__eyebrow">Therapy House team</p>
+              <h2 class="team-card__name">${teamMember.name}</h2>
+              <p class="team-card__role">${teamMember.role}</p>
+            </header>
+            <div class="team-card__content">
+              <p class="team-card__summary">${teamMember.summary}</p>
+              <p class="team-card__bio">${teamMember.bio}</p>
+            </div>
+            <div class="team-card__actions">
+              <button class="team-carousel__button team-card__prev" type="button">Previous</button>
+              <button class="team-carousel__button team-card__read-more" type="button">Read more</button>
+              <button class="team-carousel__button team-card__next" type="button">Next</button>
+            </div>
+          </div>
+        `;
+        return card;
+      });
+
+      teamCarouselDeck.replaceChildren(...cards);
+      teamCardsBuilt = true;
+    }
+
     function renderTeamMember() {
       const member = teamMembers[activeTeamIndex];
       if (!member) return;
 
-      teamCarousel.classList.remove("is-expanded");
+      buildTeamCards();
+
       if (teamCarouselDeck) {
         const total = teamMembers.length;
-        teamCarouselDeck.replaceChildren(...teamMembers.map((teamMember, index) => {
-          const card = document.createElement("article");
+        Array.from(teamCarouselDeck.children).forEach((card) => {
+          const index = Number(card.dataset.index);
           const offset = (index - activeTeamIndex + total) % total;
           const reverseOffset = (activeTeamIndex - index + total) % total;
-          card.className = "team-card";
+          const isActive = index === activeTeamIndex;
+          const isExpanded = index === expandedTeamIndex;
 
-          if (index === activeTeamIndex) {
+          card.className = "team-card";
+          if (isActive) {
             card.classList.add("is-active");
           } else if (offset === 1) {
             card.classList.add("is-next");
@@ -1928,28 +2500,21 @@
             card.classList.add("is-far-prev");
           }
 
-          card.innerHTML = `
-            <div class="team-card__media">
-              <img class="team-card__photo" src="${teamMember.image}" alt="${teamMember.name}">
-            </div>
-            <div class="team-card__body">
-              <header>
-                <p class="team-card__eyebrow">Therapy House team</p>
-                <h2 class="team-card__name">${teamMember.name}</h2>
-                <p class="team-card__role">${teamMember.role}</p>
-              </header>
-              <div class="team-card__content">
-                <p class="team-card__summary">${teamMember.summary}</p>
-                <p class="team-card__bio">${teamMember.bio}</p>
-              </div>
-              <div class="team-card__actions">
-                <button class="team-card__read-more" type="button">Read more</button>
-              </div>
-            </div>
-          `;
+          if (isExpanded) {
+            card.classList.add("is-expanded");
+          }
 
-          return card;
-        }));
+          card.setAttribute("aria-hidden", isActive ? "false" : "true");
+          card.tabIndex = isActive ? 0 : -1;
+          card.querySelectorAll("button").forEach((button) => {
+            button.tabIndex = isActive ? 0 : -1;
+          });
+
+          const readMoreButton = card.querySelector(".team-card__read-more");
+          if (readMoreButton) {
+            readMoreButton.textContent = isExpanded ? "Show less" : "Read more";
+          }
+        });
       }
       teamCarouselCount.textContent = `${activeTeamIndex + 1} of ${teamMembers.length}`;
     }
@@ -1957,9 +2522,12 @@
     function openTeamCarousel() {
       if (!insideActive || !teamCarousel) return;
 
+      lastTeamTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       activeTeamIndex = 0;
+      expandedTeamIndex = -1;
       renderTeamMember();
       teamCarousel.classList.add("is-open");
+      teamCarousel.inert = false;
       teamCarousel.setAttribute("aria-hidden", "false");
       teamCarouselClose.focus({ preventScroll: true });
     }
@@ -1967,16 +2535,23 @@
     function closeTeamCarousel() {
       if (!teamCarousel) return;
 
+      const focusTarget = lastTeamTrigger && document.contains(lastTeamTrigger) ? lastTeamTrigger : sceneSigns.find((sign) => sign.dataset.action === "about");
+      if (teamCarousel.contains(document.activeElement) && focusTarget) {
+        focusTarget.focus({ preventScroll: true });
+      }
       teamCarousel.classList.remove("is-open", "is-expanded");
+      teamCarousel.inert = true;
       teamCarousel.setAttribute("aria-hidden", "true");
     }
 
     function openPhilosophyModal() {
       if (!insideActive || !philosophyModal) return;
 
+      lastPhilosophyTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       closeTeamCarousel();
       closeContactModal();
       philosophyModal.classList.add("is-open");
+      philosophyModal.inert = false;
       philosophyModal.setAttribute("aria-hidden", "false");
       philosophyModalClose.focus({ preventScroll: true });
     }
@@ -1984,16 +2559,23 @@
     function closePhilosophyModal() {
       if (!philosophyModal) return;
 
+      const focusTarget = lastPhilosophyTrigger && document.contains(lastPhilosophyTrigger) ? lastPhilosophyTrigger : sceneSigns.find((sign) => sign.dataset.action === "philosophy");
+      if (philosophyModal.contains(document.activeElement) && focusTarget) {
+        focusTarget.focus({ preventScroll: true });
+      }
       philosophyModal.classList.remove("is-open");
+      philosophyModal.inert = true;
       philosophyModal.setAttribute("aria-hidden", "true");
     }
 
     function openContactModal() {
       if (!insideActive || !contactModal) return;
 
+      lastContactTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       closeTeamCarousel();
       closePhilosophyModal();
       contactModal.classList.add("is-open");
+      contactModal.inert = false;
       contactModal.setAttribute("aria-hidden", "false");
       contactModalClose.focus({ preventScroll: true });
     }
@@ -2001,18 +2583,19 @@
     function closeContactModal() {
       if (!contactModal) return;
 
+      const focusTarget = lastContactTrigger && document.contains(lastContactTrigger) ? lastContactTrigger : sceneSigns.find((sign) => sign.dataset.action === "contact");
+      if (contactModal.contains(document.activeElement) && focusTarget) {
+        focusTarget.focus({ preventScroll: true });
+      }
       contactModal.classList.remove("is-open");
+      contactModal.inert = true;
       contactModal.setAttribute("aria-hidden", "true");
     }
 
     function showTeamMember(offset) {
       activeTeamIndex = (activeTeamIndex + offset + teamMembers.length) % teamMembers.length;
+      expandedTeamIndex = -1;
       renderTeamMember();
-    }
-
-    function toggleTeamBio() {
-      const expanded = teamCarousel.classList.toggle("is-expanded");
-      teamCarouselReadMore.textContent = expanded ? "Show less" : "Read more";
     }
 
     function skipEntranceVideo() {
@@ -2055,15 +2638,39 @@
         sign.addEventListener("click", openContactModal);
       }
     });
-    teamCarouselPrev.addEventListener("click", () => showTeamMember(-1));
-    teamCarouselNext.addEventListener("click", () => showTeamMember(1));
     teamCarouselDeck.addEventListener("click", (event) => {
-      const activeCard = event.target.closest(".team-card.is-active");
-      const readMoreButton = event.target.closest(".team-card__read-more");
-      if (!activeCard || !readMoreButton) return;
+      const card = event.target.closest(".team-card");
+      if (!card) return;
 
-      const expanded = activeCard.classList.toggle("is-expanded");
-      readMoreButton.textContent = expanded ? "Show less" : "Read more";
+      if (card.classList.contains("is-prev")) {
+        showTeamMember(-1);
+        return;
+      }
+
+      if (card.classList.contains("is-next")) {
+        showTeamMember(1);
+        return;
+      }
+
+      const activeCard = card.classList.contains("is-active") ? card : null;
+      const readMoreButton = event.target.closest(".team-card__read-more");
+      if (!activeCard) return;
+
+      if (event.target.closest(".team-card__prev")) {
+        showTeamMember(-1);
+        return;
+      }
+
+      if (event.target.closest(".team-card__next")) {
+        showTeamMember(1);
+        return;
+      }
+
+      if (!readMoreButton) return;
+
+      const cardIndex = Number(activeCard.dataset.index);
+      expandedTeamIndex = expandedTeamIndex === cardIndex ? -1 : cardIndex;
+      renderTeamMember();
     });
     teamCarouselClose.addEventListener("click", closeTeamCarousel);
     teamCarousel.addEventListener("click", (event) => {
@@ -2114,13 +2721,27 @@
       spawnCursorSparkle(event.clientX, event.clientY);
     });
 
-    window.addEventListener("resize", () => {
-      resizeCanvas();
-      updateSceneSigns();
-    });
+    function scheduleResize() {
+      if (resizeFrameId) return;
+      resizeFrameId = requestAnimationFrame(() => {
+        resizeFrameId = 0;
+        resizeCanvas();
+        updateSceneSigns();
+      });
+    }
+
+    teamCarousel.inert = true;
+    philosophyModal.inert = true;
+    contactModal.inert = true;
+
+    applyStoredSignPositions();
+    initDebugPanel();
+    window.addEventListener("resize", scheduleResize);
     resizeCanvas();
-    preloadFrames();
-    animate();
+    if (document.body.classList.contains("debug-mode")) {
+      enterInsideView();
+    }
+    stageFrameLoads();
   </script>
 </body>
 </html>
