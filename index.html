@@ -593,7 +593,7 @@
 
     .team-card.is-prev {
       z-index: 3;
-      opacity: 0.62;
+      opacity: 0.32;
       pointer-events: auto;
       cursor: pointer;
       filter: none;
@@ -602,7 +602,7 @@
 
     .team-card.is-next {
       z-index: 3;
-      opacity: 0.62;
+      opacity: 0.32;
       pointer-events: auto;
       cursor: pointer;
       filter: none;
@@ -611,14 +611,14 @@
 
     .team-card.is-far-prev {
       z-index: 1;
-      opacity: 0.2;
+      opacity: 0.08;
       filter: none;
       transform: translate3d(-102%, -50%, -300px) rotateY(42deg) scale(0.62);
     }
 
     .team-card.is-far-next {
       z-index: 1;
-      opacity: 0.2;
+      opacity: 0.08;
       filter: none;
       transform: translate3d(2%, -50%, -300px) rotateY(-42deg) scale(0.62);
     }
@@ -627,7 +627,7 @@
       min-height: 0;
       background:
         linear-gradient(180deg, rgba(98, 66, 24, 0.07), rgba(45, 26, 8, 0.04)),
-        rgba(255, 255, 255, 0.04);
+        rgba(255, 255, 255, 0.88);
     }
 
     .team-card__photo {
@@ -636,6 +636,9 @@
       display: block;
       object-fit: cover;
       object-position: center top;
+      opacity: 1;
+      filter: none;
+      mix-blend-mode: normal;
     }
 
     .team-card__body {
@@ -644,6 +647,9 @@
       gap: 12px;
       min-height: 0;
       padding: clamp(18px, 2.5vw, 28px);
+      background:
+        linear-gradient(145deg, rgba(255, 252, 244, 0.88), rgba(255, 242, 218, 0.78)),
+        rgba(255, 255, 255, 0.82);
       color: rgba(46, 30, 14, 0.96);
     }
 
@@ -720,6 +726,8 @@
       justify-content: center;
       gap: 10px;
       padding-top: 4px;
+      border-radius: 18px;
+      background: rgba(255, 252, 244, 0.72);
     }
 
     .team-carousel__nav {
@@ -733,12 +741,16 @@
       border: 1px solid rgba(88, 59, 22, 0.22);
       border-radius: 999px;
       padding: 0 16px;
-      background: rgba(255, 255, 255, 0.5);
+      background: rgba(255, 255, 255, 0.88);
       color: rgba(48, 30, 12, 0.96);
       font: 800 13px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       cursor: pointer;
       white-space: nowrap;
     }
+      text-shadow: none;
+      filter: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
 
     .team-carousel__button:hover,
     .team-carousel__button:focus-visible,
@@ -765,13 +777,17 @@
       border: 1px solid rgba(88, 59, 22, 0.22);
       border-radius: 999px;
       padding: 0 16px;
-      background: rgba(255, 255, 255, 0.5);
+      background: rgba(255, 255, 255, 0.88);
       color: rgba(48, 30, 12, 0.96);
       font: 800 13px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       cursor: pointer;
       white-space: nowrap;
     }
 
+      text-shadow: none;
+      filter: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
     .philosophy-modal {
       position: absolute;
       inset: 0;
