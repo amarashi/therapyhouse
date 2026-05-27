@@ -273,6 +273,10 @@
       -webkit-backdrop-filter: blur(6px) saturate(1.08);
       transform:
         translate3d(-50%, -50%, 0)
+        perspective(var(--sign-perspective, 900px))
+        translateZ(var(--sign-depth, 60px))
+        rotateX(var(--sign-rotate-x, 0deg))
+        rotateY(var(--sign-rotate-y, 0deg))
         rotate(var(--sign-rotate, 0deg))
         skew(var(--sign-skew-x, 0deg), var(--sign-skew-y, 0deg))
         scale(var(--sign-scale, 1))
@@ -293,6 +297,7 @@
     }
 
     .scene-sign--door {
+      text-align: center;
       color: rgba(46, 29, 14, 0.96);
       background:
         linear-gradient(135deg, rgba(255, 255, 255, 0.5), rgba(219, 181, 115, 0.2)),
@@ -720,20 +725,30 @@
       overflow: hidden;
     }
 
-    .team-card__actions {
+    .team-carousel__nav {
+      display: grid;
+      justify-items: center;
+      gap: 8px;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .team-carousel__actions {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
-      padding-top: 4px;
-      border-radius: 18px;
-      background: rgba(255, 252, 244, 0.72);
-    }
-
-    .team-carousel__nav {
-      display: flex;
-      justify-content: center;
-      width: 100%;
+      width: min(420px, 100%);
+      padding: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.42);
+      border-radius: 999px;
+      background: rgba(255, 252, 244, 0.84);
+      box-shadow:
+        0 12px 26px rgba(38, 22, 8, 0.16),
+        inset 0 1px 0 rgba(255, 255, 255, 0.7);
+      filter: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
     }
 
     .team-carousel__button {
@@ -746,16 +761,16 @@
       font: 800 13px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       cursor: pointer;
       white-space: nowrap;
-    }
       text-shadow: none;
       filter: none;
       backdrop-filter: none;
       -webkit-backdrop-filter: none;
+    }
 
     .team-carousel__button:hover,
     .team-carousel__button:focus-visible,
-    .team-card__read-more:hover,
-    .team-card__read-more:focus-visible,
+    .team-carousel__read-more:hover,
+    .team-carousel__read-more:focus-visible,
     .team-carousel__close:hover,
     .team-carousel__close:focus-visible {
       background: rgba(255, 255, 255, 0.72);
@@ -772,7 +787,7 @@
       min-height: 18px;
     }
 
-    .team-card__read-more {
+    .team-carousel__read-more {
       min-height: 42px;
       border: 1px solid rgba(88, 59, 22, 0.22);
       border-radius: 999px;
@@ -782,14 +797,15 @@
       font: 800 13px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       cursor: pointer;
       white-space: nowrap;
-    }
-
       text-shadow: none;
       filter: none;
       backdrop-filter: none;
       -webkit-backdrop-filter: none;
+    }
+
     .philosophy-modal {
       position: absolute;
+      box-sizing: border-box;
       inset: 0;
       z-index: 9;
       display: grid;
@@ -810,6 +826,7 @@
 
     .philosophy-modal__panel {
       position: relative;
+      box-sizing: border-box;
       width: min(880px, 100%);
       max-height: min(760px, calc(100vh - 32px));
       overflow: auto;
@@ -878,6 +895,15 @@
       flex: 1;
       height: 1px;
       background: rgba(124, 75, 39, 0.42);
+    }
+
+    .philosophy-modal__image {
+      display: block;
+      width: clamp(150px, 22vw, 224px);
+      max-width: 100%;
+      height: auto;
+      margin: -2px auto 16px;
+      filter: drop-shadow(0 14px 18px rgba(68, 39, 12, 0.18));
     }
 
     .philosophy-modal__intro,
@@ -1294,7 +1320,14 @@
       }
 
       .philosophy-modal__title {
-        font-size: clamp(34px, 12vw, 48px);
+        font-size: clamp(30px, 10vw, 40px);
+        max-width: 11ch;
+        margin-inline: auto;
+      }
+
+      .philosophy-modal__image {
+        width: clamp(136px, 48vw, 190px);
+        margin-bottom: 14px;
       }
 
       .philosophy-modal__list {
@@ -1458,19 +1491,19 @@
     </video>
     <div class="inside-view" id="insideView" aria-label="Inside Therapy House">
       <div class="scene-sign-layer" id="sceneSignLayer" aria-hidden="false">
-        <button class="scene-sign scene-sign--table" type="button" data-action="about" data-x="840" data-y="570" data-rotate="0" data-skew-x="0" data-skew-y="0" data-scale="0.78" data-scale-x="1" data-scale-y="1" aria-label="About Us">
+        <button class="scene-sign scene-sign--table" type="button" data-action="about" data-x="840" data-y="570" data-perspective="900" data-depth="60" data-rotate-x="0" data-rotate-y="0" data-rotate="0" data-skew-x="0" data-skew-y="0" data-scale="0.78" data-scale-x="1" data-scale-y="1" aria-label="About Us">
           <span class="scene-sign__eyebrow">Meet</span>
           <span class="scene-sign__title">About Us</span>
         </button>
-        <button class="scene-sign scene-sign--wall" type="button" data-action="philosophy" data-x="520" data-y="150" data-rotate="-4" data-skew-x="-4" data-skew-y="1" data-scale="0.84" data-scale-x="1" data-scale-y="1" aria-label="Our Philosophy">
+        <button class="scene-sign scene-sign--wall" type="button" data-action="philosophy" data-x="520" data-y="150" data-perspective="900" data-depth="60" data-rotate-x="0" data-rotate-y="0" data-rotate="-4" data-skew-x="-4" data-skew-y="1" data-scale="0.84" data-scale-x="1" data-scale-y="1" aria-label="Our Philosophy">
           <span class="scene-sign__eyebrow">Care</span>
           <span class="scene-sign__title">Our Philosophy</span>
         </button>
-        <button class="scene-sign scene-sign--notebook" type="button" data-action="contact" data-x="1230" data-y="790" data-rotate="-16" data-skew-x="-10" data-skew-y="2" data-scale="0.8" data-scale-x="1" data-scale-y="1" aria-label="Contact Us">
+        <button class="scene-sign scene-sign--notebook" type="button" data-action="contact" data-x="1230" data-y="790" data-perspective="900" data-depth="60" data-rotate-x="0" data-rotate-y="0" data-rotate="-16" data-skew-x="-10" data-skew-y="2" data-scale="0.8" data-scale-x="1" data-scale-y="1" aria-label="Contact Us">
           <span class="scene-sign__eyebrow">Reach</span>
           <span class="scene-sign__title">Contact Us</span>
         </button>
-        <button class="scene-sign scene-sign--door" type="button" data-action="back" data-x="1325" data-y="255" data-rotate="1" data-skew-x="2" data-skew-y="-1" data-scale="0.74" data-scale-x="1" data-scale-y="1" aria-label="Back">
+        <button class="scene-sign scene-sign--door" type="button" data-action="back" data-x="1325" data-y="255" data-perspective="900" data-depth="60" data-rotate-x="0" data-rotate-y="0" data-rotate="1" data-skew-x="2" data-skew-y="-1" data-scale="0.74" data-scale-x="1" data-scale-y="1" aria-label="Back">
           <span class="scene-sign__eyebrow">Door</span>
           <span class="scene-sign__title">Back</span>
         </button>
@@ -1481,6 +1514,11 @@
           <div class="team-carousel__deck" id="teamCarouselDeck" aria-live="polite"></div>
           <div class="team-carousel__nav">
             <span class="team-carousel__count" id="teamCarouselCount"></span>
+            <div class="team-carousel__actions" aria-label="Team profile controls">
+              <button class="team-carousel__button" id="teamCarouselPrev" type="button">Previous</button>
+              <button class="team-carousel__button team-carousel__read-more" id="teamCarouselReadMore" type="button">Read more</button>
+              <button class="team-carousel__button" id="teamCarouselNext" type="button">Next</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1490,6 +1528,7 @@
           <p class="philosophy-modal__eyebrow">Therapy House</p>
           <h2 class="philosophy-modal__title" id="philosophyTitle">Our Philosophy</h2>
           <div class="philosophy-modal__rule" aria-hidden="true">o</div>
+          <img class="philosophy-modal__image" src="assets/media/bookworm.png" width="600" height="450" alt="A playful reader sitting among colourful books and leafy stationery">
           <p class="philosophy-modal__intro">At Therapy House, we believe that counselling and psychology should feel warm and inviting, not clinical or impersonal. Our aim is to create a nurturing environment where everyone can thrive.</p>
           <h3 class="philosophy-modal__subheading">Here's how we do it</h3>
           <ul class="philosophy-modal__list">
@@ -1604,8 +1643,12 @@
     const teamCarousel = document.getElementById("teamCarousel");
     const teamCarouselDeck = document.getElementById("teamCarouselDeck");
     const teamCarouselCount = document.getElementById("teamCarouselCount");
+    const teamCarouselPrev = document.getElementById("teamCarouselPrev");
+    const teamCarouselReadMore = document.getElementById("teamCarouselReadMore");
+    const teamCarouselNext = document.getElementById("teamCarouselNext");
     const teamCarouselClose = document.getElementById("teamCarouselClose");
     const philosophyModal = document.getElementById("philosophyModal");
+    const philosophyModalPanel = philosophyModal.querySelector(".philosophy-modal__panel");
     const philosophyModalClose = document.getElementById("philosophyModalClose");
     const contactModal = document.getElementById("contactModal");
     const contactModalClose = document.getElementById("contactModalClose");
@@ -1628,6 +1671,10 @@
     const signPositionFields = [
       { key: "x", datasetKey: "x", label: "data-x", min: 0, max: insideImageSize.width, step: 1 },
       { key: "y", datasetKey: "y", label: "data-y", min: 0, max: insideImageSize.height, step: 1 },
+      { key: "perspective", datasetKey: "perspective", label: "data-perspective", min: 160, max: 2000, step: 10 },
+      { key: "depth", datasetKey: "depth", label: "data-depth", min: -200, max: 220, step: 1 },
+      { key: "rotateX", datasetKey: "rotateX", label: "data-rotate-x", min: -70, max: 70, step: 0.1 },
+      { key: "rotateY", datasetKey: "rotateY", label: "data-rotate-y", min: -70, max: 70, step: 0.1 },
       { key: "rotate", datasetKey: "rotate", label: "data-rotate", min: -45, max: 45, step: 0.1 },
       { key: "skewX", datasetKey: "skewX", label: "data-skew-x", min: -35, max: 35, step: 0.1 },
       { key: "skewY", datasetKey: "skewY", label: "data-skew-y", min: -35, max: 35, step: 0.1 },
@@ -1783,6 +1830,8 @@
     function getSignPositionValue(sign, field) {
       const value = Number(sign.dataset[field.datasetKey]);
       if (Number.isFinite(value)) return value;
+      if (field.key === "perspective") return 900;
+      if (field.key === "depth") return 60;
       return field.key === "scale" || field.key === "scaleX" || field.key === "scaleY" ? 1 : 0;
     }
 
@@ -2070,6 +2119,10 @@
 
         sign.style.setProperty("--sign-x", `${clampedX}px`);
         sign.style.setProperty("--sign-y", `${clampedY}px`);
+        sign.style.setProperty("--sign-perspective", `${Number(sign.dataset.perspective) || 900}px`);
+        sign.style.setProperty("--sign-depth", `${Number(sign.dataset.depth) || 0}px`);
+        sign.style.setProperty("--sign-rotate-x", `${Number(sign.dataset.rotateX) || 0}deg`);
+        sign.style.setProperty("--sign-rotate-y", `${Number(sign.dataset.rotateY) || 0}deg`);
         sign.style.setProperty("--sign-rotate", `${Number(sign.dataset.rotate) || 0}deg`);
         sign.style.setProperty("--sign-skew-x", `${Number(sign.dataset.skewX) || 0}deg`);
         sign.style.setProperty("--sign-skew-y", `${Number(sign.dataset.skewY) || 0}deg`);
@@ -2375,9 +2428,9 @@
     });
 
     stage.addEventListener("wheel", (event) => {
-      event.preventDefault();
       if (videoPlaying || insideActive) return;
 
+      event.preventDefault();
       hoverActive = false;
       hoverVelocity = 0;
 
@@ -2478,11 +2531,6 @@
               <p class="team-card__summary">${teamMember.summary}</p>
               <p class="team-card__bio">${teamMember.bio}</p>
             </div>
-            <div class="team-card__actions">
-              <button class="team-carousel__button team-card__prev" type="button">Previous</button>
-              <button class="team-carousel__button team-card__read-more" type="button">Read more</button>
-              <button class="team-carousel__button team-card__next" type="button">Next</button>
-            </div>
           </div>
         `;
         return card;
@@ -2526,17 +2574,10 @@
 
           card.setAttribute("aria-hidden", isActive ? "false" : "true");
           card.tabIndex = isActive ? 0 : -1;
-          card.querySelectorAll("button").forEach((button) => {
-            button.tabIndex = isActive ? 0 : -1;
-          });
-
-          const readMoreButton = card.querySelector(".team-card__read-more");
-          if (readMoreButton) {
-            readMoreButton.textContent = isExpanded ? "Show less" : "Read more";
-          }
         });
       }
       teamCarouselCount.textContent = `${activeTeamIndex + 1} of ${teamMembers.length}`;
+      teamCarouselReadMore.textContent = expandedTeamIndex === activeTeamIndex ? "Show less" : "Read more";
     }
 
     function openTeamCarousel() {
@@ -2658,6 +2699,12 @@
         sign.addEventListener("click", openContactModal);
       }
     });
+    teamCarouselPrev.addEventListener("click", () => showTeamMember(-1));
+    teamCarouselNext.addEventListener("click", () => showTeamMember(1));
+    teamCarouselReadMore.addEventListener("click", () => {
+      expandedTeamIndex = expandedTeamIndex === activeTeamIndex ? -1 : activeTeamIndex;
+      renderTeamMember();
+    });
     teamCarouselDeck.addEventListener("click", (event) => {
       const card = event.target.closest(".team-card");
       if (!card) return;
@@ -2673,24 +2720,7 @@
       }
 
       const activeCard = card.classList.contains("is-active") ? card : null;
-      const readMoreButton = event.target.closest(".team-card__read-more");
       if (!activeCard) return;
-
-      if (event.target.closest(".team-card__prev")) {
-        showTeamMember(-1);
-        return;
-      }
-
-      if (event.target.closest(".team-card__next")) {
-        showTeamMember(1);
-        return;
-      }
-
-      if (!readMoreButton) return;
-
-      const cardIndex = Number(activeCard.dataset.index);
-      expandedTeamIndex = expandedTeamIndex === cardIndex ? -1 : cardIndex;
-      renderTeamMember();
     });
     teamCarouselClose.addEventListener("click", closeTeamCarousel);
     teamCarousel.addEventListener("click", (event) => {
@@ -2704,6 +2734,24 @@
         closePhilosophyModal();
       }
     });
+    philosophyModalPanel.addEventListener("wheel", (event) => {
+      if (!philosophyModal.classList.contains("is-open")) return;
+
+      const maxScrollTop = philosophyModalPanel.scrollHeight - philosophyModalPanel.clientHeight;
+      if (maxScrollTop <= 0) return;
+
+      const modeScale = event.deltaMode === WheelEvent.DOM_DELTA_LINE
+        ? 16
+        : event.deltaMode === WheelEvent.DOM_DELTA_PAGE
+          ? philosophyModalPanel.clientHeight
+          : 1;
+      const scrollDelta = event.deltaY * modeScale;
+      if (scrollDelta === 0) return;
+
+      philosophyModalPanel.scrollTop = clamp(philosophyModalPanel.scrollTop + scrollDelta, 0, maxScrollTop);
+      event.preventDefault();
+      event.stopPropagation();
+    }, { passive: false });
     contactModalClose.addEventListener("click", closeContactModal);
     contactModal.addEventListener("click", (event) => {
       if (event.target === contactModal) {
