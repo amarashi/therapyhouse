@@ -349,31 +349,100 @@
 
     .team-carousel__panel {
       position: relative;
-      width: min(980px, 100%);
-      max-height: min(760px, calc(100vh - 28px));
+      width: min(1120px, 100%);
+      min-height: min(720px, calc(100vh - 28px));
       display: grid;
-      grid-template-columns: minmax(260px, 0.88fr) minmax(300px, 1.12fr);
-      overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      border-radius: 22px;
-      background:
-        linear-gradient(145deg, rgba(255, 255, 255, 0.64), rgba(255, 244, 218, 0.36)),
-        rgba(255, 255, 255, 0.18);
-      box-shadow:
-        0 26px 68px rgba(33, 18, 6, 0.34),
-        inset 0 1px 0 rgba(255, 255, 255, 0.6);
-      backdrop-filter: blur(18px) saturate(1.18);
-      -webkit-backdrop-filter: blur(18px) saturate(1.18);
+      grid-template-rows: 1fr auto;
+      align-items: center;
+      justify-items: center;
+      gap: 18px;
+      overflow: visible;
+      perspective: 1400px;
     }
 
-    .team-carousel__media {
-      min-height: 420px;
+    .team-carousel__deck {
+      position: relative;
+      width: min(100%, 980px);
+      height: min(620px, calc(100vh - 150px));
+      min-height: 480px;
+      transform-style: preserve-3d;
+    }
+
+    .team-card {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: min(520px, 58vw);
+      height: min(600px, calc(100vh - 170px));
+      min-height: 480px;
+      display: grid;
+      grid-template-rows: 44% 56%;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.44);
+      border-radius: 24px;
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.72), rgba(255, 244, 218, 0.44)),
+        rgba(255, 255, 255, 0.2);
+      box-shadow:
+        0 28px 72px rgba(33, 18, 6, 0.34),
+        inset 0 1px 0 rgba(255, 255, 255, 0.64);
+      backdrop-filter: blur(18px) saturate(1.16);
+      -webkit-backdrop-filter: blur(18px) saturate(1.16);
+      opacity: 0;
+      pointer-events: none;
+      transform: translate3d(-50%, -50%, -360px) scale(0.62);
+      transform-style: preserve-3d;
+      transition:
+        transform 520ms cubic-bezier(0.2, 0.72, 0.2, 1),
+        opacity 320ms ease,
+        filter 320ms ease;
+      will-change: transform, opacity;
+    }
+
+    .team-card.is-active {
+      z-index: 5;
+      opacity: 1;
+      pointer-events: auto;
+      filter: none;
+      transform: translate3d(-50%, -50%, 150px) rotateY(0deg) scale(1);
+    }
+
+    .team-card.is-prev {
+      z-index: 3;
+      opacity: 0.76;
+      filter: saturate(0.86) brightness(0.9);
+      transform: translate3d(-102%, -50%, -160px) rotateY(32deg) scale(0.82);
+    }
+
+    .team-card.is-next {
+      z-index: 3;
+      opacity: 0.76;
+      filter: saturate(0.86) brightness(0.9);
+      transform: translate3d(2%, -50%, -160px) rotateY(-32deg) scale(0.82);
+    }
+
+    .team-card.is-far-prev {
+      z-index: 1;
+      opacity: 0.32;
+      filter: saturate(0.72) brightness(0.82);
+      transform: translate3d(-142%, -50%, -270px) rotateY(42deg) scale(0.68);
+    }
+
+    .team-card.is-far-next {
+      z-index: 1;
+      opacity: 0.32;
+      filter: saturate(0.72) brightness(0.82);
+      transform: translate3d(42%, -50%, -270px) rotateY(-42deg) scale(0.68);
+    }
+
+    .team-card__media {
+      min-height: 0;
       background:
         linear-gradient(180deg, rgba(98, 66, 24, 0.16), rgba(45, 26, 8, 0.1)),
         rgba(255, 255, 255, 0.12);
     }
 
-    .team-carousel__photo {
+    .team-card__photo {
       width: 100%;
       height: 100%;
       display: block;
@@ -381,20 +450,20 @@
       object-position: center top;
     }
 
-    .team-carousel__body {
+    .team-card__body {
       display: grid;
       grid-template-rows: auto 1fr auto;
-      gap: 14px;
+      gap: 12px;
       min-height: 0;
-      padding: clamp(22px, 3vw, 34px);
+      padding: clamp(18px, 2.5vw, 28px);
       color: rgba(46, 30, 14, 0.96);
     }
 
     .team-carousel__close {
       position: absolute;
-      top: 12px;
-      right: 12px;
-      z-index: 2;
+      top: 4px;
+      right: 4px;
+      z-index: 7;
       width: 38px;
       height: 38px;
       border: 1px solid rgba(88, 59, 22, 0.22);
@@ -405,7 +474,7 @@
       cursor: pointer;
     }
 
-    .team-carousel__eyebrow {
+    .team-card__eyebrow {
       margin: 0 0 7px;
       color: rgba(117, 78, 28, 0.74);
       font: 800 11px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -413,48 +482,48 @@
       text-transform: uppercase;
     }
 
-    .team-carousel__name {
+    .team-card__name {
       margin: 0;
-      font: 700 clamp(27px, 4vw, 48px)/1.02 Georgia, "Times New Roman", serif;
+      font: 700 clamp(24px, 3.1vw, 38px)/1.02 Georgia, "Times New Roman", serif;
       letter-spacing: 0;
     }
 
-    .team-carousel__role {
+    .team-card__role {
       margin: 8px 0 0;
       color: rgba(76, 51, 22, 0.88);
-      font: 700 clamp(14px, 1.6vw, 18px)/1.35 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font: 700 clamp(13px, 1.45vw, 16px)/1.35 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
-    .team-carousel__summary,
-    .team-carousel__bio {
+    .team-card__summary,
+    .team-card__bio {
       margin: 0;
       color: rgba(55, 36, 18, 0.9);
-      font: 500 15px/1.58 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font: 500 14px/1.48 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
-    .team-carousel__bio {
+    .team-card__bio {
       display: none;
-      max-height: 210px;
+      max-height: 132px;
       overflow: auto;
-      padding: 13px 15px;
+      padding: 12px 14px;
       border-radius: 16px;
       background: rgba(255, 255, 255, 0.34);
       border: 1px solid rgba(255, 255, 255, 0.28);
     }
 
-    .team-carousel.is-expanded .team-carousel__bio {
+    .team-card.is-expanded .team-card__bio {
       display: block;
     }
 
-    .team-carousel__content {
+    .team-card__content {
       display: grid;
       align-content: start;
-      gap: 12px;
+      gap: 10px;
       min-height: 0;
       overflow: hidden;
     }
 
-    .team-carousel__actions {
+    .team-card__actions {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -465,6 +534,8 @@
     .team-carousel__nav {
       display: flex;
       gap: 8px;
+      justify-content: center;
+      width: 100%;
     }
 
     .team-carousel__button {
@@ -493,6 +564,7 @@
       font: 800 12px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       letter-spacing: 0.08em;
       text-transform: uppercase;
+      text-align: center;
     }
 
     .philosophy-modal {
@@ -520,7 +592,7 @@
       width: min(880px, 100%);
       max-height: min(760px, calc(100vh - 32px));
       overflow: auto;
-      padding: clamp(30px, 5vw, 58px);
+      padding: clamp(28px, 4.2vw, 46px);
       border: 1px solid rgba(255, 255, 255, 0.5);
       border-radius: 24px;
       background:
@@ -561,7 +633,7 @@
     .philosophy-modal__title {
       margin: 0;
       color: rgba(32, 57, 20, 0.98);
-      font: 700 clamp(42px, 7vw, 72px)/0.95 Georgia, "Times New Roman", serif;
+      font: 700 clamp(38px, 6vw, 64px)/0.95 Georgia, "Times New Roman", serif;
       letter-spacing: 0;
       text-align: center;
       text-transform: uppercase;
@@ -571,7 +643,7 @@
       display: flex;
       align-items: center;
       gap: 14px;
-      margin: 22px auto 18px;
+      margin: 18px auto 16px;
       width: min(440px, 78%);
       color: rgba(124, 75, 39, 0.82);
       font: 700 18px/1 Georgia, "Times New Roman", serif;
@@ -590,12 +662,12 @@
       margin: 0 auto;
       max-width: 680px;
       color: rgba(54, 39, 22, 0.92);
-      font: 500 clamp(15px, 1.7vw, 18px)/1.62 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font: 500 clamp(15px, 1.6vw, 17px)/1.55 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       text-align: center;
     }
 
     .philosophy-modal__subheading {
-      margin: 26px 0 16px;
+      margin: 22px 0 14px;
       color: rgba(67, 42, 19, 0.88);
       font: 800 13px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       letter-spacing: 0.14em;
@@ -606,15 +678,15 @@
     .philosophy-modal__list {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      margin: 0 0 22px;
+      gap: 10px;
+      margin: 0 0 18px;
       padding: 0;
       list-style: none;
     }
 
     .philosophy-modal__item {
-      min-height: 112px;
-      padding: 15px 16px;
+      min-height: 96px;
+      padding: 13px 16px;
       border: 1px solid rgba(255, 255, 255, 0.44);
       border-radius: 16px;
       background: rgba(255, 255, 255, 0.32);
@@ -641,6 +713,186 @@
     .philosophy-modal__close:hover,
     .philosophy-modal__close:focus-visible {
       background: rgba(255, 255, 255, 0.78);
+      outline: 2px solid rgba(80, 49, 14, 0.28);
+      outline-offset: 2px;
+    }
+
+    .contact-modal {
+      position: absolute;
+      inset: 0;
+      z-index: 9;
+      display: grid;
+      place-items: center;
+      padding: clamp(16px, 4vw, 46px);
+      background:
+        radial-gradient(circle at 70% 18%, rgba(255, 207, 122, 0.16), transparent 34%),
+        rgba(29, 18, 9, 0.42);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 260ms ease;
+    }
+
+    .contact-modal.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .contact-modal__panel {
+      position: relative;
+      width: min(980px, 100%);
+      max-height: min(760px, calc(100vh - 32px));
+      display: grid;
+      grid-template-columns: minmax(260px, 0.85fr) minmax(330px, 1.15fr);
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 24px;
+      background:
+        linear-gradient(145deg, rgba(255, 248, 229, 0.86), rgba(255, 237, 205, 0.66)),
+        rgba(255, 255, 255, 0.28);
+      box-shadow:
+        0 30px 72px rgba(25, 13, 5, 0.38),
+        inset 0 1px 0 rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(18px) saturate(1.12);
+      -webkit-backdrop-filter: blur(18px) saturate(1.12);
+      color: rgba(42, 55, 22, 0.96);
+    }
+
+    .contact-modal__close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      z-index: 2;
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(88, 59, 22, 0.24);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.66);
+      color: rgba(48, 30, 12, 0.92);
+      font: 700 24px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      cursor: pointer;
+    }
+
+    .contact-modal__art {
+      display: grid;
+      place-items: center;
+      min-height: 480px;
+      padding: clamp(24px, 4vw, 42px);
+      background:
+        radial-gradient(circle at 50% 46%, rgba(255, 197, 92, 0.34), transparent 52%),
+        rgba(255, 255, 255, 0.18);
+    }
+
+    .contact-modal__art img {
+      width: min(330px, 100%);
+      height: auto;
+      display: block;
+      filter: drop-shadow(0 24px 26px rgba(80, 43, 10, 0.18));
+    }
+
+    .contact-modal__body {
+      display: grid;
+      align-content: center;
+      gap: 18px;
+      min-height: 0;
+      overflow: auto;
+      padding: clamp(30px, 4.8vw, 54px);
+    }
+
+    .contact-modal__eyebrow {
+      margin: 0;
+      color: rgba(92, 58, 24, 0.78);
+      font: 800 12px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .contact-modal__title {
+      margin: 0;
+      color: rgba(32, 57, 20, 0.98);
+      font: 700 clamp(38px, 5.2vw, 62px)/0.96 Georgia, "Times New Roman", serif;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .contact-modal__intro {
+      margin: 0;
+      color: rgba(54, 39, 22, 0.92);
+      font: 500 clamp(15px, 1.5vw, 17px)/1.58 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .contact-modal__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .contact-modal__button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      border: 1px solid rgba(88, 59, 22, 0.22);
+      border-radius: 999px;
+      padding: 0 18px;
+      background: rgba(48, 76, 30, 0.92);
+      color: rgba(255, 251, 239, 0.98);
+      font: 800 13px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .contact-modal__button--secondary {
+      background: rgba(255, 255, 255, 0.5);
+      color: rgba(48, 30, 12, 0.96);
+    }
+
+    .contact-modal__details {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+    }
+
+    .contact-modal__detail {
+      display: grid;
+      grid-template-columns: 78px 1fr;
+      gap: 12px;
+      padding: 12px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.44);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.32);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
+    }
+
+    .contact-modal__detail dt {
+      color: rgba(67, 42, 19, 0.82);
+      font: 800 12px/1.4 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .contact-modal__detail dd {
+      margin: 0;
+      color: rgba(35, 58, 22, 0.96);
+      font: 700 15px/1.4 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .contact-modal__detail a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .contact-modal__detail a:hover,
+    .contact-modal__detail a:focus-visible {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .contact-modal__close:hover,
+    .contact-modal__close:focus-visible,
+    .contact-modal__button:hover,
+    .contact-modal__button:focus-visible {
+      background: rgba(255, 255, 255, 0.78);
+      color: rgba(48, 30, 12, 0.96);
       outline: 2px solid rgba(80, 49, 14, 0.28);
       outline-offset: 2px;
     }
@@ -778,6 +1030,44 @@
       .philosophy-modal__item:last-child:nth-child(odd) {
         grid-column: auto;
       }
+
+      .contact-modal {
+        padding: 10px;
+      }
+
+      .contact-modal__panel {
+        grid-template-columns: 1fr;
+        max-height: calc(100vh - 20px);
+        overflow: auto;
+        border-radius: 18px;
+      }
+
+      .contact-modal__art {
+        min-height: 0;
+        padding: 42px 20px 10px;
+      }
+
+      .contact-modal__art img {
+        width: min(210px, 72vw);
+      }
+
+      .contact-modal__body {
+        padding: 18px 20px 24px;
+      }
+
+      .contact-modal__title {
+        font-size: clamp(34px, 12vw, 48px);
+      }
+
+      .contact-modal__actions,
+      .contact-modal__button {
+        width: 100%;
+      }
+
+      .contact-modal__detail {
+        grid-template-columns: 1fr;
+        gap: 5px;
+      }
     }
 
     @keyframes doorGlow {
@@ -902,7 +1192,7 @@
           <span class="scene-sign__eyebrow">Care</span>
           <span class="scene-sign__title">Our Philosophy</span>
         </button>
-        <button class="scene-sign scene-sign--notebook" type="button" data-x="1230" data-y="790" data-rotate="-16" data-skew-x="-10" data-skew-y="2" data-scale="0.8" aria-label="Contact Us">
+        <button class="scene-sign scene-sign--notebook" type="button" data-action="contact" data-x="1230" data-y="790" data-rotate="-16" data-skew-x="-10" data-skew-y="2" data-scale="0.8" aria-label="Contact Us">
           <span class="scene-sign__eyebrow">Reach</span>
           <span class="scene-sign__title">Contact Us</span>
         </button>
@@ -971,6 +1261,42 @@
           <p class="philosophy-modal__closing">At Therapy House, your wellbeing is our top priority, and we're here to support you every step of the way.</p>
         </section>
       </div>
+      <div class="contact-modal" id="contactModal" role="dialog" aria-modal="true" aria-labelledby="contactTitle" aria-hidden="true">
+        <section class="contact-modal__panel">
+          <button class="contact-modal__close" id="contactModalClose" type="button" aria-label="Close contact window">&times;</button>
+          <div class="contact-modal__art" aria-hidden="true">
+            <img src="phone.png" alt="">
+          </div>
+          <div class="contact-modal__body">
+            <p class="contact-modal__eyebrow">Visit or call</p>
+            <h2 class="contact-modal__title" id="contactTitle">Contact Us</h2>
+            <p class="contact-modal__intro">Our clinic is located in a Brisbane western suburb, on a main road, yet tucked away so you won't hear any road traffic. There is plenty of street parking, so you don't need to be concerned about finding a park. Our clients are from anywhere in the greater Brisbane area.</p>
+            <div class="contact-modal__actions" aria-label="Contact actions">
+              <a class="contact-modal__button" href="https://my.powerdiary.com/clientportal/3cjz0" target="_blank" rel="noopener">Book an Appointment Online</a>
+              <a class="contact-modal__button contact-modal__button--secondary" href="tel:+61733002170">Call 07 3300 2170</a>
+              <a class="contact-modal__button contact-modal__button--secondary" href="https://www.google.com/maps/search/?api=1&amp;query=1290%20Waterworks%20Rd%2C%20The%20Gap%2C%20Brisbane%2C%20QLD%204061" target="_blank" rel="noopener">Open in Google Maps</a>
+            </div>
+            <dl class="contact-modal__details">
+              <div class="contact-modal__detail">
+                <dt>Phone</dt>
+                <dd><a href="tel:+61733002170">07 3300 2170</a></dd>
+              </div>
+              <div class="contact-modal__detail">
+                <dt>Fax</dt>
+                <dd>07 3319 4640</dd>
+              </div>
+              <div class="contact-modal__detail">
+                <dt>Email</dt>
+                <dd><a href="mailto:admin@therapyhouse.com.au">admin@therapyhouse.com.au</a></dd>
+              </div>
+              <div class="contact-modal__detail">
+                <dt>Address</dt>
+                <dd><a href="https://www.google.com/maps/search/?api=1&amp;query=1290%20Waterworks%20Rd%2C%20The%20Gap%2C%20Brisbane%2C%20QLD%204061" target="_blank" rel="noopener">1290 Waterworks Rd, The Gap, Brisbane, QLD, 4061</a></dd>
+              </div>
+            </dl>
+          </div>
+        </section>
+      </div>
       <div class="cursor-sparkle-layer" id="cursorSparkleLayer" aria-hidden="true"></div>
       <!--
       Archived dog-eye cursor-follow experiment. Kept here so it can be restored later.
@@ -1011,6 +1337,8 @@
     const teamCarouselClose = document.getElementById("teamCarouselClose");
     const philosophyModal = document.getElementById("philosophyModal");
     const philosophyModalClose = document.getElementById("philosophyModalClose");
+    const contactModal = document.getElementById("contactModal");
+    const contactModalClose = document.getElementById("contactModalClose");
     const cursorSparkleLayer = document.getElementById("cursorSparkleLayer");
     const dogEyeElements = [];
 
@@ -1507,6 +1835,7 @@
       doorVideo.pause();
       doorVideo.currentTime = 0;
       closePhilosophyModal();
+      closeContactModal();
       stage.classList.remove("inside-visible", "is-inside", "is-playing");
       if (cursorSparkleLayer) {
         cursorSparkleLayer.replaceChildren();
@@ -1550,6 +1879,7 @@
       if (!insideActive || !philosophyModal) return;
 
       closeTeamCarousel();
+      closeContactModal();
       philosophyModal.classList.add("is-open");
       philosophyModal.setAttribute("aria-hidden", "false");
       philosophyModalClose.focus({ preventScroll: true });
@@ -1560,6 +1890,23 @@
 
       philosophyModal.classList.remove("is-open");
       philosophyModal.setAttribute("aria-hidden", "true");
+    }
+
+    function openContactModal() {
+      if (!insideActive || !contactModal) return;
+
+      closeTeamCarousel();
+      closePhilosophyModal();
+      contactModal.classList.add("is-open");
+      contactModal.setAttribute("aria-hidden", "false");
+      contactModalClose.focus({ preventScroll: true });
+    }
+
+    function closeContactModal() {
+      if (!contactModal) return;
+
+      contactModal.classList.remove("is-open");
+      contactModal.setAttribute("aria-hidden", "true");
     }
 
     function showTeamMember(offset) {
@@ -1608,6 +1955,8 @@
         sign.addEventListener("click", openTeamCarousel);
       } else if (sign.dataset.action === "philosophy") {
         sign.addEventListener("click", openPhilosophyModal);
+      } else if (sign.dataset.action === "contact") {
+        sign.addEventListener("click", openContactModal);
       }
     });
     teamCarouselPrev.addEventListener("click", () => showTeamMember(-1));
@@ -1625,8 +1974,21 @@
         closePhilosophyModal();
       }
     });
+    contactModalClose.addEventListener("click", closeContactModal);
+    contactModal.addEventListener("click", (event) => {
+      if (event.target === contactModal) {
+        closeContactModal();
+      }
+    });
 
     window.addEventListener("keydown", (event) => {
+      if (contactModal.classList.contains("is-open")) {
+        if (event.key === "Escape") {
+          closeContactModal();
+        }
+        return;
+      }
+
       if (philosophyModal.classList.contains("is-open")) {
         if (event.key === "Escape") {
           closePhilosophyModal();
