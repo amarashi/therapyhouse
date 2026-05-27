@@ -10,6 +10,10 @@
       box-sizing: border-box;
     }
 
+    :root {
+      --app-viewport-height: 100vh;
+    }
+
     html,
     body {
       width: 100%;
@@ -1463,90 +1467,145 @@
     }
 
     @media (max-height: 520px) and (orientation: landscape) {
+      html,
+      body,
+      .stage {
+        height: var(--app-viewport-height, 100vh);
+      }
+
+      .inside-view {
+        overflow: hidden;
+      }
+
+      .scene-sign {
+        min-width: 116px;
+        max-width: 164px;
+        padding: 8px 11px;
+        border-radius: 14px;
+        font-size: 13px;
+      }
+
+      .scene-sign::before {
+        inset: 4px;
+        border-radius: 10px;
+      }
+
+      .team-carousel,
+      .philosophy-modal,
+      .contact-modal {
+        place-items: start center;
+        align-items: start;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        padding: 8px 10px max(10px, env(safe-area-inset-bottom));
+      }
+
       .team-carousel {
-        padding: 8px 12px;
+        background: rgba(34, 21, 10, 0.28);
       }
 
       .team-carousel__panel {
-        width: min(100%, 820px);
+        width: min(100%, 760px);
         min-height: 0;
-        height: calc(100vh - 16px);
-        height: calc(100svh - 16px);
-        grid-template-rows: minmax(0, 1fr) auto;
-        gap: 6px;
+        height: calc(var(--app-viewport-height, 100vh) - 16px);
+        grid-template-rows: minmax(0, 1fr);
+        gap: 0;
       }
 
       .team-carousel__deck {
-        height: calc(100vh - 82px);
-        height: calc(100svh - 82px);
+        width: 100%;
+        height: 100%;
         min-height: 0;
       }
 
       .team-card {
-        width: min(620px, calc(100vw - 132px));
-        height: min(310px, calc(100vh - 92px));
-        height: min(310px, calc(100svh - 92px));
+        width: min(620px, calc(100vw - 96px));
+        height: min(300px, calc(var(--app-viewport-height, 100vh) - 22px));
+        max-height: calc(var(--app-viewport-height, 100vh) - 22px);
         min-height: 0;
-        grid-template-columns: 42% 58%;
+        grid-template-columns: minmax(126px, 0.72fr) minmax(0, 1.28fr);
         grid-template-rows: 1fr;
         border-radius: 18px;
+        background:
+          linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(255, 246, 224, 0.9)),
+          rgba(255, 255, 255, 0.92);
+        box-shadow:
+          0 18px 42px rgba(33, 18, 6, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.84);
+        transition: none;
+      }
+
+      .team-card::before,
+      .philosophy-modal__panel::before,
+      .contact-modal__panel::before {
+        opacity: 0.24;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
       }
 
       .team-card.is-active {
         transform: translate3d(-50%, -50%, 0) rotateY(0deg) scale(1);
       }
 
-      .team-card.is-prev {
-        opacity: 0.36;
-        transform: translate3d(-83%, -50%, -180px) rotateY(30deg) scale(0.66);
-      }
-
-      .team-card.is-next {
-        opacity: 0.36;
-        transform: translate3d(-17%, -50%, -180px) rotateY(-30deg) scale(0.66);
-      }
-
+      .team-card.is-prev,
+      .team-card.is-next,
       .team-card.is-far-prev,
       .team-card.is-far-next {
         opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+
+      .team-card__media,
+      .team-card__body {
+        background: rgba(255, 251, 242, 0.96);
+      }
+
+      .team-card__photo {
+        opacity: 1;
       }
 
       .team-card__body {
-        gap: 8px;
-        padding: 12px 14px;
+        gap: 7px;
+        padding: 11px 12px;
       }
 
       .team-card__eyebrow {
-        margin-bottom: 5px;
+        margin-bottom: 4px;
         font-size: 9px;
       }
 
       .team-card__name {
-        font-size: clamp(20px, 3.2vw, 28px);
+        font-size: clamp(20px, 4.8vh, 26px);
       }
 
       .team-card__role {
-        margin-top: 5px;
-        font-size: 12px;
-        line-height: 1.25;
+        margin-top: 4px;
+        font-size: 11.5px;
+        line-height: 1.22;
       }
 
       .team-card__summary,
       .team-card__bio {
-        font-size: 12px;
-        line-height: 1.36;
+        font-size: 11.5px;
+        line-height: 1.3;
       }
 
       .team-card__bio {
-        padding: 9px 10px;
-        border-radius: 12px;
+        padding: 8px 9px;
+        border-radius: 10px;
+      }
+
+      .team-card__content {
+        gap: 7px;
       }
 
       .team-carousel__close {
-        top: 0;
-        right: 0;
-        width: 32px;
-        height: 32px;
+        top: 2px;
+        right: 2px;
+        width: 34px;
+        height: 34px;
         font-size: 17px;
       }
 
@@ -1568,6 +1627,147 @@
       .team-carousel__count {
         min-height: 14px;
         font-size: 10px;
+      }
+
+      .philosophy-modal__panel,
+      .contact-modal__panel {
+        width: min(780px, calc(100vw - 20px));
+        max-height: none;
+        margin: 0 auto 12px;
+        border-radius: 18px;
+        background:
+          linear-gradient(145deg, rgba(255, 252, 244, 0.94), rgba(255, 239, 211, 0.9)),
+          rgba(255, 255, 255, 0.9);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+
+      .philosophy-modal__panel {
+        padding: 34px 16px 18px;
+        overflow: visible;
+      }
+
+      .philosophy-modal__close,
+      .contact-modal__close {
+        top: 10px;
+        right: 10px;
+        width: 36px;
+        height: 36px;
+        font-size: 22px;
+      }
+
+      .philosophy-modal__eyebrow,
+      .philosophy-modal__rule,
+      .philosophy-modal__image {
+        display: none;
+      }
+
+      .philosophy-modal__title {
+        font-size: clamp(26px, 7vh, 34px);
+        max-width: none;
+      }
+
+      .philosophy-modal__intro,
+      .philosophy-modal__closing {
+        max-width: 680px;
+        font-size: 12.5px;
+        line-height: 1.38;
+      }
+
+      .philosophy-modal__subheading {
+        margin: 10px 0 9px;
+        font-size: 11px;
+      }
+
+      .philosophy-modal__list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .philosophy-modal__item {
+        min-height: 0;
+        padding: 8px 10px;
+        border-radius: 12px;
+      }
+
+      .philosophy-modal__item:last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+      }
+
+      .philosophy-modal__item h3 {
+        margin-bottom: 4px;
+        font-size: 13px;
+      }
+
+      .philosophy-modal__item p {
+        font-size: 12px;
+        line-height: 1.3;
+      }
+
+      .contact-modal__panel {
+        grid-template-columns: minmax(128px, 0.55fr) minmax(0, 1.45fr);
+        overflow: visible;
+      }
+
+      .contact-modal__art {
+        min-height: 0;
+        padding: 24px 12px;
+      }
+
+      .contact-modal__art img {
+        width: min(150px, 100%);
+      }
+
+      .contact-modal__body {
+        align-content: start;
+        gap: 9px;
+        overflow: visible;
+        padding: 24px 52px 18px 18px;
+      }
+
+      .contact-modal__eyebrow {
+        font-size: 10px;
+      }
+
+      .contact-modal__title {
+        font-size: clamp(30px, 8.2vh, 42px);
+      }
+
+      .contact-modal__intro {
+        font-size: 12px;
+        line-height: 1.38;
+      }
+
+      .contact-modal__actions {
+        gap: 8px;
+      }
+
+      .contact-modal__button {
+        min-height: 34px;
+        padding: 0 12px;
+        font-size: 11px;
+      }
+
+      .contact-modal__details {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .contact-modal__detail {
+        grid-template-columns: 1fr;
+        gap: 3px;
+        padding: 8px 10px;
+        border-radius: 12px;
+      }
+
+      .contact-modal__detail dt {
+        font-size: 10px;
+      }
+
+      .contact-modal__detail dd {
+        font-size: 12px;
+        line-height: 1.25;
       }
     }
 
@@ -3210,9 +3410,15 @@
       if (resizeFrameId) return;
       resizeFrameId = requestAnimationFrame(() => {
         resizeFrameId = 0;
+        updateAppViewportHeight();
         resizeCanvas();
         updateSceneSigns();
       });
+    }
+
+    function updateAppViewportHeight() {
+      const viewportHeight = window.visualViewport?.height || window.innerHeight || document.documentElement.clientHeight;
+      document.documentElement.style.setProperty("--app-viewport-height", `${Math.max(1, viewportHeight)}px`);
     }
 
     teamCarousel.inert = true;
@@ -3222,6 +3428,11 @@
     applyStoredSignPositions();
     initDebugPanel();
     window.addEventListener("resize", scheduleResize);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", scheduleResize);
+      window.visualViewport.addEventListener("scroll", scheduleResize);
+    }
+    updateAppViewportHeight();
     resizeCanvas();
     if (document.body.classList.contains("debug-mode")) {
       enterInsideView();
