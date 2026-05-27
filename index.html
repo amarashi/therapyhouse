@@ -36,6 +36,48 @@
       user-select: none;
     }
 
+    .orientation-lock {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: none;
+      place-items: center;
+      padding: 28px;
+      background:
+        radial-gradient(circle at 50% 24%, rgba(255, 247, 229, 0.94), transparent 44%),
+        #fffaf0;
+      color: rgba(54, 35, 17, 0.94);
+      text-align: center;
+    }
+
+    .orientation-lock__content {
+      width: min(320px, 100%);
+      display: grid;
+      justify-items: center;
+      gap: 14px;
+    }
+
+    .orientation-lock__phone {
+      width: 92px;
+      height: 56px;
+      border: 5px solid rgba(73, 47, 22, 0.9);
+      border-radius: 18px;
+      box-shadow:
+        0 14px 32px rgba(70, 42, 14, 0.16),
+        inset 0 0 0 2px rgba(255, 255, 255, 0.54);
+    }
+
+    .orientation-lock__title {
+      margin: 0;
+      font: 700 25px/1.08 Georgia, "Times New Roman", serif;
+      letter-spacing: 0;
+    }
+
+    .orientation-lock__text {
+      margin: 0;
+      font: 650 15px/1.42 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
     body.debug-mode .stage {
       height: min(62vh, calc(100vh - 340px));
       min-height: 360px;
@@ -186,6 +228,12 @@
       inset: 0;
       z-index: 0;
       overflow: hidden;
+      clip-path: inset(
+        var(--inside-frame-top, 0px)
+        var(--inside-frame-right, 0px)
+        var(--inside-frame-bottom, 0px)
+        var(--inside-frame-left, 0px)
+      );
       pointer-events: none;
       transform: translateZ(0);
     }
@@ -541,6 +589,7 @@
       height: min(500px, calc(100vh - 150px));
       min-height: 390px;
       transform-style: preserve-3d;
+      touch-action: pan-y;
     }
 
     .team-card {
@@ -566,6 +615,7 @@
       isolation: isolate;
       opacity: 0;
       pointer-events: none;
+      touch-action: pan-y;
       transform: translate3d(-50%, -50%, -360px) scale(0.62);
       transform-style: preserve-3d;
       transition:
@@ -658,11 +708,12 @@
       opacity: 0.8;
       filter: none;
       mix-blend-mode: normal;
+      -webkit-user-drag: none;
     }
 
     .team-card__body {
       display: grid;
-      grid-template-rows: auto 1fr auto;
+      grid-template-rows: auto minmax(0, 1fr) auto;
       gap: 12px;
       min-height: 0;
       padding: clamp(18px, 2.5vw, 28px);
@@ -715,9 +766,9 @@
     }
 
     .team-card__bio {
-      display: none;
-      max-height: 150px;
-      overflow: auto;
+      display: block;
+      max-height: none;
+      overflow: visible;
       padding: 12px 14px;
       border-radius: 16px;
       background: rgba(255, 255, 255, 0.14);
@@ -727,16 +778,13 @@
       -webkit-backdrop-filter: none;
     }
 
-    .team-card.is-expanded .team-card__bio {
-      display: block;
-    }
-
     .team-card__content {
       display: grid;
       align-content: start;
       gap: 10px;
       min-height: 0;
-      overflow: hidden;
+      overflow: auto;
+      padding-right: 2px;
     }
 
     .team-carousel__nav {
@@ -745,6 +793,7 @@
       gap: 8px;
       justify-content: center;
       width: 100%;
+      align-self: end;
     }
 
     .team-carousel__actions {
@@ -752,7 +801,7 @@
       align-items: center;
       justify-content: center;
       gap: 10px;
-      width: min(420px, 100%);
+      width: auto;
       padding: 6px;
       border: 1px solid rgba(255, 255, 255, 0.42);
       border-radius: 999px;
@@ -766,13 +815,16 @@
     }
 
     .team-carousel__button {
+      display: inline-grid;
+      place-items: center;
+      width: 42px;
       min-height: 42px;
       border: 1px solid rgba(88, 59, 22, 0.22);
       border-radius: 999px;
-      padding: 0 16px;
+      padding: 0;
       background: rgba(255, 255, 255, 0.88);
       color: rgba(48, 30, 12, 0.96);
-      font: 800 13px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font: 900 22px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       cursor: pointer;
       white-space: nowrap;
       text-shadow: none;
@@ -783,8 +835,6 @@
 
     .team-carousel__button:hover,
     .team-carousel__button:focus-visible,
-    .team-carousel__read-more:hover,
-    .team-carousel__read-more:focus-visible,
     .team-carousel__close:hover,
     .team-carousel__close:focus-visible {
       background: rgba(255, 255, 255, 0.72);
@@ -799,22 +849,6 @@
       text-transform: uppercase;
       text-align: center;
       min-height: 18px;
-    }
-
-    .team-carousel__read-more {
-      min-height: 42px;
-      border: 1px solid rgba(88, 59, 22, 0.22);
-      border-radius: 999px;
-      padding: 0 16px;
-      background: rgba(255, 255, 255, 0.88);
-      color: rgba(48, 30, 12, 0.96);
-      font: 800 13px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      cursor: pointer;
-      white-space: nowrap;
-      text-shadow: none;
-      filter: none;
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
     }
 
     .philosophy-modal {
@@ -1273,23 +1307,32 @@
 
       .team-carousel__panel {
         width: 100%;
-        min-height: calc(100vh - 20px);
+        min-height: 0;
+        height: calc(100vh - 20px);
+        height: calc(100svh - 20px);
+        grid-template-rows: minmax(0, 1fr) auto;
         gap: 12px;
       }
 
       .team-carousel__deck {
         width: 100%;
-        height: calc(100vh - 116px);
-        min-height: 610px;
+        height: calc(100vh - 108px);
+        height: calc(100svh - 108px);
+        min-height: 0;
       }
 
       .team-card {
         width: min(330px, calc(100vw - 46px));
-        height: min(620px, calc(100vh - 128px));
-        min-height: 560px;
+        height: min(560px, calc(100vh - 120px));
+        height: min(560px, calc(100svh - 120px));
+        min-height: 0;
         grid-template-columns: 1fr;
         grid-template-rows: 38% 62%;
         border-radius: 20px;
+      }
+
+      .team-card.is-active {
+        transform: translate3d(-50%, -50%, 0) rotateY(0deg) scale(1);
       }
 
       .team-card.is-prev {
@@ -1308,15 +1351,18 @@
       }
 
       .team-card__body {
-        padding: 18px;
+        padding: 16px;
       }
 
-      .team-card__bio {
-        max-height: 118px;
+      .team-carousel__actions {
+        gap: 6px;
+        padding: 5px;
       }
 
       .team-carousel__button {
-        flex: 1;
+        width: 38px;
+        min-height: 38px;
+        font-size: 20px;
       }
 
       .philosophy-modal {
@@ -1384,6 +1430,121 @@
       .contact-modal__detail {
         grid-template-columns: 1fr;
         gap: 5px;
+      }
+    }
+
+    @media (max-height: 520px) and (orientation: landscape) {
+      .team-carousel {
+        padding: 8px 12px;
+      }
+
+      .team-carousel__panel {
+        width: min(100%, 820px);
+        min-height: 0;
+        height: calc(100vh - 16px);
+        height: calc(100svh - 16px);
+        grid-template-rows: minmax(0, 1fr) auto;
+        gap: 6px;
+      }
+
+      .team-carousel__deck {
+        height: calc(100vh - 82px);
+        height: calc(100svh - 82px);
+        min-height: 0;
+      }
+
+      .team-card {
+        width: min(620px, calc(100vw - 132px));
+        height: min(310px, calc(100vh - 92px));
+        height: min(310px, calc(100svh - 92px));
+        min-height: 0;
+        grid-template-columns: 42% 58%;
+        grid-template-rows: 1fr;
+        border-radius: 18px;
+      }
+
+      .team-card.is-active {
+        transform: translate3d(-50%, -50%, 0) rotateY(0deg) scale(1);
+      }
+
+      .team-card.is-prev {
+        opacity: 0.36;
+        transform: translate3d(-83%, -50%, -180px) rotateY(30deg) scale(0.66);
+      }
+
+      .team-card.is-next {
+        opacity: 0.36;
+        transform: translate3d(-17%, -50%, -180px) rotateY(-30deg) scale(0.66);
+      }
+
+      .team-card.is-far-prev,
+      .team-card.is-far-next {
+        opacity: 0;
+      }
+
+      .team-card__body {
+        gap: 8px;
+        padding: 12px 14px;
+      }
+
+      .team-card__eyebrow {
+        margin-bottom: 5px;
+        font-size: 9px;
+      }
+
+      .team-card__name {
+        font-size: clamp(20px, 3.2vw, 28px);
+      }
+
+      .team-card__role {
+        margin-top: 5px;
+        font-size: 12px;
+        line-height: 1.25;
+      }
+
+      .team-card__summary,
+      .team-card__bio {
+        font-size: 12px;
+        line-height: 1.36;
+      }
+
+      .team-card__bio {
+        padding: 9px 10px;
+        border-radius: 12px;
+      }
+
+      .team-carousel__close {
+        top: 0;
+        right: 0;
+        width: 32px;
+        height: 32px;
+        font-size: 17px;
+      }
+
+      .team-carousel__nav {
+        gap: 4px;
+      }
+
+      .team-carousel__actions {
+        gap: 6px;
+        padding: 4px;
+      }
+
+      .team-carousel__button {
+        width: 34px;
+        min-height: 34px;
+        font-size: 18px;
+      }
+
+      .team-carousel__count {
+        min-height: 14px;
+        font-size: 10px;
+      }
+    }
+
+    @media (max-width: 820px) and (orientation: portrait) and (hover: none) and (pointer: coarse) {
+      .orientation-lock {
+        display: grid;
       }
     }
 
@@ -1494,6 +1655,13 @@
   </style>
 </head>
 <body>
+  <aside class="orientation-lock" aria-live="polite">
+    <div class="orientation-lock__content">
+      <span class="orientation-lock__phone" aria-hidden="true"></span>
+      <p class="orientation-lock__title">Rotate your phone</p>
+      <p class="orientation-lock__text">Therapy House works best in horizontal view.</p>
+    </div>
+  </aside>
   <main class="stage" id="stage" aria-label="Rotating Therapy House scene">
     <canvas id="viewerCanvas" aria-label="Therapy House scene"></canvas>
     <button class="door-hotspot" id="doorHotspot" type="button" aria-label="Open the entrance">
@@ -1528,13 +1696,12 @@
       <div class="team-carousel" id="teamCarousel" role="dialog" aria-modal="true" aria-label="Therapy House team" aria-hidden="true">
         <div class="team-carousel__panel">
           <button class="team-carousel__close" id="teamCarouselClose" type="button" aria-label="Close team carousel">x</button>
-          <div class="team-carousel__deck" id="teamCarouselDeck" aria-live="polite"></div>
+          <div class="team-carousel__deck" id="teamCarouselDeck" aria-live="polite" aria-label="Swipe or use controls to browse team profiles"></div>
           <div class="team-carousel__nav">
             <span class="team-carousel__count" id="teamCarouselCount"></span>
             <div class="team-carousel__actions" aria-label="Team profile controls">
-              <button class="team-carousel__button" id="teamCarouselPrev" type="button">Previous</button>
-              <button class="team-carousel__button team-carousel__read-more" id="teamCarouselReadMore" type="button">Read more</button>
-              <button class="team-carousel__button" id="teamCarouselNext" type="button">Next</button>
+              <button class="team-carousel__button" id="teamCarouselPrev" type="button" aria-label="Previous team profile">&larr;</button>
+              <button class="team-carousel__button" id="teamCarouselNext" type="button" aria-label="Next team profile">&rarr;</button>
             </div>
           </div>
         </div>
@@ -1655,13 +1822,14 @@
     const doorHotspot = document.getElementById("doorHotspot");
     const doorVideo = document.getElementById("doorVideo");
     const insideView = document.getElementById("insideView");
+    const insideParallax = document.getElementById("insideParallax");
     const insideParallaxLayers = Array.from(document.querySelectorAll(".inside-parallax__layer"));
     const sceneSigns = Array.from(document.querySelectorAll(".scene-sign"));
     const teamCarousel = document.getElementById("teamCarousel");
     const teamCarouselDeck = document.getElementById("teamCarouselDeck");
+    const teamCarouselNav = teamCarousel.querySelector(".team-carousel__nav");
     const teamCarouselCount = document.getElementById("teamCarouselCount");
     const teamCarouselPrev = document.getElementById("teamCarouselPrev");
-    const teamCarouselReadMore = document.getElementById("teamCarouselReadMore");
     const teamCarouselNext = document.getElementById("teamCarouselNext");
     const teamCarouselClose = document.getElementById("teamCarouselClose");
     const philosophyModal = document.getElementById("philosophyModal");
@@ -1702,6 +1870,8 @@
     const hoverMaxFramesPerSecond = 22;
     const hoverMinimumStrength = 0.22;
     const angleEase = 0.34;
+    const teamSwipeMinDistance = 44;
+    const teamSwipeMaxVerticalRatio = 0.8;
     const cursorSparklesEnabled = false;
     const insideParallaxDepths = [
       { x: -3, y: 0 },
@@ -1818,7 +1988,6 @@
     let lastAnimationTime = performance.now();
     let lastRenderedFrame = "";
     let activeTeamIndex = 0;
-    let expandedTeamIndex = -1;
     let animationFrameId = 0;
     let resizeFrameId = 0;
     let insideParallaxFrameId = 0;
@@ -1827,6 +1996,8 @@
     let insideParallaxCurrentX = 0;
     let insideParallaxCurrentY = 0;
     let teamCardsBuilt = false;
+    let activeTeamSwipe = null;
+    let suppressTeamCardClick = false;
     let lastTeamTrigger = null;
     let lastPhilosophyTrigger = null;
     let lastContactTrigger = null;
@@ -2129,10 +2300,27 @@
       };
     }
 
+    function updateInsideFrameClip(imageRect = getInsideImageRect()) {
+      if (!insideParallax) return;
+
+      const viewRect = insideView.getBoundingClientRect();
+      const frameLeft = Math.max(0, imageRect.x);
+      const frameTop = Math.max(0, imageRect.y);
+      const frameRight = Math.max(0, viewRect.width - imageRect.x - imageRect.width);
+      const frameBottom = Math.max(0, viewRect.height - imageRect.y - imageRect.height);
+
+      insideParallax.style.setProperty("--inside-frame-left", `${frameLeft}px`);
+      insideParallax.style.setProperty("--inside-frame-top", `${frameTop}px`);
+      insideParallax.style.setProperty("--inside-frame-right", `${frameRight}px`);
+      insideParallax.style.setProperty("--inside-frame-bottom", `${frameBottom}px`);
+    }
+
     function updateSceneSigns() {
       const imageRect = getInsideImageRect();
       const viewRect = insideView.getBoundingClientRect();
       const margin = 12;
+
+      updateInsideFrameClip(imageRect);
 
       sceneSigns.forEach((sign) => {
         const imageX = Number(sign.dataset.x);
@@ -2611,7 +2799,7 @@
         card.dataset.index = String(index);
         card.innerHTML = `
           <div class="team-card__media">
-            <img class="team-card__photo" src="${teamMember.image}" alt="${teamMember.name}" width="720" height="900" loading="lazy" decoding="async">
+            <img class="team-card__photo" src="${teamMember.image}" alt="${teamMember.name}" width="720" height="900" loading="lazy" decoding="async" draggable="false">
           </div>
           <div class="team-card__body">
             <header>
@@ -2645,7 +2833,6 @@
           const offset = (index - activeTeamIndex + total) % total;
           const reverseOffset = (activeTeamIndex - index + total) % total;
           const isActive = index === activeTeamIndex;
-          const isExpanded = index === expandedTeamIndex;
 
           card.className = "team-card";
           if (isActive) {
@@ -2660,16 +2847,16 @@
             card.classList.add("is-far-prev");
           }
 
-          if (isExpanded) {
-            card.classList.add("is-expanded");
-          }
-
           card.setAttribute("aria-hidden", isActive ? "false" : "true");
           card.tabIndex = isActive ? 0 : -1;
         });
+
+        const activeCardBody = teamCarouselDeck.querySelector(".team-card.is-active .team-card__body");
+        if (activeCardBody && teamCarouselNav && teamCarouselNav.parentElement !== activeCardBody) {
+          activeCardBody.appendChild(teamCarouselNav);
+        }
       }
       teamCarouselCount.textContent = `${activeTeamIndex + 1} of ${teamMembers.length}`;
-      teamCarouselReadMore.textContent = expandedTeamIndex === activeTeamIndex ? "Show less" : "Read more";
     }
 
     function openTeamCarousel() {
@@ -2677,7 +2864,6 @@
 
       lastTeamTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       activeTeamIndex = 0;
-      expandedTeamIndex = -1;
       renderTeamMember();
       teamCarousel.classList.add("is-open");
       teamCarousel.inert = false;
@@ -2692,7 +2878,7 @@
       if (teamCarousel.contains(document.activeElement) && focusTarget) {
         focusTarget.focus({ preventScroll: true });
       }
-      teamCarousel.classList.remove("is-open", "is-expanded");
+      teamCarousel.classList.remove("is-open");
       teamCarousel.inert = true;
       teamCarousel.setAttribute("aria-hidden", "true");
     }
@@ -2747,8 +2933,62 @@
 
     function showTeamMember(offset) {
       activeTeamIndex = (activeTeamIndex + offset + teamMembers.length) % teamMembers.length;
-      expandedTeamIndex = -1;
       renderTeamMember();
+    }
+
+    function beginTeamSwipe(event) {
+      if (!teamCarousel.classList.contains("is-open")) return;
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+      if (event.target.closest(".team-carousel__button, .team-carousel__close")) return;
+
+      activeTeamSwipe = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        currentX: event.clientX,
+        currentY: event.clientY
+      };
+
+      if (typeof teamCarouselDeck.setPointerCapture === "function") {
+        teamCarouselDeck.setPointerCapture(event.pointerId);
+      }
+    }
+
+    function updateTeamSwipe(event) {
+      if (!activeTeamSwipe || event.pointerId !== activeTeamSwipe.pointerId) return;
+      activeTeamSwipe.currentX = event.clientX;
+      activeTeamSwipe.currentY = event.clientY;
+    }
+
+    function finishTeamSwipe(event) {
+      if (!activeTeamSwipe || event.pointerId !== activeTeamSwipe.pointerId) return;
+
+      const endX = Number.isFinite(activeTeamSwipe.currentX) ? activeTeamSwipe.currentX : event.clientX;
+      const endY = Number.isFinite(activeTeamSwipe.currentY) ? activeTeamSwipe.currentY : event.clientY;
+      const deltaX = endX - activeTeamSwipe.startX;
+      const deltaY = endY - activeTeamSwipe.startY;
+      activeTeamSwipe = null;
+
+      if (typeof teamCarouselDeck.releasePointerCapture === "function" && teamCarouselDeck.hasPointerCapture(event.pointerId)) {
+        teamCarouselDeck.releasePointerCapture(event.pointerId);
+      }
+
+      const horizontalTravel = Math.abs(deltaX);
+      const verticalTravel = Math.abs(deltaY);
+      if (horizontalTravel < teamSwipeMinDistance || verticalTravel > horizontalTravel * teamSwipeMaxVerticalRatio) return;
+
+      suppressTeamCardClick = true;
+      showTeamMember(deltaX < 0 ? 1 : -1);
+      event.preventDefault();
+
+      window.setTimeout(() => {
+        suppressTeamCardClick = false;
+      }, 280);
+    }
+
+    function cancelTeamSwipe(event) {
+      if (!activeTeamSwipe || event.pointerId !== activeTeamSwipe.pointerId) return;
+      activeTeamSwipe = null;
     }
 
     function skipEntranceVideo() {
@@ -2793,11 +3033,17 @@
     });
     teamCarouselPrev.addEventListener("click", () => showTeamMember(-1));
     teamCarouselNext.addEventListener("click", () => showTeamMember(1));
-    teamCarouselReadMore.addEventListener("click", () => {
-      expandedTeamIndex = expandedTeamIndex === activeTeamIndex ? -1 : activeTeamIndex;
-      renderTeamMember();
-    });
+    teamCarouselDeck.addEventListener("pointerdown", beginTeamSwipe);
+    teamCarouselDeck.addEventListener("pointermove", updateTeamSwipe);
+    teamCarouselDeck.addEventListener("pointerup", finishTeamSwipe);
+    teamCarouselDeck.addEventListener("pointercancel", cancelTeamSwipe);
+    teamCarouselDeck.addEventListener("dragstart", (event) => event.preventDefault());
     teamCarouselDeck.addEventListener("click", (event) => {
+      if (suppressTeamCardClick) {
+        event.preventDefault();
+        return;
+      }
+
       const card = event.target.closest(".team-card");
       if (!card) return;
 
