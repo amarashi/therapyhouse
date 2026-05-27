@@ -495,6 +495,156 @@
       text-transform: uppercase;
     }
 
+    .philosophy-modal {
+      position: absolute;
+      inset: 0;
+      z-index: 9;
+      display: grid;
+      place-items: center;
+      padding: clamp(16px, 4vw, 46px);
+      background:
+        radial-gradient(circle at 30% 22%, rgba(255, 241, 196, 0.18), transparent 36%),
+        rgba(29, 18, 9, 0.42);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 260ms ease;
+    }
+
+    .philosophy-modal.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .philosophy-modal__panel {
+      position: relative;
+      width: min(880px, 100%);
+      max-height: min(760px, calc(100vh - 32px));
+      overflow: auto;
+      padding: clamp(30px, 5vw, 58px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 24px;
+      background:
+        linear-gradient(145deg, rgba(255, 247, 225, 0.82), rgba(255, 236, 201, 0.62)),
+        rgba(255, 255, 255, 0.28);
+      box-shadow:
+        0 30px 72px rgba(25, 13, 5, 0.38),
+        inset 0 1px 0 rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(18px) saturate(1.12);
+      -webkit-backdrop-filter: blur(18px) saturate(1.12);
+      color: rgba(42, 55, 22, 0.96);
+    }
+
+    .philosophy-modal__close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      z-index: 2;
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(88, 59, 22, 0.24);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.62);
+      color: rgba(48, 30, 12, 0.92);
+      font: 700 24px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      cursor: pointer;
+    }
+
+    .philosophy-modal__eyebrow {
+      margin: 0 0 10px;
+      color: rgba(92, 58, 24, 0.78);
+      font: 800 12px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .philosophy-modal__title {
+      margin: 0;
+      color: rgba(32, 57, 20, 0.98);
+      font: 700 clamp(42px, 7vw, 72px)/0.95 Georgia, "Times New Roman", serif;
+      letter-spacing: 0;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .philosophy-modal__rule {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 22px auto 18px;
+      width: min(440px, 78%);
+      color: rgba(124, 75, 39, 0.82);
+      font: 700 18px/1 Georgia, "Times New Roman", serif;
+    }
+
+    .philosophy-modal__rule::before,
+    .philosophy-modal__rule::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: rgba(124, 75, 39, 0.42);
+    }
+
+    .philosophy-modal__intro,
+    .philosophy-modal__closing {
+      margin: 0 auto;
+      max-width: 680px;
+      color: rgba(54, 39, 22, 0.92);
+      font: 500 clamp(15px, 1.7vw, 18px)/1.62 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      text-align: center;
+    }
+
+    .philosophy-modal__subheading {
+      margin: 26px 0 16px;
+      color: rgba(67, 42, 19, 0.88);
+      font: 800 13px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .philosophy-modal__list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin: 0 0 22px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .philosophy-modal__item {
+      min-height: 112px;
+      padding: 15px 16px;
+      border: 1px solid rgba(255, 255, 255, 0.44);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.32);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
+    }
+
+    .philosophy-modal__item:last-child:nth-child(odd) {
+      grid-column: 1 / -1;
+      min-height: 0;
+    }
+
+    .philosophy-modal__item h3 {
+      margin: 0 0 7px;
+      color: rgba(35, 58, 22, 0.96);
+      font: 800 16px/1.2 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .philosophy-modal__item p {
+      margin: 0;
+      color: rgba(55, 36, 18, 0.9);
+      font: 500 14px/1.48 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .philosophy-modal__close:hover,
+    .philosophy-modal__close:focus-visible {
+      background: rgba(255, 255, 255, 0.78);
+      outline: 2px solid rgba(80, 49, 14, 0.28);
+      outline-offset: 2px;
+    }
+
     .cursor-sparkle-layer {
       position: absolute;
       inset: 0;
@@ -605,6 +755,28 @@
 
       .team-carousel__button {
         flex: 1;
+      }
+
+      .philosophy-modal {
+        padding: 10px;
+      }
+
+      .philosophy-modal__panel {
+        max-height: calc(100vh - 20px);
+        padding: 48px 20px 24px;
+        border-radius: 18px;
+      }
+
+      .philosophy-modal__title {
+        font-size: clamp(34px, 12vw, 48px);
+      }
+
+      .philosophy-modal__list {
+        grid-template-columns: 1fr;
+      }
+
+      .philosophy-modal__item:last-child:nth-child(odd) {
+        grid-column: auto;
       }
     }
 
@@ -726,7 +898,7 @@
           <span class="scene-sign__eyebrow">Meet</span>
           <span class="scene-sign__title">About Us</span>
         </button>
-        <button class="scene-sign scene-sign--wall" type="button" data-x="520" data-y="150" data-rotate="-4" data-skew-x="-4" data-skew-y="1" data-scale="0.84" aria-label="Our Philosophy">
+        <button class="scene-sign scene-sign--wall" type="button" data-action="philosophy" data-x="520" data-y="150" data-rotate="-4" data-skew-x="-4" data-skew-y="1" data-scale="0.84" aria-label="Our Philosophy">
           <span class="scene-sign__eyebrow">Care</span>
           <span class="scene-sign__title">Our Philosophy</span>
         </button>
@@ -766,6 +938,39 @@
           </div>
         </div>
       </div>
+      <div class="philosophy-modal" id="philosophyModal" role="dialog" aria-modal="true" aria-labelledby="philosophyTitle" aria-hidden="true">
+        <section class="philosophy-modal__panel">
+          <button class="philosophy-modal__close" id="philosophyModalClose" type="button" aria-label="Close philosophy window">&times;</button>
+          <p class="philosophy-modal__eyebrow">Therapy House</p>
+          <h2 class="philosophy-modal__title" id="philosophyTitle">Our Philosophy</h2>
+          <div class="philosophy-modal__rule" aria-hidden="true">o</div>
+          <p class="philosophy-modal__intro">At Therapy House, we believe that counselling and psychology should feel warm and inviting, not clinical or impersonal. Our aim is to create a nurturing environment where everyone can thrive.</p>
+          <h3 class="philosophy-modal__subheading">Here's how we do it</h3>
+          <ul class="philosophy-modal__list">
+            <li class="philosophy-modal__item">
+              <h3>Holistic Care</h3>
+              <p>We treat the whole person, focusing on your unique experiences rather than just a diagnosis.</p>
+            </li>
+            <li class="philosophy-modal__item">
+              <h3>Inclusive Environment</h3>
+              <p>Our space is designed to be safe, neuro-affirming, and welcoming for everyone, including the LGBTQIA+ community.</p>
+            </li>
+            <li class="philosophy-modal__item">
+              <h3>Sanctuary for Wellness</h3>
+              <p>We strive to provide a comforting sanctuary where you can journey towards wellness at your own pace.</p>
+            </li>
+            <li class="philosophy-modal__item">
+              <h3>Meaningful Connections</h3>
+              <p>We're committed to building therapeutic relationships that are meaningful and purposeful, ensuring you feel heard and valued.</p>
+            </li>
+            <li class="philosophy-modal__item">
+              <h3>Authenticity</h3>
+              <p>As therapists, we embrace our authentic selves throughout the counselling process, fostering a genuine connection with you.</p>
+            </li>
+          </ul>
+          <p class="philosophy-modal__closing">At Therapy House, your wellbeing is our top priority, and we're here to support you every step of the way.</p>
+        </section>
+      </div>
       <div class="cursor-sparkle-layer" id="cursorSparkleLayer" aria-hidden="true"></div>
       <!--
       Archived dog-eye cursor-follow experiment. Kept here so it can be restored later.
@@ -804,6 +1009,8 @@
     const teamCarouselPrev = document.getElementById("teamCarouselPrev");
     const teamCarouselNext = document.getElementById("teamCarouselNext");
     const teamCarouselClose = document.getElementById("teamCarouselClose");
+    const philosophyModal = document.getElementById("philosophyModal");
+    const philosophyModalClose = document.getElementById("philosophyModalClose");
     const cursorSparkleLayer = document.getElementById("cursorSparkleLayer");
     const dogEyeElements = [];
 
@@ -1299,6 +1506,7 @@
       hoverVelocity = 0;
       doorVideo.pause();
       doorVideo.currentTime = 0;
+      closePhilosophyModal();
       stage.classList.remove("inside-visible", "is-inside", "is-playing");
       if (cursorSparkleLayer) {
         cursorSparkleLayer.replaceChildren();
@@ -1336,6 +1544,22 @@
 
       teamCarousel.classList.remove("is-open", "is-expanded");
       teamCarousel.setAttribute("aria-hidden", "true");
+    }
+
+    function openPhilosophyModal() {
+      if (!insideActive || !philosophyModal) return;
+
+      closeTeamCarousel();
+      philosophyModal.classList.add("is-open");
+      philosophyModal.setAttribute("aria-hidden", "false");
+      philosophyModalClose.focus({ preventScroll: true });
+    }
+
+    function closePhilosophyModal() {
+      if (!philosophyModal) return;
+
+      philosophyModal.classList.remove("is-open");
+      philosophyModal.setAttribute("aria-hidden", "true");
     }
 
     function showTeamMember(offset) {
@@ -1382,6 +1606,8 @@
         sign.addEventListener("click", returnToExteriorView);
       } else if (sign.dataset.action === "about") {
         sign.addEventListener("click", openTeamCarousel);
+      } else if (sign.dataset.action === "philosophy") {
+        sign.addEventListener("click", openPhilosophyModal);
       }
     });
     teamCarouselPrev.addEventListener("click", () => showTeamMember(-1));
@@ -1393,8 +1619,21 @@
         closeTeamCarousel();
       }
     });
+    philosophyModalClose.addEventListener("click", closePhilosophyModal);
+    philosophyModal.addEventListener("click", (event) => {
+      if (event.target === philosophyModal) {
+        closePhilosophyModal();
+      }
+    });
 
     window.addEventListener("keydown", (event) => {
+      if (philosophyModal.classList.contains("is-open")) {
+        if (event.key === "Escape") {
+          closePhilosophyModal();
+        }
+        return;
+      }
+
       if (!teamCarousel.classList.contains("is-open")) return;
 
       if (event.key === "Escape") {
