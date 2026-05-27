@@ -544,8 +544,7 @@
         0 28px 72px rgba(33, 18, 6, 0.28),
         inset 0 1px 0 rgba(255, 255, 255, 0.82),
         inset 0 -1px 0 rgba(255, 255, 255, 0.22);
-      backdrop-filter: blur(10px) saturate(1.08);
-      -webkit-backdrop-filter: blur(10px) saturate(1.08);
+      isolation: isolate;
       opacity: 0;
       pointer-events: none;
       transform: translate3d(-50%, -50%, -360px) scale(0.62);
@@ -572,6 +571,11 @@
       z-index: 0;
     }
 
+    .team-card::before {
+      backdrop-filter: blur(10px) saturate(1.08);
+      -webkit-backdrop-filter: blur(10px) saturate(1.08);
+    }
+
     .team-card > *,
     .philosophy-modal__panel > *,
     .contact-modal__panel > * {
@@ -592,7 +596,7 @@
       opacity: 0.62;
       pointer-events: auto;
       cursor: pointer;
-      filter: brightness(0.94);
+      filter: none;
       transform: translate3d(-78%, -50%, -180px) rotateY(32deg) scale(0.78);
     }
 
@@ -601,21 +605,21 @@
       opacity: 0.62;
       pointer-events: auto;
       cursor: pointer;
-      filter: brightness(0.94);
+      filter: none;
       transform: translate3d(-22%, -50%, -180px) rotateY(-32deg) scale(0.78);
     }
 
     .team-card.is-far-prev {
       z-index: 1;
       opacity: 0.2;
-      filter: brightness(0.88);
+      filter: none;
       transform: translate3d(-102%, -50%, -300px) rotateY(42deg) scale(0.62);
     }
 
     .team-card.is-far-next {
       z-index: 1;
       opacity: 0.2;
-      filter: brightness(0.88);
+      filter: none;
       transform: translate3d(2%, -50%, -300px) rotateY(-42deg) scale(0.62);
     }
 
