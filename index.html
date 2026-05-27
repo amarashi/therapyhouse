@@ -175,10 +175,33 @@
       position: absolute;
       inset: 0;
       display: none;
-      background: #ffffff url("assets/media/inside-wide.webp") center / contain no-repeat;
+      background: #ffffff;
       opacity: 0;
       overflow: hidden;
       transition: opacity 1100ms ease;
+    }
+
+    .inside-parallax {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+      transform: translateZ(0);
+    }
+
+    .inside-parallax__layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: center;
+      user-select: none;
+      -webkit-user-drag: none;
+      transform: translate3d(0, 0, 0);
+      transform-origin: center;
+      will-change: transform;
     }
 
     .inside-view::before {
@@ -1462,6 +1485,12 @@
         animation-duration: 1ms;
       }
     }
+
+    @media (prefers-reduced-motion: reduce) {
+      .inside-parallax__layer {
+        transform: translate3d(0, 0, 0) !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1477,6 +1506,11 @@
       <source src="assets/media/door-transition.mp4" type="video/mp4">
     </video>
     <div class="inside-view" id="insideView" aria-label="Inside Therapy House">
+      <div class="inside-parallax" id="insideParallax" aria-hidden="true">
+        <img class="inside-parallax__layer" src="assets/media/inside-layer-1.webp" alt="" draggable="false" decoding="async">
+        <img class="inside-parallax__layer" src="assets/media/inside-layer-2.webp" alt="" draggable="false" decoding="async">
+        <img class="inside-parallax__layer" src="assets/media/inside-layer-3.webp" alt="" draggable="false" decoding="async">
+      </div>
       <div class="scene-sign-layer" id="sceneSignLayer" aria-hidden="false">
         <button class="scene-sign scene-sign--table" type="button" data-action="about" data-x="840" data-y="570" data-perspective="900" data-depth="60" data-rotate-x="0" data-rotate-y="0" data-rotate="0" data-skew-x="0" data-skew-y="0" data-scale="0.78" data-scale-x="1" data-scale-y="1" aria-label="About Us">
           <span class="scene-sign__title">About Us</span>
@@ -1622,6 +1656,7 @@
     const doorHotspot = document.getElementById("doorHotspot");
     const doorVideo = document.getElementById("doorVideo");
     const insideView = document.getElementById("insideView");
+    const insideParallaxLayers = Array.from(document.querySelectorAll(".inside-parallax__layer"));
     const sceneSigns = Array.from(document.querySelectorAll(".scene-sign"));
     const teamCarousel = document.getElementById("teamCarousel");
     const teamCarouselDeck = document.getElementById("teamCarouselDeck");
@@ -1669,6 +1704,12 @@
     const hoverMinimumStrength = 0.22;
     const angleEase = 0.34;
     const cursorSparklesEnabled = false;
+    const insideParallaxDepths = [
+      { x: -4, y: -2 },
+      { x: 7, y: 4 },
+      { x: 15, y: 8 }
+    ];
+    const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     const teamMembers = [
       {
         name: "Dr Amelia Shay",
@@ -1781,6 +1822,11 @@
     let expandedTeamIndex = -1;
     let animationFrameId = 0;
     let resizeFrameId = 0;
+    let insideParallaxFrameId = 0;
+    let insideParallaxTargetX = 0;
+    let insideParallaxTargetY = 0;
+    let insideParallaxCurrentX = 0;
+    let insideParallaxCurrentY = 0;
     let teamCardsBuilt = false;
     let lastTeamTrigger = null;
     let lastPhilosophyTrigger = null;
@@ -2119,6 +2165,67 @@
       /*
       Archived dog-eye cursor-follow experiment. Kept here so it can be restored later.
       */
+    }
+
+    function applyInsideParallax() {
+      const useMotion = !reducedMotionQuery.matches;
+
+      insideParallaxLayers.forEach((layer, index) => {
+        const depth = insideParallaxDepths[index] || insideParallaxDepths[insideParallaxDepths.length - 1] || { x: 0, y: 0 };
+        const offsetX = useMotion ? insideParallaxCurrentX * depth.x : 0;
+        const offsetY = useMotion ? insideParallaxCurrentY * depth.y : 0;
+        layer.style.transform = `translate3d(${offsetX.toFixed(2)}px, ${offsetY.toFixed(2)}px, 0)`;
+      });
+    }
+
+    function scheduleInsideParallaxUpdate() {
+      if (insideParallaxFrameId) return;
+
+      insideParallaxFrameId = requestAnimationFrame(updateInsideParallax);
+    }
+
+    function updateInsideParallax() {
+      insideParallaxFrameId = 0;
+
+      const easing = 0.14;
+      insideParallaxCurrentX += (insideParallaxTargetX - insideParallaxCurrentX) * easing;
+      insideParallaxCurrentY += (insideParallaxTargetY - insideParallaxCurrentY) * easing;
+      applyInsideParallax();
+
+      const remainingX = Math.abs(insideParallaxTargetX - insideParallaxCurrentX);
+      const remainingY = Math.abs(insideParallaxTargetY - insideParallaxCurrentY);
+      if (insideActive && (remainingX > 0.002 || remainingY > 0.002)) {
+        scheduleInsideParallaxUpdate();
+      }
+    }
+
+    function updateInsideParallaxTarget(clientX, clientY) {
+      if (!insideActive || !stage.classList.contains("inside-visible")) return;
+
+      const rect = insideView.getBoundingClientRect();
+      const width = Math.max(rect.width, 1);
+      const height = Math.max(rect.height, 1);
+      insideParallaxTargetX = clamp((clientX - rect.left) / width * 2 - 1, -1, 1);
+      insideParallaxTargetY = clamp((clientY - rect.top) / height * 2 - 1, -1, 1);
+      scheduleInsideParallaxUpdate();
+    }
+
+    function resetInsideParallax(immediate = false) {
+      insideParallaxTargetX = 0;
+      insideParallaxTargetY = 0;
+
+      if (immediate) {
+        if (insideParallaxFrameId) {
+          cancelAnimationFrame(insideParallaxFrameId);
+          insideParallaxFrameId = 0;
+        }
+        insideParallaxCurrentX = 0;
+        insideParallaxCurrentY = 0;
+        applyInsideParallax();
+        return;
+      }
+
+      scheduleInsideParallaxUpdate();
     }
 
     function spawnCursorSparkle(clientX, clientY) {
@@ -2464,6 +2571,7 @@
       doorVideo.currentTime = 0;
       stage.classList.remove("is-playing");
       stage.classList.add("is-inside");
+      resetInsideParallax(true);
       updateSceneSigns();
       requestAnimationFrame(() => {
         updateSceneSigns();
@@ -2490,6 +2598,7 @@
       if (cursorSparkleLayer) {
         cursorSparkleLayer.replaceChildren();
       }
+      resetInsideParallax(true);
       resizeCanvas();
     }
 
@@ -2771,6 +2880,20 @@
     stage.addEventListener("pointermove", (event) => {
       spawnCursorSparkle(event.clientX, event.clientY);
     });
+
+    insideView.addEventListener("pointermove", (event) => {
+      updateInsideParallaxTarget(event.clientX, event.clientY);
+    });
+
+    insideView.addEventListener("pointerleave", () => {
+      resetInsideParallax();
+    });
+
+    if (typeof reducedMotionQuery.addEventListener === "function") {
+      reducedMotionQuery.addEventListener("change", () => {
+        resetInsideParallax(true);
+      });
+    }
 
     function scheduleResize() {
       if (resizeFrameId) return;

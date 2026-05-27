@@ -3,7 +3,9 @@
 | Original path/url | New path | Old size KB | New size KB | Dimensions | Notes |
 |---|---:|---:|---:|---|---|
 | `motion_2.0-fast_A_slow_camera_push-in_toward_the_cottage_s_main_door_the_door_swinging_open_and_-0.mp4` | `assets/media/door-transition.mp4` | 11423.3 | 1266.2 | 832x480 | Re-encoded H.264 MP4, CRF 25, yuv420p, no audio, faststart. |
-| `inside_wide.png` | `assets/media/inside-wide.webp` | 2661.6 | 229.3 | 1672x940 | WebP, metadata stripped, original dimensions retained. |
+| `Inside 1.png` | `assets/media/inside-layer-1.webp` | 5303.1 | 319.8 | 2478x1388 | WebP parallax base layer, metadata stripped, transparent source archived. |
+| `Inside 2.png` | `assets/media/inside-layer-2.webp` | 2163.1 | 182.6 | 2478x1388 | WebP parallax middle layer, metadata stripped, transparent source archived. |
+| `Inside 3.png` | `assets/media/inside-layer-3.webp` | 870.5 | 72.1 | 2478x1388 | WebP parallax foreground layer, metadata stripped, transparent source archived. |
 | `phone.png` | `assets/media/phone.webp` | 233.2 | 28.0 | 577x433 | WebP, metadata stripped, original dimensions retained. |
 | `https://www.therapyhouse.com.au/wp-content/uploads/2024/11/Ameneh.png` | `assets/team/amelia-shay.webp` | 254.3 | 12.1 | 560x760 | Downloaded, auto-oriented, portrait crop, WebP. |
 | `https://www.therapyhouse.com.au/wp-content/uploads/2022/12/Kaya.jpg` | `assets/team/kaya-beinke.webp` | 207.0 | 21.8 | 560x760 | Downloaded, auto-oriented, portrait crop, WebP. |
