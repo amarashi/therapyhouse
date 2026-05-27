@@ -347,10 +347,16 @@
       pointer-events: auto;
     }
 
+    .team-carousel:not(.is-open) *,
+    .philosophy-modal:not(.is-open) *,
+    .contact-modal:not(.is-open) * {
+      pointer-events: none !important;
+    }
+
     .team-carousel__panel {
       position: relative;
-      width: min(1120px, 100%);
-      min-height: min(720px, calc(100vh - 28px));
+      width: min(1180px, 100%);
+      min-height: min(650px, calc(100vh - 28px));
       display: grid;
       grid-template-rows: 1fr auto;
       align-items: center;
@@ -362,9 +368,9 @@
 
     .team-carousel__deck {
       position: relative;
-      width: min(100%, 980px);
-      height: min(620px, calc(100vh - 150px));
-      min-height: 480px;
+      width: min(100%, 1080px);
+      height: min(500px, calc(100vh - 150px));
+      min-height: 390px;
       transform-style: preserve-3d;
     }
 
@@ -372,11 +378,11 @@
       position: absolute;
       left: 50%;
       top: 50%;
-      width: min(520px, 58vw);
-      height: min(600px, calc(100vh - 170px));
-      min-height: 480px;
+      width: min(840px, 74vw);
+      height: min(440px, calc(100vh - 170px));
+      min-height: 380px;
       display: grid;
-      grid-template-rows: 44% 56%;
+      grid-template-columns: minmax(260px, 0.9fr) minmax(320px, 1.1fr);
       overflow: hidden;
       border: 1px solid rgba(255, 255, 255, 0.44);
       border-radius: 24px;
@@ -409,30 +415,30 @@
 
     .team-card.is-prev {
       z-index: 3;
-      opacity: 0.76;
+      opacity: 0.62;
       filter: saturate(0.86) brightness(0.9);
-      transform: translate3d(-102%, -50%, -160px) rotateY(32deg) scale(0.82);
+      transform: translate3d(-78%, -50%, -180px) rotateY(32deg) scale(0.78);
     }
 
     .team-card.is-next {
       z-index: 3;
-      opacity: 0.76;
+      opacity: 0.62;
       filter: saturate(0.86) brightness(0.9);
-      transform: translate3d(2%, -50%, -160px) rotateY(-32deg) scale(0.82);
+      transform: translate3d(-22%, -50%, -180px) rotateY(-32deg) scale(0.78);
     }
 
     .team-card.is-far-prev {
       z-index: 1;
-      opacity: 0.32;
+      opacity: 0.2;
       filter: saturate(0.72) brightness(0.82);
-      transform: translate3d(-142%, -50%, -270px) rotateY(42deg) scale(0.68);
+      transform: translate3d(-102%, -50%, -300px) rotateY(42deg) scale(0.62);
     }
 
     .team-card.is-far-next {
       z-index: 1;
-      opacity: 0.32;
+      opacity: 0.2;
       filter: saturate(0.72) brightness(0.82);
-      transform: translate3d(42%, -50%, -270px) rotateY(-42deg) scale(0.68);
+      transform: translate3d(2%, -50%, -300px) rotateY(-42deg) scale(0.62);
     }
 
     .team-card__media {
@@ -503,7 +509,7 @@
 
     .team-card__bio {
       display: none;
-      max-height: 132px;
+      max-height: 150px;
       overflow: auto;
       padding: 12px 14px;
       border-radius: 16px;
@@ -526,7 +532,7 @@
     .team-card__actions {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-start;
       gap: 12px;
       padding-top: 4px;
     }
@@ -552,6 +558,8 @@
 
     .team-carousel__button:hover,
     .team-carousel__button:focus-visible,
+    .team-card__read-more:hover,
+    .team-card__read-more:focus-visible,
     .team-carousel__close:hover,
     .team-carousel__close:focus-visible {
       background: rgba(255, 255, 255, 0.72);
@@ -565,6 +573,18 @@
       letter-spacing: 0.08em;
       text-transform: uppercase;
       text-align: center;
+    }
+
+    .team-card__read-more {
+      min-height: 42px;
+      border: 1px solid rgba(88, 59, 22, 0.22);
+      border-radius: 999px;
+      padding: 0 16px;
+      background: rgba(255, 255, 255, 0.5);
+      color: rgba(48, 30, 12, 0.96);
+      font: 800 13px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      cursor: pointer;
+      white-space: nowrap;
     }
 
     .philosophy-modal {
@@ -980,29 +1000,47 @@
       }
 
       .team-carousel__panel {
-        grid-template-columns: 1fr;
-        width: min(430px, 100%);
-        max-height: calc(100vh - 20px);
-        overflow: auto;
-        border-radius: 18px;
-      }
-
-      .team-carousel__media {
-        min-height: 0;
-        height: min(46vh, 330px);
-      }
-
-      .team-carousel__body {
-        padding: 20px;
-      }
-
-      .team-carousel__actions {
-        align-items: stretch;
-        flex-direction: column;
-      }
-
-      .team-carousel__nav {
         width: 100%;
+        min-height: calc(100vh - 20px);
+        gap: 12px;
+      }
+
+      .team-carousel__deck {
+        width: 100%;
+        height: calc(100vh - 116px);
+        min-height: 610px;
+      }
+
+      .team-card {
+        width: min(330px, calc(100vw - 46px));
+        height: min(620px, calc(100vh - 128px));
+        min-height: 560px;
+        grid-template-columns: 1fr;
+        grid-template-rows: 38% 62%;
+        border-radius: 20px;
+      }
+
+      .team-card.is-prev {
+        opacity: 0.48;
+        transform: translate3d(-84%, -50%, -180px) rotateY(34deg) scale(0.74);
+      }
+
+      .team-card.is-next {
+        opacity: 0.48;
+        transform: translate3d(-16%, -50%, -180px) rotateY(-34deg) scale(0.74);
+      }
+
+      .team-card.is-far-prev,
+      .team-card.is-far-next {
+        opacity: 0;
+      }
+
+      .team-card__body {
+        padding: 18px;
+      }
+
+      .team-card__bio {
+        max-height: 118px;
       }
 
       .team-carousel__button {
@@ -1204,27 +1242,11 @@
       <div class="team-carousel" id="teamCarousel" role="dialog" aria-modal="true" aria-label="Therapy House team" aria-hidden="true">
         <div class="team-carousel__panel">
           <button class="team-carousel__close" id="teamCarouselClose" type="button" aria-label="Close team carousel">x</button>
-          <div class="team-carousel__media">
-            <img class="team-carousel__photo" id="teamCarouselPhoto" src="" alt="">
-          </div>
-          <div class="team-carousel__body">
-            <header>
-              <p class="team-carousel__eyebrow">Therapy House team</p>
-              <h2 class="team-carousel__name" id="teamCarouselName"></h2>
-              <p class="team-carousel__role" id="teamCarouselRole"></p>
-            </header>
-            <div class="team-carousel__content">
-              <p class="team-carousel__summary" id="teamCarouselSummary"></p>
-              <p class="team-carousel__bio" id="teamCarouselBio"></p>
-            </div>
-            <div class="team-carousel__actions">
-              <button class="team-carousel__button" id="teamCarouselReadMore" type="button">Read more</button>
-              <span class="team-carousel__count" id="teamCarouselCount"></span>
-              <div class="team-carousel__nav">
-                <button class="team-carousel__button" id="teamCarouselPrev" type="button">Previous</button>
-                <button class="team-carousel__button" id="teamCarouselNext" type="button">Next</button>
-              </div>
-            </div>
+          <div class="team-carousel__deck" id="teamCarouselDeck" aria-live="polite"></div>
+          <div class="team-carousel__nav">
+            <button class="team-carousel__button" id="teamCarouselPrev" type="button">Previous</button>
+            <span class="team-carousel__count" id="teamCarouselCount"></span>
+            <button class="team-carousel__button" id="teamCarouselNext" type="button">Next</button>
           </div>
         </div>
       </div>
@@ -1325,13 +1347,8 @@
     const insideView = document.getElementById("insideView");
     const sceneSigns = Array.from(document.querySelectorAll(".scene-sign"));
     const teamCarousel = document.getElementById("teamCarousel");
-    const teamCarouselPhoto = document.getElementById("teamCarouselPhoto");
-    const teamCarouselName = document.getElementById("teamCarouselName");
-    const teamCarouselRole = document.getElementById("teamCarouselRole");
-    const teamCarouselSummary = document.getElementById("teamCarouselSummary");
-    const teamCarouselBio = document.getElementById("teamCarouselBio");
+    const teamCarouselDeck = document.getElementById("teamCarouselDeck");
     const teamCarouselCount = document.getElementById("teamCarouselCount");
-    const teamCarouselReadMore = document.getElementById("teamCarouselReadMore");
     const teamCarouselPrev = document.getElementById("teamCarouselPrev");
     const teamCarouselNext = document.getElementById("teamCarouselNext");
     const teamCarouselClose = document.getElementById("teamCarouselClose");
@@ -1848,13 +1865,49 @@
       if (!member) return;
 
       teamCarousel.classList.remove("is-expanded");
-      teamCarouselPhoto.src = member.image;
-      teamCarouselPhoto.alt = member.name;
-      teamCarouselName.textContent = member.name;
-      teamCarouselRole.textContent = member.role;
-      teamCarouselSummary.textContent = member.summary;
-      teamCarouselBio.textContent = member.bio;
-      teamCarouselReadMore.textContent = "Read more";
+      if (teamCarouselDeck) {
+        const total = teamMembers.length;
+        teamCarouselDeck.replaceChildren(...teamMembers.map((teamMember, index) => {
+          const card = document.createElement("article");
+          const offset = (index - activeTeamIndex + total) % total;
+          const reverseOffset = (activeTeamIndex - index + total) % total;
+          card.className = "team-card";
+
+          if (index === activeTeamIndex) {
+            card.classList.add("is-active");
+          } else if (offset === 1) {
+            card.classList.add("is-next");
+          } else if (reverseOffset === 1) {
+            card.classList.add("is-prev");
+          } else if (offset === 2) {
+            card.classList.add("is-far-next");
+          } else if (reverseOffset === 2) {
+            card.classList.add("is-far-prev");
+          }
+
+          card.innerHTML = `
+            <div class="team-card__media">
+              <img class="team-card__photo" src="${teamMember.image}" alt="${teamMember.name}">
+            </div>
+            <div class="team-card__body">
+              <header>
+                <p class="team-card__eyebrow">Therapy House team</p>
+                <h2 class="team-card__name">${teamMember.name}</h2>
+                <p class="team-card__role">${teamMember.role}</p>
+              </header>
+              <div class="team-card__content">
+                <p class="team-card__summary">${teamMember.summary}</p>
+                <p class="team-card__bio">${teamMember.bio}</p>
+              </div>
+              <div class="team-card__actions">
+                <button class="team-card__read-more" type="button">Read more</button>
+              </div>
+            </div>
+          `;
+
+          return card;
+        }));
+      }
       teamCarouselCount.textContent = `${activeTeamIndex + 1} of ${teamMembers.length}`;
     }
 
@@ -1961,7 +2014,14 @@
     });
     teamCarouselPrev.addEventListener("click", () => showTeamMember(-1));
     teamCarouselNext.addEventListener("click", () => showTeamMember(1));
-    teamCarouselReadMore.addEventListener("click", toggleTeamBio);
+    teamCarouselDeck.addEventListener("click", (event) => {
+      const activeCard = event.target.closest(".team-card.is-active");
+      const readMoreButton = event.target.closest(".team-card__read-more");
+      if (!activeCard || !readMoreButton) return;
+
+      const expanded = activeCard.classList.toggle("is-expanded");
+      readMoreButton.textContent = expanded ? "Show less" : "Read more";
+    });
     teamCarouselClose.addEventListener("click", closeTeamCarousel);
     teamCarousel.addEventListener("click", (event) => {
       if (event.target === teamCarousel) {
