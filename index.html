@@ -74,9 +74,10 @@
     </video>
     <div class="inside-view" id="insideView" aria-label="Inside Therapy House">
       <div class="inside-parallax" id="insideParallax">
-        <img class="inside-parallax__layer" src="assets/media/inside-layer-1.webp" alt="Layered illustration of the warm Therapy House clinic interior" draggable="false" decoding="async">
-        <img class="inside-parallax__layer" src="assets/media/inside-layer-2.webp" alt="Middle layer of the Therapy House counselling room scene" draggable="false" decoding="async">
-        <img class="inside-parallax__layer" src="assets/media/inside-layer-3.webp" alt="Foreground layer of the welcoming Therapy House interior" draggable="false" decoding="async">
+        <img class="inside-parallax__layer inside-parallax__layer--background" src="assets/media/inside-layer-1.webp" alt="Layered illustration of the warm Therapy House clinic interior" draggable="false" decoding="async">
+        <div class="inside-firelight-layer" id="insideFirelightLayer" aria-hidden="true"></div>
+        <img class="inside-parallax__layer inside-parallax__layer--middle" src="assets/media/inside-layer-2.webp" alt="Middle layer of the Therapy House counselling room scene" draggable="false" decoding="async">
+        <img class="inside-parallax__layer inside-parallax__layer--foreground" src="assets/media/inside-layer-3.webp" alt="Foreground layer of the welcoming Therapy House interior" draggable="false" decoding="async">
       </div>
       <div class="scene-sign-layer" id="sceneSignLayer" aria-hidden="false">
         <button class="scene-sign scene-sign--table" type="button" data-action="about" data-x="840" data-y="265" data-perspective="900" data-depth="60" data-rotate-x="0" data-rotate-y="0" data-rotate="0" data-skew-x="0" data-skew-y="0" data-scale="0.78" data-scale-x="1" data-scale-y="1" aria-label="Meet the Therapy House team">
@@ -190,22 +191,48 @@
 
   <section class="debug-panel" id="debugPanel" aria-label="Button position debug controls" hidden>
     <div class="debug-panel__inner">
-      <div class="debug-panel__header">
-        <h2 class="debug-panel__title">Button Position Debugger</h2>
-        <p class="debug-panel__status" id="debugStatus" role="status">Open with ?debug=1 to adjust sign positions.</p>
-      </div>
-      <div class="debug-panel__row">
-        <label class="debug-panel__field" for="debugSignSelect">
-          Button
-          <select class="debug-panel__select" id="debugSignSelect"></select>
-        </label>
-        <div class="debug-panel__controls" id="debugControls"></div>
-        <button class="debug-panel__button" id="debugConfirm" type="button">Confirm positions</button>
-      </div>
-      <details class="debug-panel__output">
-        <summary>Stored position JSON</summary>
-        <pre class="debug-panel__json" id="debugOutput">{}</pre>
+      <details class="debug-panel__section debug-panel__section--button-debugger">
+        <summary class="debug-panel__summary">
+          <span class="debug-panel__title">Button Position Debugger</span>
+          <span class="debug-panel__status" id="debugStatus" role="status">Open with ?debug=1 to adjust sign positions.</span>
+        </summary>
+        <div class="debug-panel__collapsible-body">
+          <div class="debug-panel__row">
+            <label class="debug-panel__field" for="debugSignSelect">
+              Button
+              <select class="debug-panel__select" id="debugSignSelect"></select>
+            </label>
+            <div class="debug-panel__controls" id="debugControls"></div>
+            <button class="debug-panel__button" id="debugConfirm" type="button">Confirm positions</button>
+          </div>
+          <details class="debug-panel__output">
+            <summary>Stored position JSON</summary>
+            <pre class="debug-panel__json" id="debugOutput">{}</pre>
+          </details>
+        </div>
       </details>
+      <section class="debug-panel__section" aria-label="Firelight position debug controls">
+        <div class="debug-panel__header">
+          <h2 class="debug-panel__title">Firelight Debugger</h2>
+          <p class="debug-panel__status" id="debugFirelightStatus" role="status">Open with ?debug=1 to adjust firelight positions.</p>
+        </div>
+        <div class="debug-panel__row">
+          <label class="debug-panel__field" for="debugFirelightSelect">
+            Light
+            <select class="debug-panel__select" id="debugFirelightSelect"></select>
+          </label>
+          <div class="debug-panel__controls" id="debugFirelightControls"></div>
+          <div class="debug-panel__actions">
+            <button class="debug-panel__button debug-panel__button--secondary" id="debugFirelightAdd" type="button">Add light</button>
+            <button class="debug-panel__button debug-panel__button--secondary" id="debugFirelightRemove" type="button">Remove light</button>
+            <button class="debug-panel__button" id="debugFirelightConfirm" type="button">Save firelight JSON</button>
+          </div>
+        </div>
+        <details class="debug-panel__output">
+          <summary>Stored firelight JSON</summary>
+          <pre class="debug-panel__json" id="debugFirelightOutput">{}</pre>
+        </details>
+      </section>
     </div>
   </section>
   <script type="module" src="assets/scripts/app.js"></script>

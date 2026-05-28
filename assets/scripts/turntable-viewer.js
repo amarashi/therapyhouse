@@ -8,16 +8,26 @@ export function createTurntableViewer({ stage, canvas, doorHotspot, frames, fram
   const centreAngle = (frameCount - 1) / 2;
   const hoverMaxFramesPerSecond = 22;
   const hoverMinimumStrength = 0.22;
-  const angleEase = 0.34;
+  const hoverVelocitySmoothing = 14;
+  const springStiffness = 92;
+  const springDamping = 15;
+  const inertiaDecay = 4.8;
+  const dragInertiaMinimum = 3;
   let remainingFrameLoadTimer = 0;
   let targetAngle = centreAngle;
   let displayAngle = targetAngle;
+  let displayVelocity = 0;
   let hoverVelocity = 0;
+  let hoverTargetVelocity = 0;
   let hoverActive = false;
+  let inertialVelocity = 0;
   let isInteractionLocked = false;
   let isDragging = false;
   let dragStartX = 0;
   let dragStartAngle = 0;
+  let lastDragAngle = 0;
+  let lastDragTime = 0;
+  let dragVelocity = 0;
   let lastAnimationTime = performance.now();
   let lastRenderedFrame = "";
   let animationFrameId = 0;
@@ -49,7 +59,7 @@ export function createTurntableViewer({ stage, canvas, doorHotspot, frames, fram
 
   function updateHotspot() {
     const scene = getSceneRectCss();
-    const progress = targetAngle / (frameCount - 1);
+    const progress = displayAngle / (frameCount - 1);
     const doorX = 0.56 - (progress - 0.5) * 0.14;
     const doorY = 0.53;
     const doorWidth = 0.16;
@@ -122,6 +132,7 @@ export function createTurntableViewer({ stage, canvas, doorHotspot, frames, fram
     targetAngle = clamp(nextAngle, 0, frameCount - 1);
     if (immediate) {
       displayAngle = targetAngle;
+      displayVelocity = 0;
       renderFrame(displayAngle, true);
     } else {
       ensureAnimation();
@@ -130,8 +141,10 @@ export function createTurntableViewer({ stage, canvas, doorHotspot, frames, fram
   }
 
   function needsAnimation() {
-    const hoverNeedsFrame = !isInteractionLocked && !isDragging && hoverActive && hoverVelocity !== 0;
-    return hoverNeedsFrame || isDragging || Math.abs(targetAngle - displayAngle) > 0.015;
+    const hoverNeedsFrame = !isInteractionLocked && !isDragging && (hoverActive || Math.abs(hoverVelocity) > 0.001);
+    const inertiaNeedsFrame = !isInteractionLocked && !isDragging && Math.abs(inertialVelocity) > 0.015;
+    const springNeedsFrame = Math.abs(targetAngle - displayAngle) > 0.01 || Math.abs(displayVelocity) > 0.02;
+    return hoverNeedsFrame || inertiaNeedsFrame || isDragging || springNeedsFrame;
   }
 
   function ensureAnimation() {
@@ -143,25 +156,48 @@ export function createTurntableViewer({ stage, canvas, doorHotspot, frames, fram
   function animate(now = performance.now()) {
     animationFrameId = 0;
     const elapsed = Math.min(48, now - lastAnimationTime);
+    const elapsedSeconds = elapsed / 1000;
     lastAnimationTime = now;
 
     if (hoverActive && now - lastHoverInputTime > 420) {
       hoverActive = false;
-      hoverVelocity = 0;
+      hoverTargetVelocity = 0;
     }
 
-    if (!isInteractionLocked && !isDragging && hoverActive && hoverVelocity !== 0) {
-      targetAngle = clamp(targetAngle + hoverVelocity * hoverMaxFramesPerSecond * elapsed / 1000, 0, frameCount - 1);
-      updateHotspot();
+    if (!isInteractionLocked && !isDragging) {
+      const velocityBlend = 1 - Math.exp(-hoverVelocitySmoothing * elapsedSeconds);
+      hoverVelocity += (hoverTargetVelocity - hoverVelocity) * velocityBlend;
+
+      if (Math.abs(hoverVelocity) > 0.001) {
+        targetAngle = clamp(targetAngle + hoverVelocity * hoverMaxFramesPerSecond * elapsedSeconds, 0, frameCount - 1);
+      }
+
+      if (Math.abs(inertialVelocity) > 0.015) {
+        const nextAngle = clamp(targetAngle + inertialVelocity * elapsedSeconds, 0, frameCount - 1);
+        if (nextAngle === 0 || nextAngle === frameCount - 1) {
+          inertialVelocity = 0;
+        } else {
+          inertialVelocity *= Math.exp(-inertiaDecay * elapsedSeconds);
+        }
+        targetAngle = nextAngle;
+      }
     }
 
     const delta = targetAngle - displayAngle;
-    if (Math.abs(delta) > 0.015) {
-      displayAngle += delta * angleEase;
+    if (Math.abs(delta) > 0.01 || Math.abs(displayVelocity) > 0.02) {
+      displayVelocity += delta * springStiffness * elapsedSeconds;
+      displayVelocity *= Math.exp(-springDamping * elapsedSeconds);
+      displayAngle = clamp(displayAngle + displayVelocity * elapsedSeconds, 0, frameCount - 1);
+
+      if (displayAngle === 0 || displayAngle === frameCount - 1) {
+        displayVelocity = 0;
+      }
     } else {
       displayAngle = targetAngle;
+      displayVelocity = 0;
     }
 
+    updateHotspot();
     renderFrame(displayAngle);
     if (needsAnimation()) {
       animationFrameId = requestAnimationFrame(animate);
@@ -293,8 +329,13 @@ export function createTurntableViewer({ stage, canvas, doorHotspot, frames, fram
       isDragging = true;
       dragStartX = event.clientX;
       dragStartAngle = targetAngle;
+      lastDragAngle = targetAngle;
+      lastDragTime = performance.now();
+      dragVelocity = 0;
       hoverActive = false;
       hoverVelocity = 0;
+      hoverTargetVelocity = 0;
+      inertialVelocity = 0;
 
       try {
         stage.setPointerCapture(event.pointerId);
@@ -311,7 +352,15 @@ export function createTurntableViewer({ stage, canvas, doorHotspot, frames, fram
       if (isDragging) {
         const dx = event.clientX - dragStartX;
         const sensitivity = frameCount / Math.max(rect.width, 1);
-        setTargetAngle(dragStartAngle - dx * sensitivity);
+        const nextAngle = clamp(dragStartAngle - dx * sensitivity, 0, frameCount - 1);
+        const now = performance.now();
+        const elapsedDragSeconds = Math.max((now - lastDragTime) / 1000, 0.001);
+        const nextDragVelocity = (nextAngle - lastDragAngle) / elapsedDragSeconds;
+
+        dragVelocity = dragVelocity * 0.55 + nextDragVelocity * 0.45;
+        lastDragAngle = nextAngle;
+        lastDragTime = now;
+        setTargetAngle(nextAngle);
         return;
       }
 
@@ -322,17 +371,20 @@ export function createTurntableViewer({ stage, canvas, doorHotspot, frames, fram
       hoverActive = true;
       lastHoverInputTime = performance.now();
       if (Math.abs(centred) <= deadZone) {
-        hoverVelocity = 0;
+        hoverTargetVelocity = 0;
       } else {
         const direction = Math.sign(centred);
         const strength = clamp((Math.abs(centred) - deadZone) / (1 - deadZone), 0, 1);
         const easedStrength = hoverMinimumStrength + (1 - hoverMinimumStrength) * Math.pow(strength, 0.8);
-        hoverVelocity = direction * easedStrength;
+        hoverTargetVelocity = direction * easedStrength;
       }
       ensureAnimation();
     });
 
     function endDrag(event) {
+      if (isDragging && Math.abs(dragVelocity) >= dragInertiaMinimum) {
+        inertialVelocity = dragVelocity;
+      }
       isDragging = false;
       if (event.pointerId !== undefined && stage.hasPointerCapture(event.pointerId)) {
         stage.releasePointerCapture(event.pointerId);
@@ -343,9 +395,13 @@ export function createTurntableViewer({ stage, canvas, doorHotspot, frames, fram
     stage.addEventListener("pointerup", endDrag);
     stage.addEventListener("pointercancel", endDrag);
     stage.addEventListener("pointerleave", () => {
+      if (isDragging && Math.abs(dragVelocity) >= dragInertiaMinimum) {
+        inertialVelocity = dragVelocity;
+      }
       isDragging = false;
       hoverActive = false;
-      hoverVelocity = 0;
+      hoverTargetVelocity = 0;
+      ensureAnimation();
     });
 
     stage.addEventListener("wheel", (event) => {
@@ -354,6 +410,8 @@ export function createTurntableViewer({ stage, canvas, doorHotspot, frames, fram
       event.preventDefault();
       hoverActive = false;
       hoverVelocity = 0;
+      hoverTargetVelocity = 0;
+      inertialVelocity = 0;
 
       const wheelAmount = Math.abs(event.deltaY) > Math.abs(event.deltaX) ? event.deltaY : event.deltaX;
       const wheelStep = clamp(wheelAmount / 80, -3, 3);
@@ -390,6 +448,8 @@ export function createTurntableViewer({ stage, canvas, doorHotspot, frames, fram
       isInteractionLocked = true;
       hoverActive = false;
       hoverVelocity = 0;
+      hoverTargetVelocity = 0;
+      inertialVelocity = 0;
     },
     resizeCanvas,
     setTargetAngle,

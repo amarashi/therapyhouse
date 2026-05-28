@@ -13,6 +13,7 @@ export function createInsideScene({
   insideView,
   insideParallax,
   insideParallaxLayers,
+  insideLightLayers = [],
   sceneSigns,
   cursorSparkleLayer,
   insideImageSize,
@@ -183,14 +184,21 @@ export function createInsideScene({
     });
   }
 
+  function applyParallaxTransform(layer, depth, useMotion) {
+    const offsetX = useMotion ? currentX * depth.x : 0;
+    const offsetY = useMotion ? currentY * depth.y : 0;
+    layer.style.transform = `translate3d(${offsetX.toFixed(2)}px, ${offsetY.toFixed(2)}px, 0)`;
+  }
+
   function applyParallax() {
     const useMotion = !reducedMotionQuery.matches;
-
     insideParallaxLayers.forEach((layer, index) => {
       const depth = parallaxDepths[index] || parallaxDepths[parallaxDepths.length - 1] || { x: 0, y: 0 };
-      const offsetX = useMotion ? currentX * depth.x : 0;
-      const offsetY = useMotion ? currentY * depth.y : 0;
-      layer.style.transform = `translate3d(${offsetX.toFixed(2)}px, ${offsetY.toFixed(2)}px, 0)`;
+      applyParallaxTransform(layer, depth, useMotion);
+    });
+
+    insideLightLayers.forEach((layer) => {
+      applyParallaxTransform(layer, parallaxDepths[0] || { x: 0, y: 0 }, useMotion);
     });
   }
 

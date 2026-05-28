@@ -1,0 +1,75 @@
+{
+  "generatedAt": "2026-05-28T04:38:27.181Z",
+  "insideImageSize": {
+    "width": 1672,
+    "height": 940
+  },
+  "lights": [
+    {
+      "key": "fireplace",
+      "label": "Fireplace",
+      "x": 491,
+      "y": 455,
+      "width": 232,
+      "height": 226,
+      "intensity": 1,
+      "coreIntensity": 1,
+      "blur": 11
+    },
+    {
+      "key": "left-shelf-candle",
+      "label": "Left shelf candle",
+      "x": 40,
+      "y": 484,
+      "width": 112,
+      "height": 128,
+      "intensity": 0.34,
+      "coreIntensity": 0.36,
+      "blur": 10
+    },
+    {
+      "key": "coffee-table-lantern",
+      "label": "Coffee table lantern",
+      "x": 1220,
+      "y": 298,
+      "width": 120,
+      "height": 130,
+      "intensity": 1,
+      "coreIntensity": 0.28,
+      "blur": 10
+    },
+    {
+      "key": "right-wall-lantern",
+      "label": "Right wall lantern",
+      "x": 1460,
+      "y": 261,
+      "width": 128,
+      "height": 150,
+      "intensity": 0.28,
+      "coreIntensity": 0.26,
+      "blur": 10
+    },
+    {
+      "key": "right-door-lantern",
+      "label": "Right door lantern",
+      "x": 1544,
+      "y": 372,
+      "width": 122,
+      "height": 154,
+      "intensity": 0.3,
+      "coreIntensity": 0.28,
+      "blur": 10
+    },
+    {
+      "key": "custom-light-6",
+      "label": "Custom light 6",
+      "x": 119,
+      "y": 395,
+      "width": 61,
+      "height": 49,
+      "intensity": 1,
+      "coreIntensity": 1,
+      "blur": 5
+    }
+  ]
+}

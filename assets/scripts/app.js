@@ -1,4 +1,8 @@
 import {
+  defaultFirelightSettings,
+  firelightDownloadName,
+  firelightFields,
+  firelightStorageKey,
   frameCount,
   frames,
   insideEdgeFallbackColors,
@@ -10,6 +14,8 @@ import {
   teamMembers
 } from "./site-data.js";
 import { createEntranceVideoController } from "./entrance-video.js";
+import { createFirelightController } from "./firelight-controller.js";
+import { createFirelightDebugger } from "./firelight-debugger.js";
 import { createInsideScene } from "./inside-scene.js";
 import { createModalDialog } from "./modal-dialog.js";
 import { createSignPositionDebugger } from "./sign-position-debugger.js";
@@ -23,6 +29,8 @@ const doorVideo = document.getElementById("doorVideo");
 const insideView = document.getElementById("insideView");
 const insideParallax = document.getElementById("insideParallax");
 const insideParallaxLayers = Array.from(document.querySelectorAll(".inside-parallax__layer"));
+const insideLightLayers = Array.from(document.querySelectorAll(".inside-firelight-layer"));
+const insideFirelightLayer = document.getElementById("insideFirelightLayer");
 const sceneSigns = Array.from(document.querySelectorAll(".scene-sign"));
 const teamCarouselElement = document.getElementById("teamCarousel");
 const teamCarouselDeck = document.getElementById("teamCarouselDeck");
@@ -39,6 +47,15 @@ const contactModalClose = document.getElementById("contactModalClose");
 const cursorSparkleLayer = document.getElementById("cursorSparkleLayer");
 const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 
+const firelightController = createFirelightController({
+  layer: insideFirelightLayer,
+  defaultSettings: defaultFirelightSettings,
+  fields: firelightFields,
+  insideImageSize,
+  storageKey: firelightStorageKey,
+  sourceUrl: firelightDownloadName
+});
+
 const turntable = createTurntableViewer({
   stage,
   canvas,
@@ -52,6 +69,7 @@ const insideScene = createInsideScene({
   insideView,
   insideParallax,
   insideParallaxLayers,
+  insideLightLayers,
   sceneSigns,
   cursorSparkleLayer,
   insideImageSize,
@@ -119,6 +137,23 @@ const debuggerPanel = createSignPositionDebugger({
   storageKey: signPositionStorageKey,
   downloadName: signPositionDownloadName,
   updateSceneSigns: insideScene.updateSceneSigns
+});
+
+const firelightDebugger = createFirelightDebugger({
+  elements: {
+    select: document.getElementById("debugFirelightSelect"),
+    controls: document.getElementById("debugFirelightControls"),
+    addButton: document.getElementById("debugFirelightAdd"),
+    removeButton: document.getElementById("debugFirelightRemove"),
+    confirmButton: document.getElementById("debugFirelightConfirm"),
+    status: document.getElementById("debugFirelightStatus"),
+    output: document.getElementById("debugFirelightOutput")
+  },
+  controller: firelightController,
+  fields: firelightFields,
+  insideImageSize,
+  storageKey: firelightStorageKey,
+  downloadName: firelightDownloadName
 });
 
 let resizeFrameId = 0;
@@ -219,6 +254,7 @@ function bindKeyboardShortcuts() {
 
 function init() {
   turntable.init();
+  firelightController.init();
   insideScene.init();
   teamCarousel.init();
   philosophyDialog.init();
@@ -231,6 +267,7 @@ function init() {
   debuggerPanel.applyStoredPositions();
   insideScene.updateEdgeColors();
   const debugMode = debuggerPanel.init();
+  firelightDebugger.init();
 
   window.addEventListener("resize", scheduleResize);
   if (window.visualViewport) {

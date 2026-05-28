@@ -22,6 +22,8 @@ export const insideParallaxDepths = [
 
 export const signPositionStorageKey = "therapyHouse.signPositions.v1";
 export const signPositionDownloadName = "therapyhouse-button-positions.json";
+export const firelightStorageKey = "therapyHouse.firelightSettings.v1";
+export const firelightDownloadName = "therapyhouse-firelight-settings.json";
 
 export const signPositionFields = [
   { key: "x", datasetKey: "x", label: "data-x", min: 0, max: insideImageSize.width, step: 1 },
@@ -37,6 +39,78 @@ export const signPositionFields = [
   { key: "scaleX", datasetKey: "scaleX", label: "data-scale-x", min: 0.3, max: 1.8, step: 0.01 },
   { key: "scaleY", datasetKey: "scaleY", label: "data-scale-y", min: 0.3, max: 1.8, step: 0.01 }
 ];
+
+export const firelightFields = [
+  { key: "x", label: "x", min: 0, max: insideImageSize.width, step: 1 },
+  { key: "y", label: "y", min: 0, max: insideImageSize.height, step: 1 },
+  { key: "width", label: "width", min: 20, max: 420, step: 1 },
+  { key: "height", label: "height", min: 20, max: 420, step: 1 },
+  { key: "intensity", label: "glow", min: 0, max: 1, step: 0.01 },
+  { key: "coreIntensity", label: "flame", min: 0, max: 1, step: 0.01 },
+  { key: "blur", label: "blur", min: 0, max: 32, step: 1 }
+];
+
+export const defaultFirelightSettings = {
+  generatedAt: "2026-05-28T00:00:00.000Z",
+  insideImageSize,
+  lights: [
+    {
+      key: "fireplace",
+      label: "Fireplace",
+      x: 482,
+      y: 590,
+      width: 150,
+      height: 185,
+      intensity: 0.74,
+      coreIntensity: 0.64,
+      blur: 12
+    },
+    {
+      key: "left-shelf-candle",
+      label: "Left shelf candle",
+      x: 70,
+      y: 625,
+      width: 112,
+      height: 128,
+      intensity: 0.34,
+      coreIntensity: 0.36,
+      blur: 10
+    },
+    {
+      key: "coffee-table-lantern",
+      label: "Coffee table lantern",
+      x: 840,
+      y: 635,
+      width: 120,
+      height: 130,
+      intensity: 0.32,
+      coreIntensity: 0.28,
+      blur: 10
+    },
+    {
+      key: "right-wall-lantern",
+      label: "Right wall lantern",
+      x: 1460,
+      y: 340,
+      width: 128,
+      height: 150,
+      intensity: 0.28,
+      coreIntensity: 0.26,
+      blur: 10
+    },
+    {
+      key: "right-door-lantern",
+      label: "Right door lantern",
+      x: 1544,
+      y: 470,
+      width: 122,
+      height: 154,
+      intensity: 0.3,
+      coreIntensity: 0.28,
+      blur: 10
+    }
+  ]
+};
 
 export const teamMembers = [
   {
