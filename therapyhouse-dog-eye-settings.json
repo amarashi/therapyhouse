@@ -1,0 +1,53 @@
+{
+  "generatedAt": "2026-05-28T05:18:28.952Z",
+  "insideImageSize": {
+    "width": 1672,
+    "height": 940
+  },
+  "eyes": [
+    {
+      "key": "brown-dog-left-eye",
+      "label": "Brown dog left eye",
+      "x": 677,
+      "y": 673,
+      "size": 12,
+      "pupilSize": 10,
+      "maxX": 3.5,
+      "maxY": 4.5,
+      "visible": 1
+    },
+    {
+      "key": "brown-dog-right-eye",
+      "label": "Brown dog right eye",
+      "x": 719,
+      "y": 677,
+      "size": 12,
+      "pupilSize": 10,
+      "maxX": 4,
+      "maxY": 4,
+      "visible": 1
+    },
+    {
+      "key": "golden-dog-left-eye",
+      "label": "Golden dog left eye",
+      "x": 965,
+      "y": 634,
+      "size": 9,
+      "pupilSize": 9,
+      "maxX": 4,
+      "maxY": 4,
+      "visible": 1
+    },
+    {
+      "key": "golden-dog-right-eye",
+      "label": "Golden dog right eye",
+      "x": 993,
+      "y": 643,
+      "size": 10,
+      "pupilSize": 9,
+      "maxX": 4.5,
+      "maxY": 4.5,
+      "visible": 1
+    }
+  ]
+}
