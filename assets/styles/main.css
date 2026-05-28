@@ -821,7 +821,7 @@
       display: block;
       object-fit: cover;
       object-position: center top;
-      opacity: 0.8;
+      opacity: 1;
       filter: none;
       mix-blend-mode: normal;
       -webkit-user-drag: none;
