@@ -14,6 +14,7 @@ export function createInsideScene({
   insideParallax,
   insideParallaxLayers,
   insideLightLayers = [],
+  insideEyeLayers = [],
   sceneSigns,
   cursorSparkleLayer,
   insideImageSize,
@@ -199,6 +200,10 @@ export function createInsideScene({
 
     insideLightLayers.forEach((layer) => {
       applyParallaxTransform(layer, parallaxDepths[0] || { x: 0, y: 0 }, useMotion);
+    });
+
+    insideEyeLayers.forEach((layer) => {
+      applyParallaxTransform(layer, parallaxDepths[1] || { x: 0, y: 0 }, useMotion);
     });
   }
 

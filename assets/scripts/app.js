@@ -1,5 +1,9 @@
 import {
   defaultFirelightSettings,
+  defaultDogEyeSettings,
+  dogEyeDownloadName,
+  dogEyeFields,
+  dogEyeStorageKey,
   firelightDownloadName,
   firelightFields,
   firelightStorageKey,
@@ -13,6 +17,8 @@ import {
   signPositionStorageKey,
   teamMembers
 } from "./site-data.js";
+import { createDogEyeController } from "./dog-eye-controller.js";
+import { createDogEyeDebugger } from "./dog-eye-debugger.js";
 import { createEntranceVideoController } from "./entrance-video.js";
 import { createFirelightController } from "./firelight-controller.js";
 import { createFirelightDebugger } from "./firelight-debugger.js";
@@ -30,7 +36,9 @@ const insideView = document.getElementById("insideView");
 const insideParallax = document.getElementById("insideParallax");
 const insideParallaxLayers = Array.from(document.querySelectorAll(".inside-parallax__layer"));
 const insideLightLayers = Array.from(document.querySelectorAll(".inside-firelight-layer"));
+const insideEyeLayers = Array.from(document.querySelectorAll(".dog-eye-layer"));
 const insideFirelightLayer = document.getElementById("insideFirelightLayer");
+const dogEyeLayer = document.getElementById("dogEyeLayer");
 const sceneSigns = Array.from(document.querySelectorAll(".scene-sign"));
 const teamCarouselElement = document.getElementById("teamCarousel");
 const teamCarouselDeck = document.getElementById("teamCarouselDeck");
@@ -56,6 +64,16 @@ const firelightController = createFirelightController({
   sourceUrl: firelightDownloadName
 });
 
+const dogEyeController = createDogEyeController({
+  layer: dogEyeLayer,
+  insideView,
+  defaultSettings: defaultDogEyeSettings,
+  fields: dogEyeFields,
+  insideImageSize,
+  storageKey: dogEyeStorageKey,
+  sourceUrl: dogEyeDownloadName
+});
+
 const turntable = createTurntableViewer({
   stage,
   canvas,
@@ -70,6 +88,7 @@ const insideScene = createInsideScene({
   insideParallax,
   insideParallaxLayers,
   insideLightLayers,
+  insideEyeLayers,
   sceneSigns,
   cursorSparkleLayer,
   insideImageSize,
@@ -154,6 +173,21 @@ const firelightDebugger = createFirelightDebugger({
   insideImageSize,
   storageKey: firelightStorageKey,
   downloadName: firelightDownloadName
+});
+
+const dogEyeDebugger = createDogEyeDebugger({
+  elements: {
+    select: document.getElementById("debugDogEyeSelect"),
+    controls: document.getElementById("debugDogEyeControls"),
+    confirmButton: document.getElementById("debugDogEyeConfirm"),
+    status: document.getElementById("debugDogEyeStatus"),
+    output: document.getElementById("debugDogEyeOutput")
+  },
+  controller: dogEyeController,
+  fields: dogEyeFields,
+  insideImageSize,
+  storageKey: dogEyeStorageKey,
+  downloadName: dogEyeDownloadName
 });
 
 let resizeFrameId = 0;
@@ -255,6 +289,7 @@ function bindKeyboardShortcuts() {
 function init() {
   turntable.init();
   firelightController.init();
+  dogEyeController.init();
   insideScene.init();
   teamCarousel.init();
   philosophyDialog.init();
@@ -268,6 +303,7 @@ function init() {
   insideScene.updateEdgeColors();
   const debugMode = debuggerPanel.init();
   firelightDebugger.init();
+  dogEyeDebugger.init();
 
   window.addEventListener("resize", scheduleResize);
   if (window.visualViewport) {

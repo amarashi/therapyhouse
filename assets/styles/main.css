@@ -442,15 +442,19 @@
       pointer-events: none;
     }
 
-    /*
-    Archived dog-eye cursor-follow experiment. Kept here so it can be restored later.
     .dog-eye-layer {
       position: absolute;
-      inset: 0;
-      z-index: 1;
+      top: var(--inside-frame-top, 0px);
+      right: var(--inside-frame-right, 0px);
+      bottom: var(--inside-frame-bottom, 0px);
+      left: var(--inside-frame-left, 0px);
+      z-index: 4;
       pointer-events: none;
       opacity: 0;
+      transform: translate3d(0, 0, 0);
+      transform-origin: center;
       transition: opacity 700ms ease;
+      will-change: transform, opacity;
     }
 
     .stage.is-inside.inside-visible .dog-eye-layer {
@@ -459,12 +463,14 @@
 
     .dog-eye {
       position: absolute;
-      width: var(--eye-width, 14px);
-      height: var(--eye-height, 14px);
+      left: var(--eye-x, 50%);
+      top: var(--eye-y, 50%);
+      width: var(--eye-size, 14px);
+      height: var(--eye-size, 14px);
       border-radius: 50%;
       overflow: hidden;
       transform: translate3d(-50%, -50%, 0);
-      will-change: left, top;
+      will-change: transform;
     }
 
     .dog-eye::before {
@@ -484,7 +490,6 @@
       transform: translate3d(calc(-50% + var(--pupil-x, 0px)), calc(-50% + var(--pupil-y, 0px)), 0);
       will-change: transform;
     }
-    */
 
     .scene-sign-layer {
       position: absolute;
@@ -2167,7 +2172,8 @@
 
     @media (prefers-reduced-motion: reduce) {
       .inside-parallax__layer,
-      .inside-firelight-layer {
+      .inside-firelight-layer,
+      .dog-eye-layer {
         transform: translate3d(0, 0, 0) !important;
       }
     }

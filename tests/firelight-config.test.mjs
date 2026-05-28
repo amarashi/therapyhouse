@@ -29,6 +29,8 @@ assert.match(indexHtml, /id="insideFirelightLayer"/);
 assert.match(indexHtml, /<details class="debug-panel__section debug-panel__section--button-debugger"/);
 assert.match(indexHtml, /<summary class="debug-panel__summary"[\s\S]*Button Position Debugger/);
 assert.match(indexHtml, /id="debugFirelightSelect"/);
+assert.match(indexHtml, /<details class="debug-panel__section debug-panel__section--firelight-debugger"/);
+assert.match(indexHtml, /<summary class="debug-panel__summary"[\s\S]*Firelight Debugger/);
 assert.match(indexHtml, /id="debugFirelightConfirm"/);
 assert.match(siteData, /firelightFields/);
 assert.match(siteData, /defaultFirelightSettings/);

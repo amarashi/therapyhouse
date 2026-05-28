@@ -77,6 +77,7 @@
         <img class="inside-parallax__layer inside-parallax__layer--background" src="assets/media/inside-layer-1.webp" alt="Layered illustration of the warm Therapy House clinic interior" draggable="false" decoding="async">
         <div class="inside-firelight-layer" id="insideFirelightLayer" aria-hidden="true"></div>
         <img class="inside-parallax__layer inside-parallax__layer--middle" src="assets/media/inside-layer-2.webp" alt="Middle layer of the Therapy House counselling room scene" draggable="false" decoding="async">
+        <div class="dog-eye-layer" id="dogEyeLayer" aria-hidden="true"></div>
         <img class="inside-parallax__layer inside-parallax__layer--foreground" src="assets/media/inside-layer-3.webp" alt="Foreground layer of the welcoming Therapy House interior" draggable="false" decoding="async">
       </div>
       <div class="scene-sign-layer" id="sceneSignLayer" aria-hidden="false">
@@ -177,15 +178,6 @@
         </section>
       </div>
       <div class="cursor-sparkle-layer" id="cursorSparkleLayer" aria-hidden="true"></div>
-      <!--
-      Archived dog-eye cursor-follow experiment. Kept here so it can be restored later.
-      <div class="dog-eye-layer" id="dogEyeLayer" aria-hidden="true">
-        <span class="dog-eye" data-eye-index="0"></span>
-        <span class="dog-eye" data-eye-index="1"></span>
-        <span class="dog-eye" data-eye-index="2"></span>
-        <span class="dog-eye" data-eye-index="3"></span>
-      </div>
-      -->
     </div>
   </main>
 
@@ -211,26 +203,46 @@
           </details>
         </div>
       </details>
-      <section class="debug-panel__section" aria-label="Firelight position debug controls">
+      <details class="debug-panel__section debug-panel__section--firelight-debugger">
+        <summary class="debug-panel__summary">
+          <span class="debug-panel__title">Firelight Debugger</span>
+          <span class="debug-panel__status" id="debugFirelightStatus" role="status">Open with ?debug=1 to adjust firelight positions.</span>
+        </summary>
+        <div class="debug-panel__collapsible-body">
+          <div class="debug-panel__row">
+            <label class="debug-panel__field" for="debugFirelightSelect">
+              Light
+              <select class="debug-panel__select" id="debugFirelightSelect"></select>
+            </label>
+            <div class="debug-panel__controls" id="debugFirelightControls"></div>
+            <div class="debug-panel__actions">
+              <button class="debug-panel__button debug-panel__button--secondary" id="debugFirelightAdd" type="button">Add light</button>
+              <button class="debug-panel__button debug-panel__button--secondary" id="debugFirelightRemove" type="button">Remove light</button>
+              <button class="debug-panel__button" id="debugFirelightConfirm" type="button">Save firelight JSON</button>
+            </div>
+          </div>
+          <details class="debug-panel__output">
+            <summary>Stored firelight JSON</summary>
+            <pre class="debug-panel__json" id="debugFirelightOutput">{}</pre>
+          </details>
+        </div>
+      </details>
+      <section class="debug-panel__section" aria-label="Dog eye movement debug controls">
         <div class="debug-panel__header">
-          <h2 class="debug-panel__title">Firelight Debugger</h2>
-          <p class="debug-panel__status" id="debugFirelightStatus" role="status">Open with ?debug=1 to adjust firelight positions.</p>
+          <h2 class="debug-panel__title">Dog Eye Debugger</h2>
+          <p class="debug-panel__status" id="debugDogEyeStatus" role="status">Open with ?debug=1 to adjust dog eye movement.</p>
         </div>
         <div class="debug-panel__row">
-          <label class="debug-panel__field" for="debugFirelightSelect">
-            Light
-            <select class="debug-panel__select" id="debugFirelightSelect"></select>
+          <label class="debug-panel__field" for="debugDogEyeSelect">
+            Eye
+            <select class="debug-panel__select" id="debugDogEyeSelect"></select>
           </label>
-          <div class="debug-panel__controls" id="debugFirelightControls"></div>
-          <div class="debug-panel__actions">
-            <button class="debug-panel__button debug-panel__button--secondary" id="debugFirelightAdd" type="button">Add light</button>
-            <button class="debug-panel__button debug-panel__button--secondary" id="debugFirelightRemove" type="button">Remove light</button>
-            <button class="debug-panel__button" id="debugFirelightConfirm" type="button">Save firelight JSON</button>
-          </div>
+          <div class="debug-panel__controls" id="debugDogEyeControls"></div>
+          <button class="debug-panel__button" id="debugDogEyeConfirm" type="button">Save eye JSON</button>
         </div>
         <details class="debug-panel__output">
-          <summary>Stored firelight JSON</summary>
-          <pre class="debug-panel__json" id="debugFirelightOutput">{}</pre>
+          <summary>Stored dog eye JSON</summary>
+          <pre class="debug-panel__json" id="debugDogEyeOutput">{}</pre>
         </details>
       </section>
     </div>

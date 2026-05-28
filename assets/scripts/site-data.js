@@ -24,6 +24,8 @@ export const signPositionStorageKey = "therapyHouse.signPositions.v1";
 export const signPositionDownloadName = "therapyhouse-button-positions.json";
 export const firelightStorageKey = "therapyHouse.firelightSettings.v1";
 export const firelightDownloadName = "therapyhouse-firelight-settings.json";
+export const dogEyeStorageKey = "therapyHouse.dogEyeSettings.v1";
+export const dogEyeDownloadName = "therapyhouse-dog-eye-settings.json";
 
 export const signPositionFields = [
   { key: "x", datasetKey: "x", label: "data-x", min: 0, max: insideImageSize.width, step: 1 },
@@ -49,6 +51,67 @@ export const firelightFields = [
   { key: "coreIntensity", label: "flame", min: 0, max: 1, step: 0.01 },
   { key: "blur", label: "blur", min: 0, max: 32, step: 1 }
 ];
+
+export const dogEyeFields = [
+  { key: "x", label: "x", min: 0, max: insideImageSize.width, step: 1 },
+  { key: "y", label: "y", min: 0, max: insideImageSize.height, step: 1 },
+  { key: "size", label: "eye size", min: 4, max: 36, step: 1 },
+  { key: "pupilSize", label: "pupil size", min: 3, max: 30, step: 1 },
+  { key: "maxX", label: "move x", min: 0, max: 14, step: 0.5 },
+  { key: "maxY", label: "move y", min: 0, max: 14, step: 0.5 },
+  { key: "visible", label: "visible", min: 0, max: 1, step: 1 }
+];
+
+export const defaultDogEyeSettings = {
+  generatedAt: "2026-05-28T00:00:00.000Z",
+  insideImageSize,
+  eyes: [
+    {
+      key: "brown-dog-left-eye",
+      label: "Brown dog left eye",
+      x: 645,
+      y: 710,
+      size: 17,
+      pupilSize: 13,
+      maxX: 4,
+      maxY: 3,
+      visible: 1
+    },
+    {
+      key: "brown-dog-right-eye",
+      label: "Brown dog right eye",
+      x: 690,
+      y: 715,
+      size: 17,
+      pupilSize: 13,
+      maxX: 4,
+      maxY: 3,
+      visible: 1
+    },
+    {
+      key: "golden-dog-left-eye",
+      label: "Golden dog left eye",
+      x: 1064,
+      y: 666,
+      size: 16,
+      pupilSize: 12,
+      maxX: 4,
+      maxY: 3,
+      visible: 1
+    },
+    {
+      key: "golden-dog-right-eye",
+      label: "Golden dog right eye",
+      x: 1108,
+      y: 670,
+      size: 16,
+      pupilSize: 12,
+      maxX: 4,
+      maxY: 3,
+      visible: 1
+    }
+  ]
+};
 
 export const defaultFirelightSettings = {
   generatedAt: "2026-05-28T00:00:00.000Z",
