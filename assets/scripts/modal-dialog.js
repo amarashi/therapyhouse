@@ -6,6 +6,7 @@ export function createModalDialog({ modal, closeButton, fallbackFocus, onOpen, o
 
     lastTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     onOpen?.();
+    modal.hidden = false;
     modal.classList.add("is-open");
     modal.inert = false;
     modal.setAttribute("aria-hidden", "false");
@@ -22,6 +23,7 @@ export function createModalDialog({ modal, closeButton, fallbackFocus, onOpen, o
     modal.classList.remove("is-open");
     modal.inert = true;
     modal.setAttribute("aria-hidden", "true");
+    modal.hidden = true;
     onClose?.();
   }
 
@@ -32,6 +34,7 @@ export function createModalDialog({ modal, closeButton, fallbackFocus, onOpen, o
   function init() {
     if (!modal) return;
 
+    modal.hidden = true;
     modal.inert = true;
     closeButton?.addEventListener("click", close);
     modal.addEventListener("click", (event) => {

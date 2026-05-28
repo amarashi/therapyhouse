@@ -37,12 +37,12 @@ export function createTeamCarousel({
       card.dataset.index = String(index);
       card.innerHTML = `
         <div class="team-card__media">
-          <img class="team-card__photo" src="${teamMember.image}" alt="${teamMember.name}" width="720" height="900" loading="eager" decoding="async" draggable="false">
+          <img class="team-card__photo" src="${teamMember.image}" alt="${teamMember.imageAlt || `Portrait of ${teamMember.name}, ${teamMember.role} at Therapy House`}" width="720" height="900" loading="eager" decoding="async" draggable="false">
         </div>
         <div class="team-card__body">
           <header>
             <p class="team-card__eyebrow">Therapy House team</p>
-            <h2 class="team-card__name">${teamMember.name}</h2>
+            <h3 class="team-card__name">${teamMember.name}</h3>
             <p class="team-card__role">${teamMember.role}</p>
           </header>
           <div class="team-card__content">
@@ -112,6 +112,7 @@ export function createTeamCarousel({
     lastTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     activeIndex = 0;
     renderMember();
+    carousel.hidden = false;
     carousel.classList.add("is-open");
     carousel.inert = false;
     carousel.setAttribute("aria-hidden", "false");
@@ -128,6 +129,7 @@ export function createTeamCarousel({
     carousel.classList.remove("is-open");
     carousel.inert = true;
     carousel.setAttribute("aria-hidden", "true");
+    carousel.hidden = true;
   }
 
   function isOpen() {
@@ -208,6 +210,7 @@ export function createTeamCarousel({
   function init() {
     if (!carousel || !deck) return;
 
+    carousel.hidden = true;
     carousel.inert = true;
     previousButton?.addEventListener("click", () => showMember(-1));
     nextButton?.addEventListener("click", () => showMember(1));

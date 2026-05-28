@@ -3,24 +3,67 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Therapy House is a warm psychology and counselling clinic in The Gap, Brisbane. Meet our inclusive team, learn about our approach, and book an appointment online.">
+  <meta name="theme-color" content="#ffffff">
+  <meta property="og:title" content="Therapy House | Psychology and Counselling in The Gap, Brisbane">
+  <meta property="og:description" content="Warm, inclusive psychology and counselling support for children, adults, couples and families in Brisbane.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="assets/media/logo3d.png">
   <link rel="icon" type="image/png" href="assets/media/logo3d.png">
-  <title>Therapy House</title>
+  <title>Therapy House | Psychology and Counselling in The Gap, Brisbane</title>
   <link rel="stylesheet" href="assets/styles/main.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "MedicalBusiness",
+    "name": "Therapy House",
+    "description": "Therapy House provides warm, inclusive psychology and counselling support in The Gap, Brisbane.",
+    "url": "./",
+    "telephone": "+61-7-3300-2170",
+    "email": "admin@therapyhouse.com.au",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "1290 Waterworks Rd",
+      "addressLocality": "The Gap",
+      "addressRegion": "QLD",
+      "postalCode": "4061",
+      "addressCountry": "AU"
+    },
+    "areaServed": "Greater Brisbane",
+    "medicalSpecialty": [
+      "Psychology",
+      "Counselling"
+    ]
+  }
+  </script>
 </head>
 <body>
+  <a class="skip-link" href="#siteOverview">Skip to Therapy House information</a>
   <aside class="orientation-lock" aria-live="polite">
     <div class="orientation-lock__content">
       <div class="orientation-lock__logo-frame" aria-hidden="true">
-        <img class="orientation-lock__logo" src="assets/media/logo3d.png" alt="" draggable="false" decoding="async">
+        <img class="orientation-lock__logo" src="assets/media/logo3d.png" alt="Therapy House logo" draggable="false" decoding="async">
       </div>
       <span class="orientation-lock__rotate-mark" aria-hidden="true"></span>
       <p class="orientation-lock__title">Please rotate your phone</p>
       <p class="orientation-lock__text">Turn your phone sideways to explore Therapy House in horizontal view.</p>
     </div>
   </aside>
-  <main class="stage" id="stage" aria-label="Rotating Therapy House scene">
-    <canvas id="viewerCanvas" aria-label="Therapy House scene"></canvas>
-    <button class="door-hotspot" id="doorHotspot" type="button" aria-label="Open the entrance">
+  <main class="stage" id="stage" aria-labelledby="siteTitle" aria-describedby="siteSummary">
+    <section class="sr-only" id="siteOverview" tabindex="-1">
+      <h1 id="siteTitle">Therapy House psychology and counselling in The Gap, Brisbane</h1>
+      <p id="siteSummary">Therapy House offers warm, inclusive mental health support for adults, children, young people, couples and families.</p>
+      <h2>What you can do on this page</h2>
+      <ul>
+        <li>Explore our Therapy House team.</li>
+        <li>Read our inclusive counselling philosophy.</li>
+        <li>Book online, call reception, or find the clinic address.</li>
+      </ul>
+    </section>
+    <canvas id="viewerCanvas" aria-label="Interactive Therapy House exterior">
+      Interactive image of the Therapy House clinic exterior. Use the Open the Therapy House entrance button to enter the site.
+    </canvas>
+    <button class="door-hotspot" id="doorHotspot" type="button" aria-label="Open the Therapy House entrance">
       <span class="sparkle" aria-hidden="true"></span>
       <span class="sparkle" aria-hidden="true"></span>
       <span class="sparkle" aria-hidden="true"></span>
@@ -30,90 +73,91 @@
       <source src="assets/media/door-transition.mp4" type="video/mp4">
     </video>
     <div class="inside-view" id="insideView" aria-label="Inside Therapy House">
-      <div class="inside-parallax" id="insideParallax" aria-hidden="true">
-        <img class="inside-parallax__layer" src="assets/media/inside-layer-1.webp" alt="" draggable="false" decoding="async">
-        <img class="inside-parallax__layer" src="assets/media/inside-layer-2.webp" alt="" draggable="false" decoding="async">
-        <img class="inside-parallax__layer" src="assets/media/inside-layer-3.webp" alt="" draggable="false" decoding="async">
+      <div class="inside-parallax" id="insideParallax">
+        <img class="inside-parallax__layer" src="assets/media/inside-layer-1.webp" alt="Layered illustration of the warm Therapy House clinic interior" draggable="false" decoding="async">
+        <img class="inside-parallax__layer" src="assets/media/inside-layer-2.webp" alt="Middle layer of the Therapy House counselling room scene" draggable="false" decoding="async">
+        <img class="inside-parallax__layer" src="assets/media/inside-layer-3.webp" alt="Foreground layer of the welcoming Therapy House interior" draggable="false" decoding="async">
       </div>
       <div class="scene-sign-layer" id="sceneSignLayer" aria-hidden="false">
-        <button class="scene-sign scene-sign--table" type="button" data-action="about" data-x="840" data-y="265" data-perspective="900" data-depth="60" data-rotate-x="0" data-rotate-y="0" data-rotate="0" data-skew-x="0" data-skew-y="0" data-scale="0.78" data-scale-x="1" data-scale-y="1" aria-label="About Us">
+        <button class="scene-sign scene-sign--table" type="button" data-action="about" data-x="840" data-y="265" data-perspective="900" data-depth="60" data-rotate-x="0" data-rotate-y="0" data-rotate="0" data-skew-x="0" data-skew-y="0" data-scale="0.78" data-scale-x="1" data-scale-y="1" aria-label="Meet the Therapy House team">
           <span class="scene-sign__title">About Us</span>
         </button>
-        <button class="scene-sign scene-sign--wall" type="button" data-action="philosophy" data-x="335" data-y="265" data-perspective="230" data-depth="60" data-rotate-x="0" data-rotate-y="35.4" data-rotate="0.5" data-skew-x="0" data-skew-y="0" data-scale="0.84" data-scale-x="1" data-scale-y="1" aria-label="Our Philosophy">
+        <button class="scene-sign scene-sign--wall" type="button" data-action="philosophy" data-x="335" data-y="265" data-perspective="230" data-depth="60" data-rotate-x="0" data-rotate-y="35.4" data-rotate="0.5" data-skew-x="0" data-skew-y="0" data-scale="0.84" data-scale-x="1" data-scale-y="1" aria-label="Read the Therapy House philosophy">
           <span class="scene-sign__title">Our Philosophy</span>
         </button>
-        <button class="scene-sign scene-sign--notebook" type="button" data-action="contact" data-x="1438" data-y="584" data-perspective="170" data-depth="72" data-rotate-x="0" data-rotate-y="-15.2" data-rotate="0" data-skew-x="4.1" data-skew-y="32" data-scale="0.84" data-scale-x="0.64" data-scale-y="1.31" aria-label="Contact Us">
+        <button class="scene-sign scene-sign--notebook" type="button" data-action="contact" data-x="1438" data-y="584" data-perspective="170" data-depth="72" data-rotate-x="0" data-rotate-y="-15.2" data-rotate="0" data-skew-x="4.1" data-skew-y="32" data-scale="0.84" data-scale-x="0.64" data-scale-y="1.31" aria-label="Contact Therapy House in The Gap">
           <span class="scene-sign__title">Contact Us</span>
         </button>
-        <button class="scene-sign scene-sign--door" type="button" data-action="back" data-x="1337" data-y="265" data-perspective="980" data-depth="128" data-rotate-x="0" data-rotate-y="-15.2" data-rotate="-1.5" data-skew-x="0" data-skew-y="0" data-scale="0.74" data-scale-x="0.71" data-scale-y="1" aria-label="Back">
+        <button class="scene-sign scene-sign--door" type="button" data-action="back" data-x="1337" data-y="265" data-perspective="980" data-depth="128" data-rotate-x="0" data-rotate-y="-15.2" data-rotate="-1.5" data-skew-x="0" data-skew-y="0" data-scale="0.74" data-scale-x="0.71" data-scale-y="1" aria-label="Return to the Therapy House exterior">
           <span class="scene-sign__title">Back</span>
         </button>
       </div>
-      <div class="team-carousel" id="teamCarousel" role="dialog" aria-modal="true" aria-label="Therapy House team" aria-hidden="true">
+      <div class="team-carousel" id="teamCarousel" role="dialog" aria-modal="true" aria-labelledby="teamCarouselTitle" aria-hidden="true" hidden>
         <div class="team-carousel__panel">
-          <button class="team-carousel__close" id="teamCarouselClose" type="button" aria-label="Close team carousel">x</button>
+          <button class="team-carousel__close" id="teamCarouselClose" type="button" aria-label="Close team carousel">&times;</button>
+          <h2 class="sr-only" id="teamCarouselTitle">Meet the Therapy House team</h2>
           <div class="team-carousel__deck" id="teamCarouselDeck" aria-live="polite" aria-label="Swipe or use controls to browse team profiles"></div>
           <div class="team-carousel__nav">
             <span class="team-carousel__count" id="teamCarouselCount"></span>
             <div class="team-carousel__actions" aria-label="Team profile controls">
-              <button class="team-carousel__button" id="teamCarouselPrev" type="button" aria-label="Previous team profile">&larr;</button>
-              <button class="team-carousel__button" id="teamCarouselNext" type="button" aria-label="Next team profile">&rarr;</button>
+              <button class="team-carousel__button" id="teamCarouselPrev" type="button" aria-label="Show previous Therapy House team profile">&larr;</button>
+              <button class="team-carousel__button" id="teamCarouselNext" type="button" aria-label="Show next Therapy House team profile">&rarr;</button>
             </div>
           </div>
         </div>
       </div>
-      <div class="philosophy-modal" id="philosophyModal" role="dialog" aria-modal="true" aria-labelledby="philosophyTitle" aria-hidden="true">
+      <div class="philosophy-modal" id="philosophyModal" role="dialog" aria-modal="true" aria-labelledby="philosophyTitle" aria-hidden="true" hidden>
         <section class="philosophy-modal__panel">
           <button class="philosophy-modal__close" id="philosophyModalClose" type="button" aria-label="Close philosophy window">&times;</button>
           <p class="philosophy-modal__eyebrow">Therapy House</p>
           <h2 class="philosophy-modal__title" id="philosophyTitle">Our Philosophy</h2>
           <div class="philosophy-modal__rule" aria-hidden="true">o</div>
-          <img class="philosophy-modal__image" src="assets/media/bookworm.png" width="600" height="450" alt="A playful reader sitting among colourful books and leafy stationery">
-          <p class="philosophy-modal__intro">At Therapy House, we believe that counselling and psychology should feel warm and inviting, not clinical or impersonal. Our aim is to create a nurturing environment where everyone can thrive.</p>
-          <h3 class="philosophy-modal__subheading">Here's how we do it</h3>
+          <img class="philosophy-modal__image" src="assets/media/bookworm.png" width="600" height="450" alt="Friendly reader with books, representing Therapy House's warm psychology and counselling approach">
+          <p class="philosophy-modal__intro">Counselling and psychology should feel warm and inviting. Our clinic is a nurturing place where people can feel safe, understood and supported.</p>
+          <p class="philosophy-modal__subheading">Our care is built on these principles.</p>
           <ul class="philosophy-modal__list">
             <li class="philosophy-modal__item">
               <h3>Holistic Care</h3>
-              <p>We treat the whole person, focusing on your unique experiences rather than just a diagnosis.</p>
+              <p>We focus on your whole story, not only a diagnosis.</p>
             </li>
             <li class="philosophy-modal__item">
               <h3>Inclusive Environment</h3>
-              <p>Our space is designed to be safe, neuro-affirming, and welcoming for everyone, including the LGBTQIA+ community.</p>
+              <p>Our space is safe, neuro-affirming and welcoming for LGBTQIA+ people.</p>
             </li>
             <li class="philosophy-modal__item">
               <h3>Sanctuary for Wellness</h3>
-              <p>We strive to provide a comforting sanctuary where you can journey towards wellness at your own pace.</p>
+              <p>You can work towards wellbeing at your own pace.</p>
             </li>
             <li class="philosophy-modal__item">
               <h3>Meaningful Connections</h3>
-              <p>We're committed to building therapeutic relationships that are meaningful and purposeful, ensuring you feel heard and valued.</p>
+              <p>We build purposeful relationships so you feel heard and valued.</p>
             </li>
             <li class="philosophy-modal__item">
               <h3>Authenticity</h3>
-              <p>As therapists, we embrace our authentic selves throughout the counselling process, fostering a genuine connection with you.</p>
+              <p>We bring genuine care to the counselling process.</p>
             </li>
           </ul>
-          <p class="philosophy-modal__closing">At Therapy House, your wellbeing is our top priority, and we're here to support you every step of the way.</p>
+          <p class="philosophy-modal__closing">Your wellbeing matters. We are here to support you.</p>
         </section>
       </div>
-      <div class="contact-modal" id="contactModal" role="dialog" aria-modal="true" aria-labelledby="contactTitle" aria-hidden="true">
+      <div class="contact-modal" id="contactModal" role="dialog" aria-modal="true" aria-labelledby="contactTitle" aria-hidden="true" hidden>
         <section class="contact-modal__panel">
           <button class="contact-modal__close" id="contactModalClose" type="button" aria-label="Close contact window">&times;</button>
-          <div class="contact-modal__art" aria-hidden="true">
-            <img src="assets/media/phone.webp" alt="" width="660" height="660" loading="lazy" decoding="async">
+          <div class="contact-modal__art">
+            <img src="assets/media/phone.webp" alt="Illustration for contacting Therapy House reception" width="660" height="660" loading="lazy" decoding="async">
           </div>
           <div class="contact-modal__body">
             <p class="contact-modal__eyebrow">Visit or call</p>
             <h2 class="contact-modal__title" id="contactTitle">Contact Us</h2>
-            <p class="contact-modal__intro">Our clinic is located in a Brisbane western suburb, on a main road, yet tucked away so you won't hear any road traffic. There is plenty of street parking, so you don't need to be concerned about finding a park. Our clients are from anywhere in the greater Brisbane area.</p>
+            <p class="contact-modal__intro">Our clinic is in The Gap, a western suburb of Brisbane. We are on a main road, but the clinic is tucked away from road noise. Street parking is usually available nearby.</p>
             <div class="contact-modal__actions" aria-label="Contact actions">
-              <a class="contact-modal__button" href="https://my.powerdiary.com/clientportal/3cjz0" target="_blank" rel="noopener">Book an Appointment Online</a>
-              <a class="contact-modal__button contact-modal__button--secondary" href="tel:+61733002170">Call 07 3300 2170</a>
+              <a class="contact-modal__button" href="https://my.powerdiary.com/clientportal/3cjz0" target="_blank" rel="noopener">Book a Therapy House appointment online</a>
+              <a class="contact-modal__button contact-modal__button--secondary" href="tel:+61733002170">Call Therapy House on 07 3300 2170</a>
             </div>
             <dl class="contact-modal__details">
               <div class="contact-modal__detail">
                 <dt>Phone</dt>
-                <dd><a href="tel:+61733002170">07 3300 2170</a></dd>
+                <dd><a href="tel:+61733002170">Call Therapy House reception on 07 3300 2170</a></dd>
               </div>
               <div class="contact-modal__detail">
                 <dt>Fax</dt>
@@ -121,11 +165,11 @@
               </div>
               <div class="contact-modal__detail">
                 <dt>Email</dt>
-                <dd><a href="mailto:admin@therapyhouse.com.au">admin@therapyhouse.com.au</a></dd>
+                <dd><a href="mailto:admin@therapyhouse.com.au">Email Therapy House reception</a></dd>
               </div>
               <div class="contact-modal__detail">
                 <dt>Address</dt>
-                <dd><a href="https://www.google.com/maps/search/?api=1&amp;query=1290%20Waterworks%20Rd%2C%20The%20Gap%2C%20Brisbane%2C%20QLD%204061" target="_blank" rel="noopener">1290 Waterworks Rd, The Gap, Brisbane, QLD, 4061</a></dd>
+                <dd><a href="https://www.google.com/maps/search/?api=1&amp;query=1290%20Waterworks%20Rd%2C%20The%20Gap%2C%20Brisbane%2C%20QLD%204061" target="_blank" rel="noopener">Open Therapy House at 1290 Waterworks Rd, The Gap in Google Maps</a></dd>
               </div>
             </dl>
           </div>
