@@ -5,6 +5,17 @@ export const frames = Array.from({ length: frameCount }, (_, index) => {
   return `assets/turntable/turntable_${number}.webp`;
 });
 
+export const turntableFrameSize = { width: 1108, height: 756 };
+export const turntableFrameCrop = { left: 0, top: 0, right: 0, bottom: 0 };
+export const doorHotspotTrack = {
+  startX: 0.7,
+  endX: 0.59,
+  y: 0.62,
+  width: 0.15,
+  height: 0.31
+};
+export const doorTransitionPlaybackRate = 0.7;
+
 export const insideImageSize = { width: 1672, height: 940 };
 
 export const insideEdgeFallbackColors = {
