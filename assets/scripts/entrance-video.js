@@ -1,19 +1,5 @@
-export function createEntranceVideoController({
-  stage,
-  doorHotspot,
-  doorVideo,
-  turntable,
-  insideScene,
-  playbackRate = 1,
-  onEnterInside
-}) {
+export function createEntranceVideoController({ stage, doorHotspot, doorVideo, turntable, insideScene, onEnterInside }) {
   let playing = false;
-  const transitionPlaybackRate = Math.max(0.25, Math.min(playbackRate, 1));
-
-  function prepareVideo() {
-    doorVideo.defaultPlaybackRate = transitionPlaybackRate;
-    doorVideo.playbackRate = transitionPlaybackRate;
-  }
 
   function skip() {
     if (!playing || insideScene.isActive) return;
@@ -27,7 +13,6 @@ export function createEntranceVideoController({
     turntable.lockInteraction();
     doorVideo.pause();
     doorVideo.currentTime = 0;
-    prepareVideo();
     stage.classList.remove("is-playing");
     onEnterInside?.();
     insideScene.enter();
@@ -37,13 +22,10 @@ export function createEntranceVideoController({
     playing = false;
     doorVideo.pause();
     doorVideo.currentTime = 0;
-    prepareVideo();
     stage.classList.remove("is-playing");
   }
 
   function init() {
-    prepareVideo();
-
     doorHotspot.addEventListener("click", async () => {
       if (playing || insideScene.isActive) return;
 
@@ -53,7 +35,6 @@ export function createEntranceVideoController({
       await turntable.waitForCentre();
 
       doorVideo.currentTime = 0;
-      prepareVideo();
       stage.classList.add("is-playing");
 
       try {

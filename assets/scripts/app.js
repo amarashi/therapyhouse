@@ -1,8 +1,6 @@
 import {
   defaultFirelightSettings,
   defaultDogEyeSettings,
-  doorHotspotTrack,
-  doorTransitionPlaybackRate,
   dogEyeDownloadName,
   dogEyeFields,
   dogEyeStorageKey,
@@ -17,11 +15,9 @@ import {
   signPositionDownloadName,
   signPositionFields,
   signPositionStorageKey,
-  teamMembers,
-  turntableFrameCrop,
-  turntableFrameSize
+  teamMembers
 } from "./site-data.js";
-import { createDogEyeController } from "./dog-eye-controller.js";
+import { createDogEyeController } from "./dog-eye-controller.js?v=20260529-eye-scale";
 import { createDogEyeDebugger } from "./dog-eye-debugger.js";
 import { createEntranceVideoController } from "./entrance-video.js";
 import { createFirelightController } from "./firelight-controller.js";
@@ -83,10 +79,7 @@ const turntable = createTurntableViewer({
   canvas,
   doorHotspot,
   frames,
-  frameCount,
-  frameCrop: turntableFrameCrop,
-  frameSize: turntableFrameSize,
-  doorHotspotTrack
+  frameCount
 });
 
 const insideScene = createInsideScene({
@@ -143,7 +136,6 @@ const entranceVideo = createEntranceVideoController({
   doorVideo,
   turntable,
   insideScene,
-  playbackRate: doorTransitionPlaybackRate,
   onEnterInside: () => {
     teamCarousel.preloadImages();
   }

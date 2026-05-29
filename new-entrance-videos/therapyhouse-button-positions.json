@@ -1,0 +1,69 @@
+{
+  "generatedAt": "2026-05-27T11:24:31.490Z",
+  "insideImageSize": {
+    "width": 1672,
+    "height": 940
+  },
+  "positions": {
+    "about": {
+      "label": "About Us",
+      "x": 840,
+      "y": 265,
+      "perspective": 900,
+      "depth": 60,
+      "rotateX": 0,
+      "rotateY": 0,
+      "rotate": 0,
+      "skewX": 0,
+      "skewY": 0,
+      "scale": 0.78,
+      "scaleX": 1,
+      "scaleY": 1
+    },
+    "back": {
+      "label": "Back",
+      "x": 1337,
+      "y": 265,
+      "perspective": 980,
+      "depth": 128,
+      "rotateX": 0,
+      "rotateY": -15.2,
+      "rotate": -1.5,
+      "skewX": 0,
+      "skewY": 0,
+      "scale": 0.74,
+      "scaleX": 0.71,
+      "scaleY": 1
+    },
+    "contact": {
+      "label": "Contact Us",
+      "x": 1438,
+      "y": 584,
+      "perspective": 170,
+      "depth": 72,
+      "rotateX": 0,
+      "rotateY": -15.2,
+      "rotate": 0,
+      "skewX": 4.1,
+      "skewY": 32,
+      "scale": 0.84,
+      "scaleX": 0.64,
+      "scaleY": 1.31
+    },
+    "philosophy": {
+      "label": "Our Philosophy",
+      "x": 335,
+      "y": 265,
+      "perspective": 230,
+      "depth": 60,
+      "rotateX": 0,
+      "rotateY": 35.4,
+      "rotate": 0.5,
+      "skewX": 0,
+      "skewY": 0,
+      "scale": 0.84,
+      "scaleX": 1,
+      "scaleY": 1
+    }
+  }
+}

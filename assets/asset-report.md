@@ -2,7 +2,7 @@
 
 | Original path/url | New path | Old size KB | New size KB | Dimensions | Notes |
 |---|---:|---:|---:|---|---|
-| `archive/move_to_door.mp4` | `assets/media/door-transition.mp4` | 3217.6 | 1775.2 | 1024x696 | Removed the top-right source watermark with `delogo`, cropped 72px from the bottom to remove the lower source watermark, then re-encoded H.264 MP4, CRF 24, yuv420p, no audio, faststart. Runtime playback is slowed in `entrance-video.js`. |
+| `motion_2.0-fast_A_slow_camera_push-in_toward_the_cottage_s_main_door_the_door_swinging_open_and_-0.mp4` | `assets/media/door-transition.mp4` | 11423.3 | 1266.2 | 832x480 | Re-encoded H.264 MP4, CRF 25, yuv420p, no audio, faststart. |
 | `Inside 1.png` | `assets/media/inside-layer-1.webp` | 5303.1 | 319.8 | 2478x1388 | WebP parallax base layer, metadata stripped, transparent source archived. |
 | `Inside 2.png` | `assets/media/inside-layer-2.webp` | 2163.1 | 182.6 | 2478x1388 | WebP parallax middle layer, metadata stripped, transparent source archived. |
 | `Inside 3.png` | `assets/media/inside-layer-3.webp` | 870.5 | 72.1 | 2478x1388 | WebP parallax foreground layer, metadata stripped, transparent source archived. |
@@ -19,4 +19,4 @@
 | `https://www.therapyhouse.com.au/wp-content/uploads/2023/05/josie.png` | `assets/team/josie.webp` | 554.7 | 27.7 | 560x760 | Downloaded, auto-oriented, portrait crop, WebP. |
 | `https://www.therapyhouse.com.au/wp-content/uploads/2022/09/Reaa-2.png` | `assets/team/reea.webp` | 1821.2 | 35.3 | 560x760 | Downloaded, auto-oriented, portrait crop, WebP. |
 | `https://www.therapyhouse.com.au/wp-content/uploads/2021/11/Samson.jpg` | `assets/team/samson.webp` | 24.9 | 23.4 | 560x760 | Downloaded, auto-oriented, portrait crop, WebP. |
-| `archive/turning_house.mp4` | `assets/turntable/turntable_001.webp` through `_048.webp` | 12157.1 | 5072.4 | 1108x756 | 48 WebP frames sampled from the new turning-house source, cropped 72px from the bottom to remove the source watermark; total is 4.95 MiB. |
+| `optimised-rotation-frames/turntable_001.webp` through `_048.webp` | `assets/turntable/turntable_001.webp` through `_048.webp` | 4150.6 | 2790.7 | 960x540 | 48 WebP frames recompressed at original dimensions; total is 2.73 MiB. |

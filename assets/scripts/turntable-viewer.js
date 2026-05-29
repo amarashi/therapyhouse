@@ -1,26 +1,7 @@
 import { clamp, getImageHeight, getImageWidth, requestIdleTask } from "./utils.js";
 
-export function createTurntableViewer({
-  stage,
-  canvas,
-  doorHotspot,
-  frames,
-  frameCount,
-  frameCrop = { left: 8, top: 8, right: 28, bottom: 28 },
-  frameSize = { width: 960, height: 540 },
-  doorHotspotTrack = { startX: 0.63, endX: 0.49, y: 0.53, width: 0.16, height: 0.28 }
-}) {
+export function createTurntableViewer({ stage, canvas, doorHotspot, frames, frameCount }) {
   const context = canvas.getContext("2d", { alpha: false });
-  const crop = {
-    left: frameCrop.left || 0,
-    top: frameCrop.top || 0,
-    right: frameCrop.right || 0,
-    bottom: frameCrop.bottom || 0
-  };
-  const effectiveFrameSize = {
-    width: Math.max(1, frameSize.width - crop.left - crop.right),
-    height: Math.max(1, frameSize.height - crop.top - crop.bottom)
-  };
   const imageCache = new Array(frameCount);
   const imageLoadPromises = new Array(frameCount);
   const loadedFrameIndexes = new Set();
@@ -54,8 +35,10 @@ export function createTurntableViewer({
 
   function getSceneRectCss() {
     const rect = stage.getBoundingClientRect();
+    const effectiveImageWidth = 960 - 8 - 28;
+    const effectiveImageHeight = 540 - 8 - 28;
     const stageRatio = rect.width / rect.height;
-    const imageRatio = effectiveFrameSize.width / effectiveFrameSize.height;
+    const imageRatio = effectiveImageWidth / effectiveImageHeight;
     const isMobilePortrait = window.matchMedia("(max-width: 720px) and (orientation: portrait)").matches;
     let width = rect.width;
     let height = rect.height;
@@ -77,10 +60,10 @@ export function createTurntableViewer({
   function updateHotspot() {
     const scene = getSceneRectCss();
     const progress = displayAngle / (frameCount - 1);
-    const doorX = doorHotspotTrack.startX + (doorHotspotTrack.endX - doorHotspotTrack.startX) * progress;
-    const doorY = doorHotspotTrack.y;
-    const doorWidth = doorHotspotTrack.width;
-    const doorHeight = doorHotspotTrack.height;
+    const doorX = 0.56 - (progress - 0.5) * 0.14;
+    const doorY = 0.53;
+    const doorWidth = 0.16;
+    const doorHeight = 0.28;
 
     doorHotspot.style.left = `${scene.x + scene.width * (doorX - doorWidth / 2)}px`;
     doorHotspot.style.top = `${scene.y + scene.height * (doorY - doorHeight / 2)}px`;
@@ -108,14 +91,8 @@ export function createTurntableViewer({
     if (!image) return;
     if (image instanceof HTMLImageElement && image.naturalWidth === 0) return;
 
-    const cropLeft = crop.left;
-    const cropTop = crop.top;
-    const cropRight = crop.right;
-    const cropBottom = crop.bottom;
-    const sourceWidth = Math.max(1, getImageWidth(image) - cropLeft - cropRight);
-    const sourceHeight = Math.max(1, getImageHeight(image) - cropTop - cropBottom);
     const canvasRatio = canvas.width / canvas.height;
-    const imageRatio = sourceWidth / sourceHeight;
+    const imageRatio = getImageWidth(image) / getImageHeight(image);
     let drawWidth = canvas.width;
     let drawHeight = canvas.height;
 
@@ -127,6 +104,12 @@ export function createTurntableViewer({
 
     const x = (canvas.width - drawWidth) / 2;
     const y = (canvas.height - drawHeight) / 2;
+    const cropLeft = 8;
+    const cropTop = 8;
+    const cropRight = 28;
+    const cropBottom = 28;
+    const sourceWidth = Math.max(1, getImageWidth(image) - cropLeft - cropRight);
+    const sourceHeight = Math.max(1, getImageHeight(image) - cropTop - cropBottom);
     context.drawImage(image, cropLeft, cropTop, sourceWidth, sourceHeight, x, y, drawWidth, drawHeight);
   }
 

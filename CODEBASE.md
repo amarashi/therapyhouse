@@ -40,11 +40,11 @@ http://127.0.0.1:8765/index.html?debug=1
 | File | Purpose |
 |---|---|
 | `assets/scripts/app.js` | Application entry point. It finds DOM elements, creates all feature controllers, wires scene actions, keyboard shortcuts, modal scrolling, resize handling, debug mode, and initial startup. This is the orchestration layer. |
-| `assets/scripts/entrance-video.js` | Controls the entrance transition. It listens to the door hotspot, centres the turntable, plays `door-transition.mp4` at the configured reduced speed, skips on double-click, and enters the inside scene when the video ends or debug mode requests it. |
+| `assets/scripts/entrance-video.js` | Controls the entrance transition. It listens to the door hotspot, centres the turntable, plays `door-transition.mp4`, skips on double-click, and enters the inside scene when the video ends or debug mode requests it. |
 | `assets/scripts/inside-scene.js` | Manages the inside room experience. It calculates image framing, positions interactive signs against the inside image coordinate system, applies parallax movement, samples edge colours from the base layer, handles reduced motion, and manages entering/leaving the inside scene. |
 | `assets/scripts/modal-dialog.js` | Small reusable modal helper. It handles open/close state, `inert`, `aria-hidden`, backdrop clicks, close button clicks, and focus restoration. It is used by the philosophy and contact dialogs. |
 | `assets/scripts/sign-position-debugger.js` | Reusable sign-position debugging tool. It reads and writes sign datasets, builds slider/number controls, updates signs live, serialises the current position document, saves it to `localStorage`, and downloads JSON snapshots. |
-| `assets/scripts/site-data.js` | Static configuration and content. It defines the 48 turntable frame paths, exterior frame dimensions, door hotspot track, transition playback speed, inside image dimensions, fallback edge colours, parallax depth settings, debug storage keys, editable sign fields, and team member data. |
+| `assets/scripts/site-data.js` | Static configuration and content. It defines the 48 turntable frame paths, inside image dimensions, fallback edge colours, parallax depth settings, debug storage keys, editable sign fields, and team member data. |
 | `assets/scripts/team-carousel.js` | Team carousel feature module. It preloads team images, builds team cards from `site-data.js`, handles next/previous navigation, click-to-advance cards, swipe gestures, open/close state, focus restoration, and the visible profile count. |
 | `assets/scripts/turntable-viewer.js` | Exterior rotating house renderer. It renders WebP frames into the canvas, loads nearby frames first, lazily loads the remaining sequence, handles hover, drag, wheel, keyboard navigation, canvas resizing, hotspot positioning, and centring before the entrance video plays. |
 | `assets/scripts/utils.js` | Shared low-level helpers: clamping numbers, formatting values, idle-task scheduling, reading image dimensions, and preloading images. |
@@ -56,7 +56,7 @@ http://127.0.0.1:8765/index.html?debug=1
 | File | Used by | Purpose |
 |---|---|---|
 | `assets/media/bookworm.png` | `index.html` philosophy modal | Illustration displayed in the Our Philosophy modal. |
-| `assets/media/door-transition.mp4` | `index.html`, `entrance-video.js` | Cropped transition video from `archive/move_to_door.mp4`, played at reduced speed after clicking the door hotspot. |
+| `assets/media/door-transition.mp4` | `index.html`, `entrance-video.js` | Short transition video played after clicking the door hotspot. |
 | `assets/media/inside-layer-1.webp` | `index.html`, `inside-scene.js` | Base inside-room parallax layer. Also sampled for edge colours. |
 | `assets/media/inside-layer-2.webp` | `index.html`, `inside-scene.js` | Middle inside-room parallax layer. |
 | `assets/media/inside-layer-3.webp` | `index.html`, `inside-scene.js` | Foreground inside-room parallax layer. |
@@ -84,7 +84,7 @@ http://127.0.0.1:8765/index.html?debug=1
 
 ### `assets/turntable/`
 
-`assets/turntable/turntable_001.webp` through `assets/turntable/turntable_048.webp` are the exterior rotation frames generated from `archive/turning_house.mp4`. `site-data.js` generates these paths programmatically and stores their `1108x756` frame size; `turntable-viewer.js` draws them into the canvas and positions the door hotspot against that exterior image coordinate space.
+`assets/turntable/turntable_001.webp` through `assets/turntable/turntable_048.webp` are the exterior rotation frames. `site-data.js` generates these paths programmatically and `turntable-viewer.js` draws them into the canvas.
 
 Each file is one frame in the same 48-frame sequence:
 
