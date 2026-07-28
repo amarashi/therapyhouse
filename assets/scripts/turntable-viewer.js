@@ -1,6 +1,15 @@
 import { clamp, getImageHeight, getImageWidth, requestIdleTask } from "./utils.js";
 
-export function createTurntableViewer({ stage, canvas, doorHotspot, frames, frameCount }) {
+export function createTurntableViewer({
+  stage,
+  canvas,
+  doorHotspot,
+  exteriorHotspotLayer,
+  exteriorHotspots = [],
+  onExteriorHotspot,
+  frames,
+  frameCount
+}) {
   const context = canvas.getContext("2d", { alpha: false });
   const imageCache = new Array(frameCount);
   const imageLoadPromises = new Array(frameCount);
@@ -57,18 +66,77 @@ export function createTurntableViewer({ stage, canvas, doorHotspot, frames, fram
     };
   }
 
-  function updateHotspot() {
+  function getHotspotRect(hotspot) {
     const scene = getSceneRectCss();
     const progress = displayAngle / (frameCount - 1);
-    const doorX = 0.56 - (progress - 0.5) * 0.14;
-    const doorY = 0.53;
-    const doorWidth = 0.16;
-    const doorHeight = 0.28;
+    const position = hotspot.position || {};
+    const shiftX = Number(position.shiftX) || 0;
+    const x = Number(position.x) - (progress - 0.5) * shiftX;
+    const y = Number(position.y);
+    const width = Number(position.width);
+    const height = Number(position.height);
 
-    doorHotspot.style.left = `${scene.x + scene.width * (doorX - doorWidth / 2)}px`;
-    doorHotspot.style.top = `${scene.y + scene.height * (doorY - doorHeight / 2)}px`;
-    doorHotspot.style.width = `${scene.width * doorWidth}px`;
-    doorHotspot.style.height = `${scene.height * doorHeight}px`;
+    return {
+      left: scene.x + scene.width * (x - width / 2),
+      top: scene.y + scene.height * (y - height / 2),
+      width: scene.width * width,
+      height: scene.height * height
+    };
+  }
+
+  function applyHotspotRect(element, rect) {
+    element.style.left = `${rect.left}px`;
+    element.style.top = `${rect.top}px`;
+    element.style.width = `${rect.width}px`;
+    element.style.height = `${rect.height}px`;
+  }
+
+  function renderExteriorHotspots() {
+    if (!exteriorHotspotLayer) return;
+
+    const buttons = exteriorHotspots
+      .filter((hotspot) => hotspot.id !== "main-door")
+      .map((hotspot) => {
+        const button = document.createElement("button");
+        button.className = "exterior-hotspot";
+        button.type = "button";
+        button.dataset.exteriorHotspotId = hotspot.id;
+        button.dataset.targetRoom = hotspot.targetRoom;
+        button.setAttribute("aria-label", hotspot.ariaLabel || hotspot.label);
+
+        const label = document.createElement("span");
+        label.className = "exterior-hotspot__label";
+        label.textContent = hotspot.label;
+        button.appendChild(label);
+
+        button.addEventListener("click", () => {
+          onExteriorHotspot?.(hotspot);
+        });
+        return button;
+      });
+
+    exteriorHotspotLayer.replaceChildren(...buttons);
+  }
+
+  function updateExteriorHotspots() {
+    const mainDoorHotspot = exteriorHotspots.find((hotspot) => hotspot.id === "main-door");
+    if (mainDoorHotspot) {
+      doorHotspot.dataset.exteriorHotspotId = mainDoorHotspot.id;
+      doorHotspot.dataset.targetRoom = mainDoorHotspot.targetRoom;
+      doorHotspot.setAttribute("aria-label", mainDoorHotspot.ariaLabel || doorHotspot.getAttribute("aria-label"));
+      applyHotspotRect(doorHotspot, getHotspotRect(mainDoorHotspot));
+    }
+
+    if (!exteriorHotspotLayer) return;
+    exteriorHotspotLayer.querySelectorAll(".exterior-hotspot").forEach((button) => {
+      const hotspot = exteriorHotspots.find((candidate) => candidate.id === button.dataset.exteriorHotspotId);
+      if (!hotspot) return;
+      applyHotspotRect(button, getHotspotRect(hotspot));
+    });
+  }
+
+  function updateHotspot() {
+    updateExteriorHotspots();
   }
 
   function resizeCanvas() {
@@ -322,9 +390,12 @@ export function createTurntableViewer({ stage, canvas, doorHotspot, frames, fram
   }
 
   function init() {
+    renderExteriorHotspots();
+    updateExteriorHotspots();
+
     stage.addEventListener("pointerdown", (event) => {
       if (isInteractionLocked) return;
-      if (event.target.closest(".door-hotspot")) return;
+      if (event.target.closest(".door-hotspot, .exterior-hotspot")) return;
 
       isDragging = true;
       dragStartX = event.clientX;
@@ -458,6 +529,7 @@ export function createTurntableViewer({ stage, canvas, doorHotspot, frames, fram
       isInteractionLocked = false;
     },
     updateHotspot,
+    updateExteriorHotspots,
     waitForCentre
   };
 }

@@ -6,7 +6,7 @@ export function createEntranceVideoController({ stage, doorHotspot, doorVideo, t
     enterInsideView();
   }
 
-  function enterInsideView() {
+  function enterInsideView(roomId) {
     if (insideScene.isActive) return;
 
     playing = false;
@@ -15,7 +15,7 @@ export function createEntranceVideoController({ stage, doorHotspot, doorVideo, t
     doorVideo.currentTime = 0;
     stage.classList.remove("is-playing");
     onEnterInside?.();
-    insideScene.enter();
+    insideScene.enter({ roomId });
   }
 
   function reset() {

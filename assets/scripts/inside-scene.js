@@ -1,5 +1,18 @@
 import { clamp, getImageHeight, getImageWidth } from "./utils.js";
 
+const defaultImageSize = { width: 1672, height: 940 };
+const defaultEdgeFallbackColors = {
+  top: "#34231a",
+  right: "#2d211a",
+  bottom: "#24170f",
+  left: "#31231b"
+};
+const defaultParallaxDepths = [
+  { x: -3, y: 0 },
+  { x: 5, y: 0 },
+  { x: 14, y: 1.5 }
+];
+
 function colorChannelToHex(value) {
   return clamp(Math.round(value), 0, 255).toString(16).padStart(2, "0");
 }
@@ -8,18 +21,24 @@ function rgbToHex(red, green, blue) {
   return `#${colorChannelToHex(red)}${colorChannelToHex(green)}${colorChannelToHex(blue)}`;
 }
 
+function toDatasetValue(value, fallback = 0) {
+  return String(Number.isFinite(Number(value)) ? value : fallback);
+}
+
 export function createInsideScene({
   stage,
   insideView,
   insideParallax,
-  insideParallaxLayers,
+  insideParallaxLayers: initialInsideParallaxLayers = [],
   insideLightLayers = [],
   insideEyeLayers = [],
-  sceneSigns,
+  sceneSignLayer,
+  sceneSigns: initialSceneSigns = [],
   cursorSparkleLayer,
-  insideImageSize,
-  edgeFallbackColors,
-  parallaxDepths,
+  insideImageSize = defaultImageSize,
+  edgeFallbackColors = defaultEdgeFallbackColors,
+  parallaxDepths = defaultParallaxDepths,
+  roomScenes = null,
   reducedMotionQuery
 }) {
   let active = false;
@@ -29,7 +48,20 @@ export function createInsideScene({
   let currentX = 0;
   let currentY = 0;
   let lastSparkleTime = 0;
+  let actionHandler = null;
   const cursorSparklesEnabled = false;
+  const sceneSigns = [...initialSceneSigns];
+  const roomSceneMap = roomScenes?.rooms || {};
+  const fallbackRoomId = roomScenes?.initialRoomId || Object.keys(roomSceneMap)[0] || "welcome";
+  let activeRoomId = fallbackRoomId;
+  let currentInsideImageSize = insideImageSize;
+  let currentEdgeFallbackColors = edgeFallbackColors;
+  let currentParallaxDepths = parallaxDepths;
+  let insideParallaxLayers = [...initialInsideParallaxLayers];
+
+  function getActiveRoomScene() {
+    return roomSceneMap[activeRoomId] || roomSceneMap[fallbackRoomId] || null;
+  }
 
   function getAverageEdgeColor(image, edge) {
     const sourceWidth = getImageWidth(image);
@@ -91,7 +123,7 @@ export function createInsideScene({
 
   async function updateEdgeColors() {
     const baseLayer = insideParallaxLayers[0];
-    applyEdgeColors(edgeFallbackColors);
+    applyEdgeColors(currentEdgeFallbackColors);
     if (!baseLayer) return;
 
     try {
@@ -101,18 +133,18 @@ export function createInsideScene({
 
       const sampledColors = {};
       ["top", "right", "bottom", "left"].forEach((edge) => {
-        sampledColors[edge] = getAverageEdgeColor(baseLayer, edge) || edgeFallbackColors[edge];
+        sampledColors[edge] = getAverageEdgeColor(baseLayer, edge) || currentEdgeFallbackColors[edge];
       });
       applyEdgeColors(sampledColors);
     } catch (error) {
-      applyEdgeColors(edgeFallbackColors);
+      applyEdgeColors(currentEdgeFallbackColors);
     }
   }
 
   function getInsideImageRect() {
     const rect = insideView.getBoundingClientRect();
     const viewRatio = rect.width / rect.height;
-    const imageRatio = insideImageSize.width / insideImageSize.height;
+    const imageRatio = currentInsideImageSize.width / currentInsideImageSize.height;
     let width = rect.width;
     let height = rect.height;
 
@@ -165,8 +197,8 @@ export function createInsideScene({
 
       const width = sign.offsetWidth || 160;
       const height = sign.offsetHeight || 58;
-      const x = imageRect.x + imageRect.width * imageX / insideImageSize.width;
-      const y = imageRect.y + imageRect.height * imageY / insideImageSize.height;
+      const x = imageRect.x + imageRect.width * imageX / currentInsideImageSize.width;
+      const y = imageRect.y + imageRect.height * imageY / currentInsideImageSize.height;
       const clampedX = clamp(x, margin + width / 2, Math.max(margin + width / 2, viewRect.width - margin - width / 2));
       const clampedY = clamp(y, margin + height / 2, Math.max(margin + height / 2, viewRect.height - margin - height / 2));
 
@@ -185,6 +217,95 @@ export function createInsideScene({
     });
   }
 
+  function renderRoomBackground(roomScene) {
+    if (!insideParallax || !roomScene?.background?.layers) return;
+
+    insideParallax.querySelectorAll(".inside-parallax__layer").forEach((layer) => layer.remove());
+
+    const nextLayers = roomScene.background.layers.map((layerConfig, index) => {
+      const image = document.createElement("img");
+      image.className = ["inside-parallax__layer", layerConfig.className].filter(Boolean).join(" ");
+      image.src = layerConfig.src;
+      image.alt = layerConfig.alt || "";
+      image.draggable = false;
+      image.decoding = "async";
+      image.dataset.roomId = roomScene.id;
+      image.dataset.layerIndex = String(index);
+      image.style.zIndex = String(layerConfig.zIndex ?? index);
+      insideParallax.appendChild(image);
+      return image;
+    });
+
+    insideParallaxLayers.splice(0, insideParallaxLayers.length, ...nextLayers);
+  }
+
+  function createRoomHotspotButton(hotspotConfig) {
+    const button = document.createElement("button");
+    const position = hotspotConfig.position || {};
+    button.className = ["scene-sign", hotspotConfig.className].filter(Boolean).join(" ");
+    button.type = "button";
+    button.dataset.roomHotspotId = hotspotConfig.id;
+    button.dataset.action = hotspotConfig.action || hotspotConfig.id || "content";
+    button.dataset.contentKey = hotspotConfig.contentKey || "";
+    button.dataset.targetRoom = hotspotConfig.targetRoom || "";
+    button.dataset.x = toDatasetValue(position.x);
+    button.dataset.y = toDatasetValue(position.y);
+    button.dataset.perspective = toDatasetValue(position.perspective, 900);
+    button.dataset.depth = toDatasetValue(position.depth);
+    button.dataset.rotateX = toDatasetValue(position.rotateX);
+    button.dataset.rotateY = toDatasetValue(position.rotateY);
+    button.dataset.rotate = toDatasetValue(position.rotate);
+    button.dataset.skewX = toDatasetValue(position.skewX);
+    button.dataset.skewY = toDatasetValue(position.skewY);
+    button.dataset.scale = toDatasetValue(position.scale, 1);
+    button.dataset.scaleX = toDatasetValue(position.scaleX, 1);
+    button.dataset.scaleY = toDatasetValue(position.scaleY, 1);
+    button.setAttribute("aria-label", hotspotConfig.ariaLabel || hotspotConfig.label || hotspotConfig.id);
+
+    const title = document.createElement("span");
+    title.className = "scene-sign__title";
+    title.textContent = hotspotConfig.label || hotspotConfig.id;
+    button.appendChild(title);
+    return button;
+  }
+
+  function renderRoomHotspots(roomScene) {
+    if (!sceneSignLayer || !Array.isArray(roomScene?.hotspots)) return;
+
+    const buttons = roomScene.hotspots.map(createRoomHotspotButton);
+    sceneSignLayer.replaceChildren(...buttons);
+    sceneSigns.splice(0, sceneSigns.length, ...buttons);
+  }
+
+  function applyRoomEffects(roomScene) {
+    const effects = roomScene?.effects || {};
+    insideLightLayers.forEach((layer) => {
+      layer.hidden = effects.firelight === false;
+    });
+    insideEyeLayers.forEach((layer) => {
+      layer.hidden = effects.dogEyes === false;
+    });
+  }
+
+  function setActiveRoom(roomId) {
+    const nextRoom = roomSceneMap[roomId] || roomSceneMap[fallbackRoomId];
+    if (!nextRoom) return false;
+
+    activeRoomId = nextRoom.id;
+    currentInsideImageSize = nextRoom.imageSize || insideImageSize;
+    currentEdgeFallbackColors = nextRoom.edgeFallbackColors || edgeFallbackColors;
+    currentParallaxDepths = nextRoom.parallaxDepths || parallaxDepths;
+    insideView.dataset.room = activeRoomId;
+    stage.dataset.room = activeRoomId;
+    renderRoomBackground(nextRoom);
+    renderRoomHotspots(nextRoom);
+    applyRoomEffects(nextRoom);
+    resetParallax(true);
+    updateSceneSigns();
+    updateEdgeColors();
+    return true;
+  }
+
   function applyParallaxTransform(layer, depth, useMotion) {
     const offsetX = useMotion ? currentX * depth.x : 0;
     const offsetY = useMotion ? currentY * depth.y : 0;
@@ -194,16 +315,16 @@ export function createInsideScene({
   function applyParallax() {
     const useMotion = !reducedMotionQuery.matches;
     insideParallaxLayers.forEach((layer, index) => {
-      const depth = parallaxDepths[index] || parallaxDepths[parallaxDepths.length - 1] || { x: 0, y: 0 };
+      const depth = currentParallaxDepths[index] || currentParallaxDepths[currentParallaxDepths.length - 1] || { x: 0, y: 0 };
       applyParallaxTransform(layer, depth, useMotion);
     });
 
     insideLightLayers.forEach((layer) => {
-      applyParallaxTransform(layer, parallaxDepths[0] || { x: 0, y: 0 }, useMotion);
+      applyParallaxTransform(layer, currentParallaxDepths[0] || { x: 0, y: 0 }, useMotion);
     });
 
     insideEyeLayers.forEach((layer) => {
-      applyParallaxTransform(layer, parallaxDepths[1] || { x: 0, y: 0 }, useMotion);
+      applyParallaxTransform(layer, currentParallaxDepths[1] || { x: 0, y: 0 }, useMotion);
     });
   }
 
@@ -283,8 +404,22 @@ export function createInsideScene({
     window.setTimeout(() => sparkle.remove(), 1000);
   }
 
-  function enter({ onReady } = {}) {
-    if (active) return;
+  function handleSceneSignClick(event) {
+    const sign = event.target.closest(".scene-sign");
+    if (!sign || !sceneSignLayer?.contains(sign)) return;
+    actionHandler?.(sign.dataset.action, sign, activeRoomId);
+  }
+
+  function setSceneActionHandler(handler) {
+    actionHandler = typeof handler === "function" ? handler : null;
+  }
+
+  function enter({ roomId = activeRoomId, onReady } = {}) {
+    setActiveRoom(roomId);
+    if (active) {
+      onReady?.();
+      return;
+    }
 
     active = true;
     stage.classList.add("is-inside");
@@ -310,6 +445,8 @@ export function createInsideScene({
   }
 
   function init() {
+    setActiveRoom(activeRoomId);
+
     insideView.addEventListener("pointermove", (event) => {
       updateParallaxTarget(event.clientX, event.clientY);
     });
@@ -317,6 +454,8 @@ export function createInsideScene({
     insideView.addEventListener("pointerleave", () => {
       resetParallax();
     });
+
+    sceneSignLayer?.addEventListener("click", handleSceneSignClick);
 
     stage.addEventListener("pointermove", (event) => {
       spawnCursorSparkle(event.clientX, event.clientY);
@@ -329,14 +468,24 @@ export function createInsideScene({
     }
   }
 
+  setActiveRoom(activeRoomId);
+
   return {
     enter,
+    get activeRoomId() {
+      return activeRoomId;
+    },
     get isActive() {
       return active;
+    },
+    getSceneSigns() {
+      return sceneSigns;
     },
     init,
     leave,
     resetParallax,
+    setActiveRoom,
+    setSceneActionHandler,
     updateEdgeColors,
     updateSceneSigns
   };

@@ -69,6 +69,7 @@
       <span class="sparkle" aria-hidden="true"></span>
       <span class="sparkle" aria-hidden="true"></span>
     </button>
+    <div class="exterior-hotspot-layer" id="exteriorHotspotLayer" aria-label="Therapy House exterior room navigation"></div>
     <video class="transition-video" id="doorVideo" playsinline preload="metadata">
       <source src="assets/media/door-transition.mp4" type="video/mp4">
     </video>
@@ -140,6 +141,15 @@
             </li>
           </ul>
           <p class="philosophy-modal__closing">Your wellbeing matters. We are here to support you.</p>
+        </section>
+      </div>
+      <div class="content-modal" id="contentModal" role="dialog" aria-modal="true" aria-labelledby="contentModalTitle" aria-hidden="true" hidden>
+        <section class="content-modal__panel">
+          <button class="content-modal__close" id="contentModalClose" type="button" aria-label="Close content window">&times;</button>
+          <p class="content-modal__eyebrow" id="contentModalEyebrow">Therapy House</p>
+          <h2 class="content-modal__title" id="contentModalTitle">Therapy House</h2>
+          <div class="content-modal__rule" aria-hidden="true">o</div>
+          <div class="content-modal__body" id="contentModalBody"></div>
         </section>
       </div>
       <div class="contact-modal" id="contactModal" role="dialog" aria-modal="true" aria-labelledby="contactTitle" aria-hidden="true" hidden>
