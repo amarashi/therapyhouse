@@ -1,0 +1,110 @@
+---
+import { callsToAction } from '../data/site.js';
+
+/**
+ * The two calls to action, held in the thumb zone, on phones only.
+ *
+ * PRODUCT.md asks for booking and calling at equal weight, neither buried.
+ * On a desktop the masthead carries both and they are on screen the whole
+ * time. On a phone they were not: the masthead's booking link was a 143x26px
+ * text link in the top-right corner — out of reach of a thumb and under the
+ * 44px the site's own `.btn` honours — the phone number was dropped entirely,
+ * and the next affordance of any kind was the closing card, 4,790px down the
+ * homepage. Five and a half screens of scrolling, on the device this audience
+ * actually uses, with nothing to act on.
+ *
+ * So on a phone the pair moves to where a thumb already is. It is a bar rather
+ * than a floating button because the two actions are equal and a single
+ * floating button would have to pick one; both are pills of the same width, so
+ * neither reads as the fallback for the other.
+ *
+ * Labels are `site.js`'s, unchanged — the call button shows the number itself
+ * because a parent scanning for one is looking for digits, not for a verb.
+ *
+ * Height is reserved by the footer rather than by `body`, so the extra space
+ * carries the footer's own white behind the bar instead of opening a strip of
+ * page ground beneath it. Over-reserving is therefore free, which is what
+ * keeps this from drifting if a label ever wraps.
+ */
+const { book, call } = callsToAction;
+---
+
+<div class="actionbar">
+  <a
+    class="btn btn--primary actionbar__btn"
+    href={book.href}
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    {book.label}<span class="sr-only"> (opens in a new tab)</span>
+  </a>
+  <a class="btn btn--secondary actionbar__btn actionbar__btn--call" href={call.href}>
+    {call.label}
+  </a>
+</div>
+
+<style>
+  /* Nowhere but a phone. Above this width the masthead's own pair is on screen
+     and a bar would be taking a strip of viewport to repeat it. */
+  .actionbar {
+    display: none;
+  }
+
+  @media (max-width: 44rem) {
+    .actionbar {
+      position: fixed;
+      inset: auto 0 0;
+      z-index: 45;
+      display: flex;
+      gap: var(--space-sm);
+      padding: var(--space-sm) var(--space-md);
+      /* The home indicator's strip on a phone that reports one. `max()` keeps
+         the ordinary padding everywhere else. */
+      padding-bottom: max(var(--space-sm), env(safe-area-inset-bottom));
+      /* Opaque, never translucent: DESIGN.md's glass is for small ambient
+         objects over the illustration, and this is a content surface with the
+         page scrolling underneath it. */
+      background: var(--surface-raised);
+      border-top: 1px solid var(--line);
+      /* The lit top edge every raised surface in this system carries, and a
+         warm shadow thrown upward — brown-black, never neutral. The bar is
+         standing in front of the page, not printed on it. */
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.86),
+        0 -6px 20px rgba(48, 25, 8, 0.1);
+    }
+
+    /* Equal widths, because the two actions are equal. `flex: 1 1 0` rather
+       than `1 1 auto` so the longer label cannot claim more of the bar than
+       the shorter one. */
+    .actionbar__btn {
+      flex: 1 1 0;
+      min-width: 0;
+      min-height: 48px;
+      padding-inline: var(--space-sm);
+      text-align: center;
+    }
+
+    .actionbar__btn--call {
+      /* A published number a parent is reading off the screen. */
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+  }
+
+  /* Measured, not assumed: "Call 07 3300 2170" holds one line everywhere, and
+     "Book an appointment" takes two at 430px and below. That is left alone
+     rather than shrunk away — a wrapped label in a pill is ordinary on a
+     phone, both pills stay the same height because `min-height` sets it, and
+     the alternative is taking a step off the label a worried parent is
+     reading. The step below keeps the narrowest phones to the same two lines
+     the wider ones get, in the ~125px of label a 320px screen leaves.
+
+     Bar height measures 69px at 320 and 360, 72px at 390. The footer reserves
+     92px (`--action-bar-h`), so there is room for a label to grow. */
+  @media (max-width: 23.5rem) {
+    .actionbar__btn {
+      font-size: var(--text-meta);
+      padding-inline: var(--space-xs);
+    }
+  }
+</style>

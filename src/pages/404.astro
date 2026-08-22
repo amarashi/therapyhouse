@@ -1,0 +1,94 @@
+---
+import PlainLayout from '../layouts/PlainLayout.astro';
+import { footerNav, contact, callsToAction } from '../data/site.js';
+
+/**
+ * A wrong URL is a dead end, and the framework's default one hands a worried
+ * parent a stack trace. This one hands them the same doors the rail does,
+ * plus the phone number, and never pretends the page exists.
+ */
+---
+
+<PlainLayout
+  title="Page not found"
+  description="That page isn't here. Every part of Therapy House is one link away, and reception can point you at the rest."
+>
+  <div class="wrap notfound">
+    <div class="prose--flush prose">
+      <h1>That page isn't here.</h1>
+      <p class="lede">
+        It may have moved, or the address may have a typo in it. Everything on the
+        site is one link away below.
+      </p>
+    </div>
+
+    <section aria-labelledby="everywhere">
+      <div class="section-head"><h2 id="everywhere">Where you can go</h2></div>
+      {/* Every page, not the six floors of the lift. The lede above promises
+          "everything on the site is one link away below", and the list it was
+          promising over left out Home, the philosophy page and the careers
+          page — which was the whole of `/work-with-us/`'s reachability. A dead
+          end that hands you an incomplete map is still a dead end. */}
+      <ul class="doors">
+        {footerNav.map((item) => (
+          <li>
+            <a href={item.href}>{item.label}</a>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="prose--flush prose" aria-labelledby="ask">
+      <h2 id="ask">Or just ask</h2>
+      <p>
+        Reception can point you at the right page, or answer the question directly:
+        <a href={callsToAction.call.href}>{contact.phone}</a> ·{' '}
+        <a href={`mailto:${contact.email}`}>{contact.email}</a>
+      </p>
+    </section>
+  </div>
+</PlainLayout>
+
+<style>
+  .notfound {
+    margin-top: var(--space-3xl);
+  }
+
+  .notfound h1 {
+    margin-bottom: var(--space-lg);
+  }
+
+  .doors {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--space-lg);
+    display: grid;
+    gap: var(--space-sm) var(--space-xl);
+    grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr));
+  }
+
+  .doors a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    font-weight: 700;
+    border-bottom: 1px solid var(--line);
+  }
+
+  /* The number and the address are the line's content rather than words inside
+     a sentence, so WCAG 2.5.8's inline exception does not cover them and 21px
+     is under the 24 they are owed. Padding on an inline-block, the same fix the
+     footer and the homepage's reception line use. */
+  .notfound a[href^='tel:'],
+  .notfound a[href^='mailto:'] {
+    display: inline-block;
+    padding-block: 5px;
+  }
+
+  @media (max-width: 44rem) {
+    .notfound a[href^='tel:'],
+    .notfound a[href^='mailto:'] {
+      padding-block: 11px;
+    }
+  }
+</style>

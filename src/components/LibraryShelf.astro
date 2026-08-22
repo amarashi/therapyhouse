@@ -1,0 +1,770 @@
+---
+/**
+ * The library shelf.
+ *
+ * Two things are on this page at once and the order matters. The list of
+ * volumes is the content: it is server-rendered, it is complete, and it works
+ * with no script, no WebGL and no patience. The shelf above it is a second
+ * view of the same eleven titles — a walnut board you can push along, take a
+ * volume down from, open and read or play.
+ *
+ * The shelf is attached only when it is asked for and only when it can be
+ * afforded: on intersection, behind a WebGL check, and never under
+ * `prefers-reduced-motion`. If any of that fails nothing is reported and
+ * nothing is lost, because the list was never waiting on it.
+ */
+import { volumes, youtubeChannel } from '../data/library-shelf.js';
+
+const total = volumes.length;
+const bookCount = volumes.filter((volume) => volume.kind === 'book').length;
+const videoCount = total - bookCount;
+---
+
+<section class="shelf" aria-labelledby="shelf-heading">
+  <div class="shelf__intro">
+    <h2 id="shelf-heading">Books and videos</h2>
+    <p class="lede">
+      Two books written here — one for children, one for the clinicians who sit with
+      them — and the talks Dr Amelia has recorded over the years.
+    </p>
+  </div>
+
+  {/*
+    The stage. `data-state` is the renderer's handshake: it stays `idle` unless
+    the script attaches, which is what keeps the whole block out of the way on
+    a phone that cannot spare it.
+  */}
+  <div class="shelf__stage" data-state="idle" data-shelf-host tabindex="-1">
+    <canvas class="shelf__canvas" data-shelf="canvas" aria-hidden="true"></canvas>
+
+    <div class="shelf__browse" data-shelf="browse">
+      <p class="shelf__title" data-shelf="title">{volumes[0].title}</p>
+      <p class="shelf__note" data-shelf="note">{volumes[0].note}</p>
+
+      <div class="shelf__controls">
+        <button class="shelf__step" type="button" data-shelf="prev" aria-label="Previous volume">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M15 5 8 12l7 7" />
+          </svg>
+        </button>
+
+        {/* The count is where you are on a shelf that wraps, which is the one
+            thing the picture cannot tell you. */}
+        <p class="shelf__counter" data-shelf="counter">01 / {String(total).padStart(2, '0')}</p>
+
+        <button class="shelf__step" type="button" data-shelf="next" aria-label="Next volume">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="m9 5 7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="shelf__markers" data-shelf="markers" role="group" aria-label="Jump to a volume">
+        {volumes.map((volume, index) => (
+          <button
+            type="button"
+            data-index={index}
+            aria-current={index === 0 ? 'true' : 'false'}
+            aria-label={volume.gloss || volume.title}
+          ></button>
+        ))}
+      </div>
+
+      <button class="btn btn--primary shelf__take" type="button" data-shelf="open">
+        Take it down
+      </button>
+    </div>
+
+    <aside class="shelf__detail" data-shelf="detail" aria-hidden="true" inert>
+      <button class="shelf__close" type="button" data-shelf="close" aria-label="Put it back">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M6 6 18 18M18 6 6 18" />
+        </svg>
+      </button>
+
+      <h3 class="shelf__detail-title" data-shelf="detailTitle"></h3>
+      <p class="shelf__detail-meta" data-shelf="detailMeta" hidden></p>
+      <p class="shelf__detail-deck" data-shelf="detailDeck"></p>
+
+      <dl class="shelf__facts" data-shelf="detailFacts" hidden></dl>
+
+      <div class="shelf__actions">
+        <a class="btn btn--secondary" data-shelf="detailAction" href="#"></a>
+        <button class="btn btn--secondary" type="button" data-shelf="toggle" hidden>
+          Open the book
+        </button>
+        <button class="btn btn--secondary shelf__play" type="button" data-shelf="play" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="shelf__play-glyph">
+            <path d="M8 5.5v13l11-6.5z" />
+          </svg>
+          <span data-shelf="playLabel">Play it here</span>
+        </button>
+      </div>
+
+      <div class="shelf__pages" data-shelf="pages" hidden>
+        <button class="shelf__step" type="button" data-shelf="prevPage" aria-label="Previous page" disabled>
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M15 5 8 12l7 7" />
+          </svg>
+        </button>
+        <p class="shelf__page-label">
+          <span data-shelf="pageLabel">Closed</span>
+          <span class="shelf__page-counter" data-shelf="pageCounter"></span>
+        </p>
+        <button class="shelf__step" type="button" data-shelf="nextPage" aria-label="Next page" disabled>
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="m9 5 7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    </aside>
+
+    {/* The video plays inside the framed panel on the back wall. The player is
+        a real iframe sized to that frame's projected corners, not a texture —
+        so it keeps its own controls, its own captions and its own keyboard. */}
+    <div class="shelf__theatre" data-shelf="theatre" hidden></div>
+
+    <p class="sr-only" role="status" aria-live="polite" data-shelf="live"></p>
+  </div>
+
+  {/* The content of record. Always here, never behind the shelf. */}
+  <div class="shelf__list">
+    <h3 class="shelf__list-heading">
+      All {total} — {bookCount} books and {videoCount} videos
+    </h3>
+
+    <ul class="volumes">
+      {volumes.map((volume) => (
+        <li class="volume">
+          <div class="volume__art">
+            {volume.kind === 'book' ? (
+              <img
+                src={volume.cover}
+                alt={`Cover of ${volume.title}`}
+                width="240"
+                height="224"
+                loading="lazy"
+                decoding="async"
+              />
+            ) : (
+              <img
+                src={volume.thumbnail}
+                alt=""
+                width="240"
+                height="135"
+                loading="lazy"
+                decoding="async"
+              />
+            )}
+          </div>
+
+          <div class="volume__body">
+            <h4 class="volume__title">
+              <a
+                href={volume.kind === 'book' ? volume.action.href : volume.href}
+                lang={volume.titleLang}
+                dir={volume.titleLang ? 'rtl' : undefined}
+                {...(volume.kind === 'video' ? { target: '_blank', rel: 'noopener' } : {})}
+              >
+                {volume.title}
+              </a>
+            </h4>
+
+            {volume.gloss && <p class="volume__gloss">{volume.gloss}</p>}
+            <p class="volume__deck">{volume.deck}</p>
+
+            {volume.facts && (
+              <dl class="volume__facts">
+                {volume.facts.map((fact) => (
+                  <>
+                    <dt>{fact.term}</dt>
+                    <dd>{fact.value}</dd>
+                  </>
+                ))}
+              </dl>
+            )}
+
+            <p class="volume__action">
+              <a
+                href={volume.kind === 'book' ? volume.action.href : volume.href}
+                {...(volume.kind === 'video' ? { target: '_blank', rel: 'noopener' } : {})}
+              >
+                {volume.kind === 'book' ? volume.action.label : 'Watch on YouTube'}
+              </a>
+            </p>
+          </div>
+        </li>
+      ))}
+    </ul>
+
+    <p class="shelf__channel">
+      Dr Amelia also publishes in Persian on
+      <a href={youtubeChannel} target="_blank" rel="noopener">her YouTube channel</a>.
+    </p>
+  </div>
+</section>
+
+<style>
+  .shelf {
+    margin-top: var(--space-section);
+  }
+
+  .shelf__intro {
+    max-width: 46rem;
+  }
+
+  .shelf__intro h2 {
+    margin-top: 0;
+  }
+
+  /* ---- The stage ----
+     Idle by default. The renderer flips `data-state` to `ready`, which is the
+     only thing that gives the block any height — so a browser that cannot run
+     it never reserves a screen of empty walnut. */
+
+  .shelf__stage {
+    display: none;
+  }
+
+  .shelf__stage[data-state='ready'],
+  .shelf__stage[data-state='booting'] {
+    display: block;
+    position: relative;
+    margin-top: var(--space-2xl);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    background:
+      radial-gradient(120% 90% at 50% 6%, #f0e2c6 0%, #ded0b4 52%, #c2ad8b 100%);
+    border: 1px solid var(--line);
+    /* Upright on a phone: at 16/9 a 390px screen gave the shelf 219px, which
+       is a strip of book tops with the controls sitting on them. The volumes
+       need vertical room more than they need width. */
+    aspect-ratio: 3 / 4;
+    min-height: 32rem;
+    max-height: 84vh;
+    /* The one heavy shadow in the system, per DESIGN.md's panel role. */
+    box-shadow: 0 30px 72px rgba(25, 13, 5, 0.18);
+  }
+
+  @media (min-width: 51.25rem) {
+    .shelf__stage[data-state='ready'],
+    .shelf__stage[data-state='booting'] {
+      aspect-ratio: 16 / 9;
+      min-height: 26rem;
+      max-height: min(70vh, 640px);
+    }
+  }
+
+  /* `hidden` has to win. The UA sheet sets `[hidden] { display: none }` at the
+     bottom of the cascade, so a `.btn` with `display: inline-flex` outranks it
+     and the "Play it here" button turned up on a printed book. */
+  .shelf__stage [hidden] {
+    display: none !important;
+  }
+
+  .shelf__stage:focus-visible {
+    outline: 3px solid var(--focus-blue);
+    outline-offset: 3px;
+  }
+
+  .shelf__canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ---- Browse ---- */
+
+  .shelf__browse {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: var(--space-2xl) var(--space-panel) var(--space-lg);
+    display: grid;
+    justify-items: center;
+    gap: var(--space-sm);
+    text-align: center;
+    /* Reads as light falling on the board rather than as a scrim laid over a
+       picture — the copy needs a ground, the room needs to stay visible. The
+       fade runs long and starts fully transparent so the shelf edge is never
+       cut by a visible band. */
+    background: linear-gradient(
+      to top,
+      rgba(255, 252, 244, 0.96) 0%,
+      rgba(255, 252, 244, 0.9) 34%,
+      rgba(255, 252, 244, 0.62) 62%,
+      rgba(255, 252, 244, 0) 100%
+    );
+    transition: opacity 260ms ease, transform 260ms ease;
+  }
+
+  .is-detail .shelf__browse {
+    opacity: 0;
+    transform: translateY(12px);
+    pointer-events: none;
+  }
+
+  .shelf__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--text-subhead);
+    line-height: var(--lh-subhead);
+    color: var(--ink-green);
+    text-wrap: balance;
+  }
+
+  .shelf__note {
+    margin: 0;
+    font-size: var(--text-meta);
+    line-height: var(--lh-tight);
+    color: var(--ink-soft);
+    max-width: 34rem;
+  }
+
+  .shelf__controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+  }
+
+  .shelf__step {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid rgba(43, 33, 24, 0.16);
+    border-radius: var(--radius-pill);
+    background: var(--surface-raised);
+    color: var(--hedge-green);
+    cursor: pointer;
+    box-shadow: 0 10px 24px rgba(45, 25, 9, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.86);
+    transition: background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  }
+
+  .shelf__step svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Warmer when you reach for it, not heavier — the gold bloom from DESIGN.md. */
+  .shelf__step:hover:not(:disabled) {
+    background: var(--lamplit-cream);
+    box-shadow:
+      0 12px 26px rgba(38, 22, 8, 0.16),
+      0 0 28px rgba(255, 234, 172, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.86);
+    transform: translateY(-1px);
+  }
+
+  .shelf__step:disabled {
+    opacity: 0.38;
+    cursor: default;
+  }
+
+  .shelf__counter {
+    margin: 0;
+    min-width: 5.5ch;
+    font-size: var(--text-meta);
+    font-variant-numeric: lining-nums tabular-nums;
+    color: var(--ink-faint);
+  }
+
+  .shelf__markers {
+    display: flex;
+    gap: 7px;
+  }
+
+  .shelf__markers button {
+    width: 9px;
+    height: 9px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(43, 33, 24, 0.22);
+    cursor: pointer;
+    transition: background 160ms ease, transform 160ms ease;
+  }
+
+  .shelf__markers button:hover {
+    background: rgba(43, 33, 24, 0.44);
+  }
+
+  .shelf__markers button[aria-current='true'] {
+    background: var(--hedge-green);
+    transform: scale(1.34);
+  }
+
+  .shelf__take {
+    margin-top: var(--space-xs);
+  }
+
+  /* ---- Detail ---- */
+
+  .shelf__detail {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: min(30rem, 42%);
+    height: 100%;
+    overflow-y: auto;
+    padding: var(--space-panel);
+    background: var(--surface-raised);
+    border-left: 1px solid var(--line);
+    opacity: 0;
+    transform: translateX(16px);
+    pointer-events: none;
+    transition: opacity 300ms ease, transform 300ms ease;
+  }
+
+  .is-detail .shelf__detail {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+
+  .shelf__close {
+    position: absolute;
+    top: var(--space-md);
+    right: var(--space-md);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    border: 1px solid rgba(43, 33, 24, 0.14);
+    border-radius: var(--radius-pill);
+    background: var(--surface-sunk);
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .shelf__close svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+
+  .shelf__close:hover {
+    background: var(--lamplit-cream);
+    box-shadow: 0 0 28px rgba(255, 234, 172, 0.5);
+  }
+
+  .shelf__detail-title {
+    margin: 0 3rem var(--space-xs) 0;
+    font-family: var(--font-display);
+    font-size: var(--text-subhead);
+    line-height: var(--lh-subhead);
+    color: var(--heading);
+    text-wrap: balance;
+  }
+
+  .shelf__detail-meta {
+    margin: 0 0 var(--space-md);
+    font-size: var(--text-meta);
+    color: var(--ink-faint);
+  }
+
+  .shelf__detail-deck {
+    margin: 0 0 var(--space-lg);
+    font-size: var(--text-secondary);
+    line-height: var(--lh-compact);
+    color: var(--ink-soft);
+  }
+
+  /* The detail-tile pattern from DESIGN.md: this is what factual content uses
+     here, rather than a grid of little cards. */
+  .shelf__facts {
+    display: grid;
+    grid-template-columns: minmax(6rem, auto) 1fr;
+    gap: var(--space-xs) var(--space-md);
+    margin: 0 0 var(--space-lg);
+    padding: var(--space-md) 0;
+    border-top: 1px solid var(--line-soft);
+    border-bottom: 1px solid var(--line-soft);
+  }
+
+  .shelf__facts dt {
+    font-size: var(--text-label);
+    font-weight: 800;
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding-top: 0.18em;
+  }
+
+  .shelf__facts dd {
+    margin: 0;
+    font-size: var(--text-secondary);
+    line-height: var(--lh-tight);
+    color: var(--ink);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+
+  .shelf__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+  }
+
+  .shelf__play-glyph {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+  }
+
+  .shelf__pages {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    margin-top: var(--space-lg);
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--line-soft);
+  }
+
+  .shelf__page-label {
+    flex: 1;
+    margin: 0;
+    font-size: var(--text-meta);
+    line-height: var(--lh-tight);
+    color: var(--ink-soft);
+    text-align: center;
+  }
+
+  .shelf__page-counter {
+    display: block;
+    color: var(--ink-faint);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+
+  .shelf__theatre {
+    position: absolute;
+    z-index: 3;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    box-shadow: 0 18px 42px rgba(25, 13, 5, 0.4);
+  }
+
+  .shelf__theatre :global(iframe) {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+  }
+
+  /* Below the panel breakpoint the detail becomes a sheet across the foot of
+     the stage and the renderer stops offsetting the camera. */
+  @media (max-width: 51.25rem) {
+    .shelf__detail {
+      top: auto;
+      bottom: 0;
+      width: 100%;
+      height: auto;
+      max-height: 66%;
+      border-left: 0;
+      border-top: 1px solid var(--line);
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      transform: translateY(16px);
+      /* Same deference as the browse cluster: the booking and call bar owns
+         the foot of the viewport and nothing here may hide under it. */
+      padding-bottom: calc(var(--space-panel) + 5rem);
+    }
+  }
+
+  /* Below 44rem the booking and call bar is fixed to the foot of the viewport,
+     and those two CTAs are not allowed to be crowded by anything — so the
+     shelf's own controls keep clear of the strip it occupies rather than
+     hiding under it.
+
+     This has to sit after `.shelf__browse`'s own `padding` shorthand. Media
+     queries carry no extra specificity, so written above it the shorthand won
+     and the reservation silently did nothing. */
+  @media (max-width: 43.99rem) {
+    .shelf__browse {
+      padding-bottom: calc(var(--space-lg) + 5rem);
+    }
+  }
+
+  /* ---- The list ---- */
+
+  .shelf__list {
+    margin-top: var(--space-section);
+  }
+
+  .shelf__list-heading {
+    margin: 0 0 var(--space-xl);
+    padding-bottom: var(--space-md);
+    border-bottom: 1px solid var(--line);
+    font-size: var(--text-subhead);
+    line-height: var(--lh-subhead);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+
+  .volumes {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: var(--space-2xl);
+  }
+
+  @media (min-width: 56rem) {
+    .volumes {
+      grid-template-columns: 1fr 1fr;
+      column-gap: var(--space-3xl);
+    }
+  }
+
+  .volume {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr;
+    gap: var(--space-lg);
+    align-items: start;
+  }
+
+  .volume__art {
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    /* The warm brown shadow, never a neutral one. */
+    box-shadow: 0 10px 22px rgba(60, 35, 12, 0.14);
+  }
+
+  .volume__art img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .volume__title {
+    margin: 0 0 var(--space-xs);
+    font-family: var(--font-display);
+    font-size: var(--text-cardtitle);
+    line-height: var(--lh-subhead);
+    text-wrap: balance;
+  }
+
+  .volume__title a {
+    color: var(--link);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+
+  .volume__title a:hover {
+    color: var(--link-hover);
+    text-decoration-thickness: 2px;
+  }
+
+  .volume__gloss,
+  .volume__deck {
+    margin: 0 0 var(--space-sm);
+    font-size: var(--text-secondary);
+    line-height: var(--lh-compact);
+    color: var(--ink-soft);
+  }
+
+  .volume__gloss {
+    color: var(--ink-faint);
+  }
+
+  .volume__facts {
+    display: grid;
+    grid-template-columns: minmax(5.5rem, auto) 1fr;
+    gap: 2px var(--space-md);
+    margin: 0 0 var(--space-sm);
+  }
+
+  .volume__facts dt {
+    font-size: var(--text-label);
+    font-weight: 800;
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding-top: 0.24em;
+  }
+
+  .volume__facts dd {
+    margin: 0;
+    font-size: var(--text-meta);
+    line-height: var(--lh-tight);
+    color: var(--ink);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+
+  .volume__action {
+    margin: 0;
+    font-size: var(--text-meta);
+  }
+
+  .shelf__channel {
+    margin-top: var(--space-2xl);
+    font-size: var(--text-secondary);
+    color: var(--ink-soft);
+  }
+</style>
+
+<script>
+  import { volumes } from '../data/library-shelf.js';
+
+  const host = document.querySelector<HTMLElement>('[data-shelf-host]');
+  const canvas = host?.querySelector<HTMLCanvasElement>('canvas');
+
+  /* Three gates before a single byte of three.js is fetched.
+     Motion preference is a real answer, not a degraded one — this clinic sees
+     neurodivergent families, and a shelf that pans and bobs is exactly what
+     that visitor turned the setting off to avoid. */
+  const wantsMotion = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const hasWebGL = (() => {
+    try {
+      const probe = document.createElement('canvas');
+      return Boolean(
+        probe.getContext('webgl2') || probe.getContext('webgl')
+      );
+    } catch {
+      return false;
+    }
+  })();
+
+  /* Watch the section, not the stage. The stage is `display: none` until the
+     renderer claims it, and an element with no box never intersects anything —
+     so observing it directly is a shelf that waits forever. */
+  const sentinel = host?.parentElement;
+
+  if (host && canvas && sentinel && wantsMotion && hasWebGL && !navigator.connection?.saveData) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        observer.disconnect();
+        host.dataset.state = 'booting';
+
+        import('../scripts/bookshelf/renderer.js')
+          .then(({ createShelfRenderer }) => {
+            const shelf = createShelfRenderer(host, canvas, volumes);
+            return shelf.ready.catch(() => {
+              shelf.dispose();
+              host.dataset.state = 'idle';
+            });
+          })
+          .catch(() => {
+            /* A shelf that will not build is a shelf nobody hears about. The
+               list below it was always the answer. */
+            host.dataset.state = 'idle';
+          });
+      },
+      { rootMargin: '200px' }
+    );
+
+    observer.observe(sentinel);
+  }
+</script>

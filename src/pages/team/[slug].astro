@@ -1,0 +1,238 @@
+---
+import { getCollection, render } from 'astro:content';
+import PlainLayout from '../../layouts/PlainLayout.astro';
+import CallToAction from '../../components/CallToAction.astro';
+import { site, isAcceptingNewClients } from '../../data/site.js';
+
+export async function getStaticPaths() {
+  const everyone = await getCollection('team');
+  return everyone.map((person) => ({ params: { slug: person.id }, props: { person } }));
+}
+
+const { person } = Astro.props;
+const { Content } = await render(person);
+const { name, role, image, imageAlt, credentials, worksWith, worksOn, languages, availability, kind } =
+  person.data;
+
+/* Same two facts as the team card. A card that promises "Works on: Autism,
+   ADHD" and a profile that does not repeat it is the kind of gap a parent
+   notices. */
+const facts = [
+  { term: 'Works with', value: worksWith },
+  { term: 'Works on', value: worksOn },
+].filter((f) => f.value && f.value.length > 0);
+
+const accepting = isAcceptingNewClients(availability);
+
+/**
+ * Person-level structured data. This is the page a parent lands on from a
+ * search for a named practitioner, so the machine-readable identity belongs
+ * here rather than only on the team index.
+ *
+ * `worksFor` ties them to the clinic. An AHPRA registration number would go in
+ * `identifier` — the clinic has not supplied those yet.
+ */
+const personSchema =
+  kind === 'dog'
+    ? null
+    : {
+        '@context': 'https://schema.org',
+        '@type': 'Person',
+        name,
+        jobTitle: role,
+        ...(credentials ? { hasCredential: credentials } : {}),
+        ...(languages ? { knowsLanguage: languages } : {}),
+        image: new URL(image, site.origin).href,
+        url: new URL(`/team/${person.id}/`, site.origin).href,
+        worksFor: { '@type': 'MedicalBusiness', name: site.name, url: site.origin },
+      };
+---
+
+<PlainLayout
+  title={name}
+  description={`${name}, ${role} at Therapy House in The Gap, Brisbane.`}
+  showClosing={false}
+>
+  {personSchema && (
+    <script type="application/ld+json" set:html={JSON.stringify(personSchema)} slot="head" />
+  )}
+
+  <div class="wrap profile">
+    <p class="profile__back"><a class="standalone-link" href="/team/">← All of the team</a></p>
+
+    <div class="profile__grid">
+      {/* 18rem in the two-column grid below, 14rem once it stacks — so a
+          1x screen takes the 280 step and a 2x screen the 560, and nobody
+          takes a photograph wider than the page can paint. */}
+      <img
+        class="profile__photo"
+        src={image}
+        srcset={`${image.replace(/\.webp$/, '-280.webp')} 280w, ${image} 560w`}
+        sizes="(max-width: 46rem) 14rem, 18rem"
+        alt={imageAlt}
+        width="420"
+        height="420"
+        decoding="async"
+      />
+
+      <div class="profile__body">
+        <h1>{name}</h1>
+        <p class="profile__role">{role}</p>
+        {credentials && credentials !== role && <p class="profile__creds">{credentials}</p>}
+
+        {availability && (
+          <p class:list={['profile__availability', accepting && 'is-accepting']}>{availability}</p>
+        )}
+
+        {facts.length > 0 && (
+          <dl class="profile__facts">
+            {facts.map((fact) => (
+              <div>
+                <dt>{fact.term}</dt>
+                <dd>{fact.value.join(' · ')}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+
+        {languages && languages.length > 1 && (
+          <p class="profile__languages">
+            Works in {languages.join(', ')}
+          </p>
+        )}
+
+        <div class="profile__prose">
+          <Content />
+        </div>
+
+        {kind !== 'dog' && <CallToAction />}
+      </div>
+    </div>
+  </div>
+</PlainLayout>
+
+<style>
+  .profile {
+    padding-block: var(--space-2xl) var(--space-3xl);
+  }
+
+  .profile__back {
+    margin-bottom: var(--space-xl);
+  }
+
+  .profile__grid {
+    display: grid;
+    gap: var(--space-2xl);
+    grid-template-columns: minmax(0, 18rem) minmax(0, 34rem);
+    align-items: start;
+  }
+
+  .profile__photo {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: var(--radius-xl);
+    background: var(--surface-sunk);
+  }
+
+  .profile__body h1 {
+    font-size: var(--text-headline);
+    margin-bottom: var(--space-sm);
+  }
+
+  .profile__role {
+    font-size: var(--text-lede);
+    line-height: var(--lh-lede);
+    color: var(--ink-soft);
+    margin-bottom: var(--space-xs);
+  }
+
+  /* The qualifications are the reason this page converts, so they are set at
+     full ink and heavier than the role above them — not as fine print. */
+  .profile__creds {
+    color: var(--ink);
+    font-weight: 700;
+    font-size: var(--text-body);
+    font-variant-numeric: lining-nums tabular-nums;
+    margin-bottom: var(--space-lg);
+  }
+
+  .profile__availability {
+    display: inline-block;
+    font-size: var(--text-meta);
+    font-weight: 700;
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-pill);
+    background: var(--surface-sunk);
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    margin-bottom: var(--space-lg);
+  }
+
+  .profile__availability.is-accepting {
+    background: var(--surface-accent);
+    border-color: var(--hedge-green);
+    color: var(--hedge-green-deep);
+  }
+
+  /* Same tile as the team card, and it gets the same edges — see
+     `.person__facts`. Cream on warm white is a two-percent step, so without a
+     hairline and the lit top edge the block reads as a smudge behind the words
+     rather than as the detail tile DESIGN.md specifies. */
+  .profile__facts {
+    margin: 0 0 var(--space-lg);
+    padding: var(--space-md) var(--space-lg);
+    background: var(--surface-sunk);
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius-md);
+    box-shadow: var(--edge-lit);
+    display: grid;
+    gap: var(--space-sm);
+  }
+
+  .profile__facts > div {
+    display: grid;
+    grid-template-columns: 7rem 1fr;
+    gap: var(--space-sm);
+    align-items: baseline;
+  }
+
+  .profile__facts dt {
+    font-size: var(--text-label);
+    font-weight: 800;
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .profile__facts dd {
+    margin: 0;
+    color: var(--ink);
+  }
+
+  @media (max-width: 30rem) {
+    .profile__facts > div {
+      grid-template-columns: 1fr;
+      gap: var(--space-xs);
+    }
+  }
+
+  .profile__languages {
+    font-weight: 600;
+    color: var(--chestnut);
+  }
+
+  .profile__prose {
+    margin-bottom: var(--space-xl);
+  }
+
+  @media (max-width: 46rem) {
+    .profile__grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .profile__photo {
+      max-width: 14rem;
+    }
+  }
+</style>

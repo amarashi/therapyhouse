@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-import { roomIds, roomSceneDefaults } from "../assets/scripts/content-data.js";
+import { roomIds, roomSceneDefaults } from "../public/assets/scripts/content-data.js";
 
 const root = new URL("../", import.meta.url);
 
@@ -9,8 +9,8 @@ async function readProjectFile(path) {
   return readFile(new URL(path, root), "utf8");
 }
 
-const insideSceneScript = await readProjectFile("assets/scripts/inside-scene.js");
-const appScript = await readProjectFile("assets/scripts/app.js");
+const insideSceneScript = await readProjectFile("public/assets/scripts/inside-scene.js");
+const appScript = await readProjectFile("public/assets/scripts/app.js");
 
 assert.equal(roomSceneDefaults.initialRoomId, "welcome");
 assert.deepEqual(Object.keys(roomSceneDefaults.rooms), roomIds.filter((roomId) => roomId !== "exterior"));

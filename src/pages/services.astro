@@ -1,0 +1,234 @@
+---
+import { getEntry, render } from 'astro:content';
+import PlainLayout from '../layouts/PlainLayout.astro';
+import HeroReveal from '../components/HeroReveal.astro';
+
+const page = await getEntry('pages', 'services');
+if (!page) throw new Error('Missing content: src/content/pages/services.md');
+
+const { Content } = await render(page);
+const { title, description, lede, offerings, therapyModels, fees, rebates, reports, lastReviewed } =
+  page.data;
+
+const reviewedLabel = lastReviewed
+  ? new Intl.DateTimeFormat('en-AU', { month: 'long', year: 'numeric' }).format(lastReviewed)
+  : null;
+
+/* An evening surcharge is not a session you can book, so it never joins the
+   column of session prices a visitor is comparing. */
+const sessionFees = fees?.filter((row) => !row.adjustment) ?? [];
+const adjustments = fees?.filter((row) => row.adjustment) ?? [];
+
+const feeGroups = [
+  { label: null, rows: sessionFees },
+  ...(adjustments.length > 0 ? [{ label: 'Adjustments', rows: adjustments }] : []),
+];
+---
+
+<PlainLayout title={title} description={description}>
+  <HeroReveal
+    slot="hero"
+    title={title}
+    lede={lede}
+    image="/assets/rooms/consulting-room-out.webp"
+    imageSmall="/assets/rooms/consulting-room-out-720.webp"
+    imageMedium="/assets/rooms/consulting-room-out-1080.webp"
+    imageMediumWidth={1086}
+    imageAlt="The consulting room — armchairs, lamplight and a window onto the garden"
+    imageWidth={1448}
+    imageHeight={1086}
+  />
+
+  <div class="wrap page">
+    <div class="prose--flush prose stack">
+      <Content />
+    </div>
+
+    {/*
+      What the clinic does, in one band: the list a visitor scans for their own
+      situation, and the methods behind it beside rather than under. Stacked,
+      they were two identically-set bullet lists a screen apart with nothing to
+      tell a parent which one was for them.
+    */}
+    <div class="band">
+      <section aria-labelledby="offerings">
+        <h2 id="offerings">What we help with</h2>
+        <ul class="tick-list">
+          {offerings?.map((item) => <li>{item}</li>)}
+        </ul>
+        <p class="band__aside-note">
+          Assessments have their own process, timeline and pricing —
+          <a href="/assessments/">see the assessment packages</a>.
+        </p>
+      </section>
+
+      <section class="band__side" aria-labelledby="models">
+        <h2 id="models">How we work</h2>
+        <ul class="tick-list band__side-list">
+          {therapyModels?.map((item) => <li>{item}</li>)}
+        </ul>
+      </section>
+    </div>
+
+    {/*
+      The page's payload, and the two things that change what it comes to —
+      what Medicare covers and what is billed on top — beside the figures they
+      qualify rather than as sub-headings tucked underneath them.
+    */}
+    <section class="fees" aria-labelledby="fees">
+      <h2 id="fees">Fees</h2>
+
+      <div class="band fees__band">
+        <div class="table-scroll">
+          <table class="fee-table">
+            {reviewedLabel && <caption>Fees current as of {reviewedLabel}.</caption>}
+            <thead>
+              <tr>
+                <th scope="col">Session</th>
+                <th scope="col" class="amount">Cost</th>
+              </tr>
+            </thead>
+
+            {feeGroups.map((group) => (
+              <tbody class:list={[group.label && 'fee-table__group']}>
+                {group.label && (
+                  <tr>
+                    <th scope="rowgroup" colspan="2">{group.label}</th>
+                  </tr>
+                )}
+
+                {group.rows.map((row) => (
+                  <tr>
+                    <th scope="row">
+                      {row.label}
+                      {row.note && <span class="fee-table__note">{row.note}</span>}
+                    </th>
+                    <td class="amount">{row.amount}</td>
+                  </tr>
+                ))}
+              </tbody>
+            ))}
+          </table>
+        </div>
+
+        <div class="band__side fees__qualifiers">
+          <section aria-labelledby="rebates">
+            <h3 id="rebates">Rebates</h3>
+            <ul class="tick-list">
+              {rebates?.map((item) => <li>{item}</li>)}
+            </ul>
+          </section>
+
+          <section aria-labelledby="reports">
+            <h3 id="reports">Reports and letters</h3>
+            {reports?.map((item) => <p>{item}</p>)}
+          </section>
+        </div>
+      </div>
+    </section>
+  </div>
+</PlainLayout>
+
+<style>
+  /* Three questions on one page: what you can come here for, how the work is
+     done, what it costs. The break between two questions is the page's largest
+     interval; inside one, the heading's own margin is the whole gap. Every
+     section used to open on the same 64px, which gave three headings identical
+     weight and the page no cadence. */
+  .page > * + * {
+    margin-top: var(--space-section);
+  }
+
+  .page h2 {
+    margin-top: 0;
+  }
+
+  /* ---- The two-column band ----
+     Used twice, at the same ratio both times, so the page reads as one
+     structure rather than as a stack of one-off arrangements. */
+  .band {
+    display: grid;
+    gap: var(--space-2xl);
+    align-items: start;
+  }
+
+  @media (min-width: 64rem) {
+    .band {
+      grid-template-columns: minmax(0, var(--content-max)) minmax(15rem, 1fr);
+      column-gap: clamp(var(--space-2xl), 4.5vw, 5rem);
+    }
+
+    /* "What we help with" is set at h2 and "How we work" a step below it, which
+       is the hierarchy this band is for. Aligned on the tops of their boxes,
+       though, two different sizes start on two different lines and the
+       deliberate step reads as a misalignment — seven pixels of it, which is
+       exactly the amount that looks like a mistake rather than a decision.
+       Baseline alignment puts both headings on one line and lets the size
+       difference be the only thing saying which one leads. Scoped to the first
+       band: the fees band opposite opens on a table, whose first baseline is a
+       caption. */
+    .band:not(.fees__band) {
+      align-items: baseline;
+    }
+  }
+
+  /* Supporting, and sized to say so. The methods and the rebate rules are what
+     a visitor reads after they have found their own situation in the column
+     beside them, not before. */
+  .band__side h2 {
+    font-size: var(--text-subhead);
+    line-height: var(--lh-subhead);
+  }
+
+  .band__side-list {
+    margin-bottom: 0;
+  }
+
+  .band__aside-note {
+    margin-bottom: 0;
+  }
+
+  /* ---- Fees ---- */
+
+  /* The section heading introduces the whole band, so the band starts under it
+     rather than opening another section-sized gap. */
+  .fees__band {
+    margin-top: var(--space-xl);
+  }
+
+  .fee-table {
+    /* A step wider than the reading measure — it is the answer the page is for
+       — and no wider, because an amount half a screen from its label is not a
+       price list. */
+    max-width: 46rem;
+  }
+
+  .fees caption {
+    max-width: 42rem;
+  }
+
+  .fees__qualifiers > * + * {
+    margin-top: var(--space-2xl);
+  }
+
+  .fees__qualifiers h3 {
+    margin-top: 0;
+  }
+
+  .fees__qualifiers p:last-child,
+  .fees__qualifiers .tick-list {
+    margin-bottom: 0;
+  }
+
+  /* ---- Narrow ----
+     Last in the sheet so these win at equal specificity. */
+  @media (max-width: 52rem) {
+    .fee-table .amount {
+      font-size: var(--text-cardtitle);
+    }
+
+    .fee-table th[scope='row'] {
+      padding-right: var(--space-md);
+    }
+  }
+</style>

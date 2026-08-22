@@ -1,0 +1,271 @@
+{
+  "generator": "run_wan_camera.py + run_sharpen.py",
+  "model": "DA3-BASE",
+  "modelLicence": "Apache-2.0",
+  "rooms": [
+    {
+      "id": "assessment-room",
+      "title": "Assessment Room",
+      "source": "assessment-room.webp",
+      "sourceSize": [
+        1672,
+        940
+      ],
+      "poster": "assessment-room-poster.webp",
+      "model": "DA3-BASE",
+      "modelLicence": "Apache-2.0",
+      "frames": {
+        "count": 33,
+        "arcDegrees": 30.0,
+        "stepDegrees": 0.9375,
+        "centreIndex": 0,
+        "pad": 2,
+        "desktop": {
+          "pattern": "assessment-room/d-{i}.webp",
+          "width": 1600,
+          "bytes": 5590696,
+          "sizeMB": 5.33
+        },
+        "mobile": {
+          "pattern": "assessment-room/m-{i}.webp",
+          "width": 960,
+          "bytes": 2237490,
+          "sizeMB": 2.13
+        }
+      },
+      "buildSeconds": 7.4,
+      "generator": "wan2.2_fun_camera + seedvr2"
+    },
+    {
+      "id": "consulting-room",
+      "title": "Consulting Room",
+      "source": "consulting-room.webp",
+      "sourceSize": [
+        1390,
+        782
+      ],
+      "poster": "consulting-room-poster.webp",
+      "model": "DA3-BASE",
+      "modelLicence": "Apache-2.0",
+      "frames": {
+        "count": 33,
+        "arcDegrees": 30.0,
+        "stepDegrees": 0.9375,
+        "centreIndex": 0,
+        "pad": 2,
+        "desktop": {
+          "pattern": "consulting-room/d-{i}.webp",
+          "width": 1600,
+          "bytes": 6135190,
+          "sizeMB": 5.85
+        },
+        "mobile": {
+          "pattern": "consulting-room/m-{i}.webp",
+          "width": 960,
+          "bytes": 2417740,
+          "sizeMB": 2.31
+        }
+      },
+      "buildSeconds": 10.7,
+      "generator": "wan2.2_fun_camera + seedvr2"
+    },
+    {
+      "id": "group-room",
+      "title": "Group Room",
+      "source": "group-room.webp",
+      "sourceSize": [
+        1672,
+        941
+      ],
+      "poster": "group-room-poster.webp",
+      "model": "DA3-BASE",
+      "modelLicence": "Apache-2.0",
+      "frames": {
+        "count": 33,
+        "arcDegrees": 30.0,
+        "stepDegrees": 0.9375,
+        "centreIndex": 0,
+        "pad": 2,
+        "desktop": {
+          "pattern": "group-room/d-{i}.webp",
+          "width": 1600,
+          "bytes": 5950708,
+          "sizeMB": 5.68
+        },
+        "mobile": {
+          "pattern": "group-room/m-{i}.webp",
+          "width": 960,
+          "bytes": 2360508,
+          "sizeMB": 2.25
+        }
+      },
+      "buildSeconds": 8.3,
+      "generator": "wan2.2_fun_camera + seedvr2"
+    },
+    {
+      "id": "library-attic-room",
+      "title": "Library Attic Room",
+      "source": "library-attic-room.webp",
+      "sourceSize": [
+        1672,
+        940
+      ],
+      "poster": "library-attic-room-poster.webp",
+      "model": "DA3-BASE",
+      "modelLicence": "Apache-2.0",
+      "frames": {
+        "count": 33,
+        "arcDegrees": 30.0,
+        "stepDegrees": 0.9375,
+        "centreIndex": 0,
+        "pad": 2,
+        "desktop": {
+          "pattern": "library-attic-room/d-{i}.webp",
+          "width": 1600,
+          "bytes": 5619214,
+          "sizeMB": 5.36
+        },
+        "mobile": {
+          "pattern": "library-attic-room/m-{i}.webp",
+          "width": 960,
+          "bytes": 2157264,
+          "sizeMB": 2.06
+        }
+      },
+      "buildSeconds": 7.2,
+      "generator": "wan2.2_fun_camera + seedvr2"
+    },
+    {
+      "id": "library-room",
+      "title": "Library Room",
+      "source": "library-room.webp",
+      "sourceSize": [
+        1672,
+        941
+      ],
+      "poster": "library-room-poster.webp",
+      "model": "DA3-BASE",
+      "modelLicence": "Apache-2.0",
+      "frames": {
+        "count": 33,
+        "arcDegrees": 30.0,
+        "stepDegrees": 0.9375,
+        "centreIndex": 0,
+        "pad": 2,
+        "desktop": {
+          "pattern": "library-room/d-{i}.webp",
+          "width": 1600,
+          "bytes": 5611370,
+          "sizeMB": 5.35
+        },
+        "mobile": {
+          "pattern": "library-room/m-{i}.webp",
+          "width": 960,
+          "bytes": 2022520,
+          "sizeMB": 1.93
+        }
+      },
+      "buildSeconds": 13.5,
+      "generator": "wan2.2_fun_camera + seedvr2"
+    },
+    {
+      "id": "reception-room",
+      "title": "Reception Room",
+      "source": "reception-room.webp",
+      "sourceSize": [
+        1672,
+        940
+      ],
+      "poster": "reception-room-poster.webp",
+      "model": "DA3-BASE",
+      "modelLicence": "Apache-2.0",
+      "frames": {
+        "count": 33,
+        "arcDegrees": 30.0,
+        "stepDegrees": 0.9375,
+        "centreIndex": 0,
+        "pad": 2,
+        "desktop": {
+          "pattern": "reception-room/d-{i}.webp",
+          "width": 1600,
+          "bytes": 5670272,
+          "sizeMB": 5.41
+        },
+        "mobile": {
+          "pattern": "reception-room/m-{i}.webp",
+          "width": 960,
+          "bytes": 2173326,
+          "sizeMB": 2.07
+        }
+      },
+      "buildSeconds": 7.0,
+      "generator": "wan2.2_fun_camera + seedvr2"
+    },
+    {
+      "id": "team-parlour",
+      "title": "Team Parlour",
+      "source": "team-parlour.webp",
+      "sourceSize": [
+        1672,
+        940
+      ],
+      "poster": "team-parlour-poster.webp",
+      "model": "DA3-BASE",
+      "modelLicence": "Apache-2.0",
+      "frames": {
+        "count": 33,
+        "arcDegrees": 30.0,
+        "stepDegrees": 0.9375,
+        "centreIndex": 0,
+        "pad": 2,
+        "desktop": {
+          "pattern": "team-parlour/d-{i}.webp",
+          "width": 1600,
+          "bytes": 5823200,
+          "sizeMB": 5.55
+        },
+        "mobile": {
+          "pattern": "team-parlour/m-{i}.webp",
+          "width": 960,
+          "bytes": 2268530,
+          "sizeMB": 2.16
+        }
+      },
+      "buildSeconds": 6.3,
+      "generator": "wan2.2_fun_camera + seedvr2"
+    },
+    {
+      "id": "work-with-us-room",
+      "title": "Work With Us Room",
+      "source": "work-with-us-room.webp",
+      "sourceSize": [
+        1396,
+        785
+      ],
+      "poster": "work-with-us-room-poster.webp",
+      "model": "DA3-BASE",
+      "modelLicence": "Apache-2.0",
+      "frames": {
+        "count": 33,
+        "arcDegrees": 30.0,
+        "stepDegrees": 0.9375,
+        "centreIndex": 0,
+        "pad": 2,
+        "desktop": {
+          "pattern": "work-with-us-room/d-{i}.webp",
+          "width": 1600,
+          "bytes": 6106626,
+          "sizeMB": 5.82
+        },
+        "mobile": {
+          "pattern": "work-with-us-room/m-{i}.webp",
+          "width": 960,
+          "bytes": 2342626,
+          "sizeMB": 2.23
+        }
+      },
+      "buildSeconds": 10.0,
+      "generator": "wan2.2_fun_camera + seedvr2"
+    }
+  ]
+}
