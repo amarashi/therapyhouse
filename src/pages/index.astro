@@ -1,0 +1,506 @@
+---
+import { withBase } from '../lib/base.js';
+import { getCollection, getEntry, render } from 'astro:content';
+import PlainLayout from '../layouts/PlainLayout.astro';
+import HeroReveal from '../components/HeroReveal.astro';
+import PersonPortrait from '../components/PersonPortrait.astro';
+import LocationMap from '../components/LocationMap.astro';
+import { contact, callsToAction, isAcceptingNewClients } from '../data/site.js';
+// PROTOTYPE — throwaway, remove with WelcomeHeroPrototype.astro.
+import WelcomeHeroPrototype from '../components/WelcomeHeroPrototype.astro';
+
+const page = await getEntry('pages', 'home');
+if (!page) throw new Error('Missing content: src/content/pages/home.md');
+
+const { Content } = await render(page);
+/* `home.md` also carries `lede`, `headline` and `headlineAccent`. None of the
+   three is read here — the hero sets its own welcome — and destructuring them
+   only made it look as though they were. Left in the content file and in the
+   schema rather than deleted, because the sentence in `lede` ("Therapy House is
+   a boutique psychology clinic for people of all ages, in a leafy suburb of
+   Brisbane") is the only place on the home page that says what the clinic
+   actually is, and where that sentence should go is a decision for the clinic
+   and not for this file. */
+const { title, description, routes, practicalNotes } = page.data;
+
+const philosophy = await getEntry('pages', 'philosophy');
+
+const everyone = (await getCollection('team')).sort((a, b) => a.data.order - b.data.order);
+const practitioners = everyone.filter((p) => p.data.kind === 'practitioner');
+const acceptingNow = practitioners.filter((p) => isAcceptingNewClients(p.data.availability));
+
+/**
+ * A handful of faces, not the whole roster — the team page holds the full list.
+ *
+ * Accepting practitioners lead it. `slice(0, 6)` on roster order meant the
+ * count above the grid described the whole team while the grid showed the first
+ * six by `order`, so the page said "2 practitioners are currently accepting new
+ * clients" above six faces of whom exactly one was — and the second, at order
+ * 7, was sliced off the page entirely. A parent could check that claim in two
+ * taps and find it wrong, on the one block PRODUCT.md calls load-bearing. The
+ * count and the faces now describe each other at any roster size.
+ */
+const faces = [
+  ...acceptingNow,
+  ...practitioners.filter((p) => !acceptingNow.includes(p)),
+].slice(0, 6);
+---
+
+<PlainLayout title={title} description={description}>
+  {/* One left edge: the welcome sits on the same margin as the masthead above
+      it and every heading below it, and the house runs off the opposite edge.
+      The line that used to be the headline is still here, at the size of an
+      aside — it says who the clinic is for, which is a second thought, not the
+      greeting. */}
+  <HeroReveal
+    slot="hero"
+    layout="anchored"
+    title="Welcome to Therapy House"
+    lede="A place for all children, and anyone who has once been a child."
+    image={withBase("/assets/media/house-hero-loop-poster.webp")}
+    imageSmall={withBase("/assets/media/house-hero-loop-poster-597.webp")}
+    imageAlt="The Therapy House cottage, with children sitting on the lawn and signs for each part of the clinic"
+    imageWidth={1194}
+    imageHeight={884}
+    video={withBase("/assets/media/house-hero-loop.mp4")}
+    videoSmall={withBase("/assets/media/house-hero-loop-720.mp4")}
+    showCue
+  />
+
+  {/* PROTOTYPE — throwaway. Dev-only; delete this line and the import above. */}
+  <WelcomeHeroPrototype />
+
+  <div class="wrap">
+    <div class="prose--flush prose stack intro">
+      <Content />
+      {philosophy && (
+        <p class="intro__more"><a class="standalone-link" href={withBase("/philosophy/")}>How we work, and what we believe →</a></p>
+      )}
+    </div>
+
+    {/*
+      The rooms are the wayfinding. Each route shows the room that heads the
+      page it leads to, so clicking a room walks you into it — the house's own
+      way of finding things, on the reading side of the site. Deliberately not
+      three cards in a row: alternating sides, no borders, no shadows, one link
+      per row.
+    */}
+    <section class="rooms-section" aria-labelledby="what-we-do">
+      <div class="section-head"><h2 id="what-we-do">What we do</h2></div>
+      <ul class="rooms">
+        {routes?.map((route) => (
+          <li class="room">
+            <a class="room__link" href={withBase(route.href)}>
+              {/* The heading and description name the destination; a described
+                  room would only lengthen the link's accessible name. */}
+              <img
+                class="room__art"
+                src={withBase(route.image)}
+                srcset={`${withBase(route.image)} 360w, ${withBase(route.image?.replace('-360.webp', '-720.webp'))} 720w`}
+                sizes="(max-width: 44rem) 260px, 280px"
+                alt=""
+                width="360"
+                height="270"
+                loading="lazy"
+                decoding="async"
+              />
+              <span class="room__body">
+                <h3 class="room__title">{route.title}</h3>
+                <span class="room__desc">{route.description}</span>
+                {route.note && <span class="room__note">{route.note}</span>}
+                <span class="room__go">{route.linkText} →</span>
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+
+    </section>
+
+    {practitioners.length > 0 && (
+    <section aria-labelledby="people">
+      <div class="section-head">
+        <h2 id="people">The people you would meet</h2>
+        {/* At zero this said "0 practitioners are currently accepting new
+            clients." and stopped — a flat dead end on the page's most
+            load-bearing block. The count now drops out and the caveat carries
+            the block on its own, because a parent whose answer is "nobody this
+            month" is the one who most needs the next step. The sentence is
+            /team/'s, unchanged, so both pages say the same thing. */}
+        <p class="section-head__note">
+          {acceptingNow.length > 0 && (
+            <>
+              <strong>
+                {acceptingNow.length === 1
+                  ? '1 practitioner is'
+                  : `${acceptingNow.length} practitioners are`} currently accepting
+                new clients.
+              </strong>{' '}
+            </>
+          )}
+          Availability changes — reception will know the current position and the
+          likely wait.
+        </p>
+      </div>
+      <ul class="faces">
+        {faces.map((person) => (
+          <li>
+            <a href={withBase(`/team/${person.id}/`)}>
+              {/* Name and role follow in the same link, so a described
+                  portrait would make the link announce both twice. */}
+              {/* Not lazy: six faces rendering as blank cream squares is the
+                  worst possible placeholder under "the people you would
+                  meet". Low priority keeps them behind the hero. */}
+              <PersonPortrait
+                image={person.data.image}
+                alt=""
+                size={200}
+                sizes="180px"
+                loading="eager"
+                fetchpriority="low"
+              />
+              <span class="faces__name">{person.data.name}</span>
+              {/* Directly under the name, not pinned to the floor of the column.
+                  Availability is the first thing a parent checks, so it reads
+                  in the order they ask: who, can I see them, what are they,
+                  what are they qualified in. Pinned to the bottom it also had
+                  to be levelled against the longest column on the row — and
+                  once qualifications joined the block, the longest ran to five
+                  lines and left 130 empty pixels under the two practitioners
+                  who were actually accepting. Names are one line for everyone
+                  on the roster, so this row lines up on its own. */}
+              {person.data.availability && (
+                <span
+                  class:list={[
+                    'faces__status',
+                    isAcceptingNewClients(person.data.availability) && 'is-accepting',
+                  ]}
+                >{person.data.availability}</span>
+              )}
+              <span class="faces__role">{person.data.role}</span>
+              {/* The rung that decides the booking. PRODUCT.md puts credibility
+                  above everything else on this site and says it is carried by
+                  people — and this block, the one that exists to carry it,
+                  answered "who" and never "are they any good". The value is
+                  already in the content model, already rendered on the team
+                  card and on the profile, and was the one place it was left
+                  out. Not every practitioner has one on file; where there is
+                  none the line is simply absent rather than padded. */}
+              {person.data.credentials && person.data.credentials !== person.data.role && (
+                <span class="faces__creds">{person.data.credentials}</span>
+              )}
+            </a>
+          </li>
+        ))}
+      </ul>
+      <p class="section-head"><a class="standalone-link" href={withBase("/team/")}>Meet the whole team →</a></p>
+    </section>
+    )}
+
+    {/*
+      The "How we work" grid of five abstract values — Holistic Care, Inclusive
+      Environment, Sanctuary for Wellness, Meaningful Connections, Authenticity
+      — was deleted from here. It asserted warmth in copy, which PRODUCT.md's
+      "Show the place, don't claim it" exists to prevent, and it restated what
+      the rooms above already show. /philosophy/ still renders all five from the
+      same source; the link to it sits under the intro.
+    */}
+
+    {/* The map leads, the notes follow. "On a main road yet tucked away" and
+        "plenty of street parking" are answers to a question the picture asks
+        first — and the address line that used to sit here is now the pin's own
+        label, so one link goes to the map instead of two. */}
+    <section class="finding" aria-labelledby="finding-us">
+      <h2 id="finding-us">Finding us</h2>
+      <div class="finding__split">
+        {/* `--gutter`'s value written out rather than referenced. `sizes` is
+            parsed by the preload scanner, outside the cascade, so a `var()` in
+            it is unresolvable — the whole source-size list is discarded and
+            the browser falls back to 100vw, which took the 288KB master for a
+            366px picture at every phone width. Keep this in step with
+            `--gutter` in tokens.css. */}
+        <LocationMap sizes="(min-width: 58rem) min(34rem, 44vw), calc(100vw - clamp(1.5rem, 5vw, 7rem))" />
+        <div class="finding__words">
+          <ul class="tick-list">
+            {practicalNotes?.map((note) => <li>{note}</li>)}
+          </ul>
+          <p class="finding__reception">
+            Reception: <a href={withBase(callsToAction.call.href)}>{contact.phone}</a> ·{' '}
+            <a href={`mailto:${contact.email}`}>{contact.email}</a>
+          </p>
+        </div>
+      </div>
+    </section>
+  </div>
+</PlainLayout>
+
+<style>
+
+  .intro {
+    margin-top: var(--space-2xl);
+  }
+
+  .section-head__note {
+    color: var(--ink-soft);
+    margin-bottom: var(--space-lg);
+  }
+
+  .faces {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--space-lg);
+    display: grid;
+    gap: var(--space-lg);
+    grid-template-columns: repeat(auto-fit, minmax(min(9rem, 45%), 1fr));
+  }
+
+  /* Each face is a column, and the status sits on its floor. The role used to
+     carry `min-height: calc(4 * 1.3 * 1em)` — four lines reserved for every
+     practitioner because one of them is "Psychologist, Educational and
+     Developmental Registrar, Chief Operating Officer" — which levelled the row
+     by holding ~55px of nothing under "Psychologist", and broke the moment a
+     role ran to five. Stretching the column and pushing the status down with
+     `margin-top: auto` levels the same row off real content, at any length. */
+  .faces li {
+    display: flex;
+  }
+
+  .faces a {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: inherit;
+    --portrait-gap: var(--space-sm);
+  }
+
+  /* Names and roles are clinic-entered free text; nothing here may push the
+     column wider than the grid gave it. */
+  .faces__name,
+  .faces__role,
+  .faces__creds,
+  .faces__status {
+    overflow-wrap: break-word;
+  }
+
+  .faces__name {
+    display: block;
+    font-weight: 700;
+    color: var(--heading);
+  }
+
+  .faces a:hover .faces__name {
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+  }
+
+  .faces__role {
+    display: block;
+    font-size: var(--text-meta);
+    color: var(--ink-soft);
+    line-height: var(--lh-tight);
+  }
+
+  /* Qualifications, at full ink rather than as fine print — the same call the
+     profile page makes, for the same reason. It sits under the role because
+     the role says what they do and this says whether they can, and a parent
+     scanning six faces reads down the column in that order. */
+  .faces__creds {
+    display: block;
+    margin-top: 2px;
+    font-size: var(--text-meta);
+    line-height: var(--lh-tight);
+    color: var(--ink);
+    font-weight: 700;
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+
+  /* Not a pill. The column is ~150px across at six abreast, and "Not currently
+     accepting new clients" wraps to three lines in it — a pill that wraps stops
+     reading as a pill, which is the same reason the team cards give the status
+     its own row. Plain text carries it at any width and any wording. */
+  .faces__status {
+    display: block;
+    margin-block: 2px var(--space-xs);
+    font-size: var(--text-meta);
+    line-height: var(--lh-tight);
+    color: var(--ink-faint);
+  }
+
+  .faces__status.is-accepting {
+    color: var(--hedge-green-deep);
+    font-weight: 700;
+  }
+
+  .intro__more {
+    margin-bottom: 0;
+    font-weight: 600;
+  }
+
+
+  /* ---- Finding us ----
+     Two columns on the page's own left edge, not a centred band: the map takes
+     the wider side because it is doing the explaining, and the notes sit
+     beside it at a reading measure. Capped at 70rem so the picture stays a
+     picture rather than becoming a billboard on a 27" screen. */
+
+  .finding {
+    max-width: 70rem;
+  }
+
+  .finding__split {
+    display: grid;
+    gap: clamp(var(--space-xl), 3.5vw, 48px);
+    align-items: center;
+  }
+
+  .finding__words > :last-child {
+    margin-bottom: 0;
+  }
+
+  .finding__reception {
+    font-weight: 600;
+  }
+
+  /* A phone number and an email address, 21px tall and side by side, were two
+     of the smallest targets on the page. The padding grows the box without
+     touching the type or the line they sit on.
+
+     Not phone-only. These two are not links inside a sentence — they are the
+     line's whole content, one after the other — so WCAG 2.5.8's inline
+     exception does not cover them and 22px is under the 24 a pointer is owed
+     at AA. A mouse being aimed at a phone number by someone who is upset is
+     not a steadier instrument than a thumb. */
+  .finding__reception a {
+    display: inline-block;
+    padding-block: 5px;
+  }
+
+  @media (max-width: 44rem) {
+    .finding__reception a {
+      padding-block: 11px;
+    }
+  }
+
+  @media (min-width: 58rem) {
+    .finding__split {
+      grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+    }
+  }
+
+  /* ---- The rooms ----
+     Three columns: an image slot, the words, another image slot. The words
+     always sit in the middle column, so every title and every line of copy
+     starts on the same vertical line down the page. The image alternates
+     between the outer two — left, right, left — which gives the block its
+     movement without ever shifting the text. The whole thing is centred on the
+     page rather than hugging the left edge. */
+
+  .rooms-section .section-head {
+    text-align: center;
+  }
+
+  .rooms {
+    --room-art: clamp(116px, 18vw, 280px);
+    list-style: none;
+    padding: 0;
+    margin: 0 auto var(--space-2xl);
+    max-width: 70rem;
+  }
+
+  .room + .room {
+    border-top: 1px solid var(--line-soft);
+  }
+
+  .room__link {
+    display: grid;
+    grid-template-columns: var(--room-art) minmax(0, 1fr) var(--room-art);
+    align-items: center;
+    column-gap: clamp(var(--space-lg), 3vw, 44px);
+    padding-block: clamp(var(--space-lg), 2.4vw, var(--space-2xl));
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .room__art {
+    grid-column: 1;
+    grid-row: 1;
+    width: 100%;
+    height: auto;
+    /* Cut-outs on an opaque white field, same as the hero artwork. Multiply
+       drops that field into the page's warm ground instead of leaving a pale
+       rectangle standing behind each room. */
+    mix-blend-mode: multiply;
+  }
+
+  /* The only thing that alternates. The middle column is untouched, so the
+     words do not move with it. */
+  .room:nth-child(even) .room__art {
+    grid-column: 3;
+  }
+
+  .room__body {
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    min-width: 0;
+  }
+
+  .room__title {
+    margin: 0;
+    color: var(--heading);
+  }
+
+  .room__link:hover .room__title {
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+  }
+
+  .room__desc {
+    max-width: 46ch;
+  }
+
+  /* The figure a parent wants before they click. Tabular so the three notes
+     line up as numbers rather than drifting. */
+  .room__note {
+    font-weight: 700;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .room__go {
+    margin-top: var(--space-xs);
+    font-weight: 700;
+    color: var(--link);
+  }
+
+  .room__link:hover .room__go {
+    color: var(--link-hover);
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+  }
+
+  @media (max-width: 44rem) {
+    /* No room for side columns: the picture sits above its words. */
+    .room__link {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: var(--space-md);
+    }
+
+    .room__art,
+    .room:nth-child(even) .room__art {
+      grid-column: 1;
+      grid-row: 1;
+      justify-self: center;
+      width: min(72%, 260px);
+    }
+
+    .room__body {
+      grid-column: 1;
+      grid-row: 2;
+    }
+  }
+
+</style>

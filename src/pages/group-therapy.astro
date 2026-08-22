@@ -1,0 +1,563 @@
+---
+import { withBase } from '../lib/base.js';
+import { getEntry, render } from 'astro:content';
+import PlainLayout from '../layouts/PlainLayout.astro';
+import HeroReveal from '../components/HeroReveal.astro';
+import { contact } from '../data/site.js';
+
+const page = await getEntry('pages', 'group-therapy');
+if (!page) throw new Error('Missing content: src/content/pages/group-therapy.md');
+
+const { Content } = await render(page);
+const { title, description, lede, programs, circleOfSecurity, workshopTopics } = page.data;
+
+/**
+ * The Circle of Security details are authored as `Label: value` strings, which
+ * is the right shape for a CMS field but the wrong shape for a bullet list — a
+ * parent scanning for the cost should not have to read four sentences to find
+ * it. Split on the first colon so the labels can hold their own column, and let
+ * anything without one fall through as a plain note rather than fake a term.
+ */
+const factRows = (circleOfSecurity?.details ?? []).map((detail) => {
+  const at = detail.indexOf(': ');
+  return at > 0
+    ? { term: detail.slice(0, at), value: detail.slice(at + 2) }
+    : { term: null, value: detail };
+});
+const facts = factRows.filter((row) => row.term);
+const factNotes = factRows.filter((row) => !row.term).map((row) => row.value);
+
+/**
+ * The four programs are told apart by exactly one number: the child's age.
+ * Authored as "Children aged 7–12" and read as four separate pills, that left a
+ * parent holding one number in their head to do the same arithmetic four times
+ * over — and no way at all to see that Lego Club and the emotion regulation
+ * workshop overlap almost entirely, or that nothing here runs past fifteen.
+ *
+ * So the ranges come out of the copy and go on one scale. The comparison the
+ * list was asking the reader to perform is the thing the section now draws.
+ *
+ * Parsed, not re-authored: the wording stays the content file's, and the whole
+ * original string is still what a screen reader is given. A program whose
+ * audience carries no range keeps the pill, so an edit upstream costs one row
+ * rather than the section.
+ */
+const AGE_RANGE = /(\d+)\s*(?:–|—|-|to)\s*(\d+)/;
+
+const rows = (programs ?? []).map((program) => {
+  const found = program.audience?.match(AGE_RANGE);
+  const from = found ? Number(found[1]) : null;
+  const to = found ? Number(found[2]) : null;
+  return { ...program, from, to, banded: from !== null && to > from };
+});
+
+const banded = rows.filter((row) => row.banded);
+const ageMin = banded.length ? Math.min(...banded.map((row) => row.from)) : 0;
+const ageMax = banded.length ? Math.max(...banded.map((row) => row.to)) : 0;
+const ageSpan = ageMax - ageMin;
+/* A scale is only a comparison if there are at least two things on it. One
+   banded program is a fact about that program, and it keeps its pill. */
+const scaled = banded.length > 1 && ageSpan > 0;
+
+/* Whole-year ticks that divide the span evenly — three to six intervals, which
+   is enough to read a band against and few enough that the rule under each
+   program stays a ruler rather than becoming graph paper. A span no whole year
+   divides cleanly falls back to its two ends, which is still a scale. */
+const tickStep = [1, 2, 3, 5, 10].find(
+  (step) => ageSpan % step === 0 && ageSpan / step >= 3 && ageSpan / step <= 6
+);
+const ticks = !scaled
+  ? []
+  : tickStep
+    ? Array.from({ length: ageSpan / tickStep + 1 }, (_, i) => ageMin + i * tickStep)
+    : [ageMin, ageMax];
+
+/** Where an age falls along the scale, as a percentage of the track. */
+const at = (age) => `${(((age - ageMin) / ageSpan) * 100).toFixed(3)}%`;
+---
+
+<PlainLayout title={title} description={description}>
+  <HeroReveal
+    slot="hero"
+    title={title}
+    lede={lede}
+    image={withBase("/assets/rooms/group-room-out.webp")}
+    imageSmall={withBase("/assets/rooms/group-room-out-720.webp")}
+    imageMedium={withBase("/assets/rooms/group-room-out-1080.webp")}
+    imageMediumWidth={1086}
+    imageAlt="The group room — a circle of chairs and cushions in a bright open space"
+    imageWidth={1448}
+    imageHeight={1086}
+  />
+
+  <div class="wrap">
+    <div class="prose--flush prose stack">
+      <Content />
+    </div>
+
+    {/*
+      The four programs are the answer this page exists to give, so they get the
+      page's full width rather than a card grid that broke 3 + 1 and left a row
+      two-thirds empty. Each program is one row on two tracks: who it is for on
+      the left edge every other heading uses, what it does beside it.
+
+      The left track is an age scale, shared by every row and labelled once at
+      the top. A parent arrives holding a single number, and reading down that
+      column now answers it in one pass: which bands contain nine, which of them
+      are nearly the same program, where the range runs out. The band is the
+      audience — it replaces the pill rather than repeating it — and the full
+      authored line is still what assistive technology reads.
+    */}
+    <section aria-labelledby="programs">
+      <div class="section-head"><h2 id="programs">Programs for children and young people</h2></div>
+
+      {scaled && (
+        <div class="scale" aria-hidden="true" style={`--ticks:${ticks.length - 1}`}>
+          <span class="scale__track">
+            {ticks.map((tick) => (
+              <span class="scale__tick" style={`--at:${at(tick)}`}>{tick}</span>
+            ))}
+          </span>
+          <span class="scale__unit">Age</span>
+        </div>
+      )}
+
+      <ul class="programs" style={scaled ? `--ticks:${ticks.length - 1}` : undefined}>
+        {rows.map((program) => (
+          <li class="program">
+            <div class="program__id">
+              <h3>{program.title}</h3>
+
+              {scaled && program.banded ? (
+                <p class="band">
+                  <span class="sr-only">{program.audience}</span>
+                  <span class="band__track" aria-hidden="true">
+                    <span class="band__span" style={`--from:${at(program.from)};--to:${at(program.to)}`}></span>
+                  </span>
+                  <span class="band__years" aria-hidden="true">{program.from}–{program.to}</span>
+                </p>
+              ) : (
+                program.audience && <p class="audience">{program.audience}</p>
+              )}
+            </div>
+            <p class="program__body">{program.description}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    {circleOfSecurity && (
+      <section class="card cos" aria-labelledby="circle">
+        <div class="cos__inner">
+          <div class="cos__intro">
+            <h2 id="circle">{circleOfSecurity.title}</h2>
+            {circleOfSecurity.audience && <p class="audience">{circleOfSecurity.audience}</p>}
+            <p class="cos__description">{circleOfSecurity.description}</p>
+          </div>
+
+          <div class="cos__facts">
+            <dl class="facts">
+              {facts.map((fact) => (
+                <div class="facts__row" data-fact={fact.term.toLowerCase().split(' ')[0]}>
+                  <dt>{fact.term}</dt>
+                  <dd>{fact.value}</dd>
+                </div>
+              ))}
+            </dl>
+            {factNotes.map((note) => <p class="facts__note">{note}</p>)}
+          </div>
+        </div>
+      </section>
+    )}
+
+    <section class="prose--flush prose" aria-labelledby="workshops">
+      <h2 id="workshops">Workshops and seminars</h2>
+      <p>
+        Therapy House runs workshops for schools, workplaces and community
+        groups. Topics include:
+      </p>
+      <ul class="tick-list topics">
+        {workshopTopics?.map((topic) => <li>{topic}</li>)}
+      </ul>
+      <p>
+        <a href={`mailto:${contact.email}`}>Email reception</a> to register
+        interest in a workshop for your group.
+      </p>
+    </section>
+  </div>
+</PlainLayout>
+
+<style>
+  /* ---- Programs ---- */
+
+  .programs {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  /* Hairlines, not boxes. Four programs are a set of four comparable things,
+     and a rule between them says that in one pixel where a card says it in
+     four borders and a shadow. */
+  .program {
+    border-top: 1px solid var(--line);
+    padding-block: var(--space-xl);
+  }
+
+  .program:last-child {
+    border-bottom: 1px solid var(--line);
+  }
+
+  /* The title of one row in a set, not a section subhead — the same role the
+     location card's title takes. At subhead size these run to three lines in
+     their column and stop reading as a list of four names. */
+  .program h3 {
+    margin-top: 0;
+    margin-bottom: var(--space-sm);
+    font-size: var(--text-cardtitle);
+    line-height: var(--lh-subhead);
+  }
+
+  /* Stacked, the age band and the description are two different answers with
+     nothing between them; side by side they are two columns and the gap is
+     horizontal. */
+  .program__id {
+    margin-bottom: var(--space-md);
+  }
+
+  .program__body {
+    margin-bottom: 0;
+    max-width: var(--content-max);
+  }
+
+  @media (min-width: 64rem) {
+    .program {
+      /* The left track is fixed rather than `minmax(0, 20rem)`: it is a scale
+         now, and the header's ticks are laid out against the same width. A
+         track that flexed would put the numbers over the wrong years on any
+         width where it came up short. */
+      grid-template-columns: var(--scale-width) minmax(0, 38rem);
+      display: grid;
+      column-gap: clamp(var(--space-xl), 4vw, 64px);
+      align-items: start;
+      padding-block: var(--space-2xl);
+    }
+
+    .program__id {
+      margin-bottom: 0;
+    }
+  }
+
+  /* ---- The age scale ----
+     One ruler, four bands, and the header that names it. Everything here is
+     hairlines and one warm mark: the same vocabulary the rest of the page uses
+     to separate the programs, turned sideways to compare them.
+
+     The geometry lives in two custom properties published by the server —
+     `--from` and `--to` on each band, `--ticks` on the section — so the scale
+     redraws itself from the content file and never from a number typed twice.
+  */
+  .scale,
+  .programs {
+    --scale-width: 20rem;
+  }
+
+  .programs {
+    /* The distance between whole-year ticks, as a share of the track. */
+    --tick-gap: calc(100% / var(--ticks, 1));
+  }
+
+  .scale {
+    margin-block: var(--space-xl) var(--space-sm);
+  }
+
+  /* The band line and the header share one shape: a track that takes the width,
+     and a fixed slot at the right where the years line up in a column. */
+  .scale,
+  .band {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    max-width: var(--scale-width);
+  }
+
+  .scale__track,
+  .band__track {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .scale__unit,
+  .band__years {
+    flex: 0 0 2.9rem;
+    text-align: right;
+    font-variant-numeric: lining-nums tabular-nums;
+    white-space: nowrap;
+  }
+
+  .scale__track {
+    height: 1em;
+  }
+
+  .scale__tick,
+  .scale__unit {
+    font-size: var(--text-label);
+    font-weight: 800;
+    letter-spacing: var(--track-label);
+    color: var(--ink-faint);
+  }
+
+  .scale__unit {
+    text-transform: uppercase;
+  }
+
+  .scale__tick {
+    position: absolute;
+    top: 0;
+    left: var(--at);
+    transform: translateX(-50%);
+    letter-spacing: normal;
+    font-weight: 700;
+  }
+
+  /* The outer two sit flush with the ends of the track rather than half over
+     the edge of it — on a phone the first one would otherwise hang past the
+     page gutter. */
+  .scale__tick:first-child {
+    transform: none;
+  }
+
+  .scale__tick:last-child {
+    transform: translateX(-100%);
+  }
+
+  .band {
+    margin-bottom: 0;
+  }
+
+  .band__track {
+    height: 18px;
+  }
+
+  /* The rule the bands are measured against: the full span of the scale as a
+     hairline, ticked at each whole year the header names. Same 1px `--line` the
+     programs are separated by, so the ruler is the page's own material and not
+     a chart borrowed from somewhere else. */
+  .band__track::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    top: 50%;
+    height: 9px;
+    transform: translateY(-50%);
+    background-image:
+      /* a tick at every whole year the header names */
+      repeating-linear-gradient(to right, var(--line) 0 1px, transparent 1px var(--tick-gap)),
+      /* the closing tick, which the repeat draws past the end of the box */
+      linear-gradient(var(--line), var(--line)),
+      /* and the rule they stand on */
+      linear-gradient(var(--line), var(--line));
+    background-repeat: repeat, no-repeat, no-repeat;
+    background-size: auto, 1px 100%, 100% 1px;
+    background-position: 0 0, 100% 0, 0 50%;
+  }
+
+  /* The program's own years. The pale span is always the full, true range — the
+     solid fill is what arrives (see the motion note below), so a band caught
+     mid-draw still shows the reader where it actually ends. */
+  .band__span {
+    position: absolute;
+    top: 50%;
+    left: var(--from);
+    width: max(7px, calc(var(--to) - var(--from)));
+    height: 7px;
+    transform: translateY(-50%);
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--chestnut) 22%, transparent);
+  }
+
+  .band__span::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--chestnut);
+  }
+
+  .band__years {
+    font-size: var(--text-meta);
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  /* ---- The one moment on this page ----
+     Each band draws out along the scale as its row arrives, left to right, so
+     going down the list is the set assembling into one comparison rather than
+     four separate facts turning up. It is driven by the scroll and nothing
+     else: the reader's own movement lays the bands down, stopping when they
+     stop and running backwards when they go back up.
+
+     Drawn, not revealed. The row, its heading, its years and the true extent of
+     its band are all painted before any of this runs — without the timeline, on
+     reduced motion, or on a browser that has neither, the chart is simply
+     already there. That is also why the fill is clipped rather than scaled: the
+     end cap keeps its shape, and a partly drawn band never reports a range
+     shorter than the one printed beside it.
+
+     Nothing else on the page moves. The stillness around it is what makes this
+     read as a moment rather than as decoration. */
+  .band {
+    view-timeline-name: --age-band;
+  }
+
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .band__span::after {
+        /* Linear, and deliberately: the scroll is the easing. An ease-out here
+           put the band at 93% before it was halfway through its range, which
+           reads as the bar popping and then creeping — the mark stops belonging
+           to the hand moving the page. */
+        animation: band-draw linear both;
+        /* Timed against the band's own arrival rather than its row's. The band
+           sits at the foot of the row, so a row-length range had spent seven
+           eighths of itself before the bar was on screen at all — the reader
+           met it nearly finished. Measured from the band, the draw starts the
+           moment it clears the bottom edge and lands while it is still being
+           looked at. */
+        animation-timeline: --age-band;
+        animation-range: cover 4% cover 30%;
+      }
+    }
+  }
+
+  @keyframes band-draw {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+
+  /* ---- Who a program is for, where a scale cannot say it ----
+     The Circle of Security audience runs from four months to twelve years and
+     belongs to the parent, not the child, so it has no place on the children's
+     scale above and keeps the pill. The pill is also what a program falls back
+     to if its audience is ever reworded out of a readable range. */
+  .audience {
+    display: inline-block;
+    font-size: var(--text-meta);
+    font-weight: 700;
+    color: var(--hedge-green-deep);
+    background: var(--surface-sunk);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    padding: var(--space-xs) var(--space-md);
+    margin-bottom: 0;
+  }
+
+  /* ---- Circle of Security ----
+     The one panel on the page. Everything above it is for children; this is
+     the program a parent attends themselves, and the only one with a published
+     price — so it is set apart by material rather than by another 64px gap. */
+  .cos {
+    margin-top: var(--space-3xl);
+    padding: var(--space-panel);
+  }
+
+  .cos h2 {
+    margin-top: 0;
+  }
+
+  .cos__description {
+    margin-bottom: 0;
+    max-width: var(--content-max);
+  }
+
+  .cos .audience {
+    margin-bottom: var(--space-lg);
+  }
+
+  .cos__facts {
+    margin-top: var(--space-2xl);
+  }
+
+  @media (min-width: 64rem) {
+    .cos__inner {
+      display: grid;
+      /* Two tracks held to the panel's own edges rather than centred inside
+         it: the prose starts where the panel starts, the facts end where it
+         ends, and the space between them is whatever the panel is wide. */
+      grid-template-columns: minmax(0, 32rem) minmax(16rem, 26rem);
+      justify-content: space-between;
+      column-gap: clamp(var(--space-2xl), 5vw, 64px);
+      align-items: start;
+    }
+
+    .cos__facts {
+      margin-top: 0;
+    }
+  }
+
+  .facts {
+    margin: 0;
+  }
+
+  .facts__row {
+    display: grid;
+    gap: 3px;
+    padding-block: var(--space-md);
+    border-top: 1px solid var(--line);
+  }
+
+  .facts__row:first-child {
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  .facts dt {
+    font-size: var(--text-label);
+    font-weight: 800;
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .facts dd {
+    margin: 0;
+    text-wrap: pretty;
+  }
+
+  /* The number a parent came for. Set in the same serif at the same size the
+     assessment packages give their prices, so a published cost looks the same
+     wherever the site publishes one. */
+  .facts__row[data-fact='cost'] dd {
+    font-family: var(--font-display);
+    font-size: var(--text-subhead);
+    line-height: var(--lh-subhead);
+    color: var(--heading);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+
+  .facts__note {
+    margin: var(--space-md) 0 0;
+    color: var(--ink-soft);
+    font-size: var(--text-secondary);
+    line-height: var(--lh-compact);
+  }
+
+  /* ---- Workshops ----
+     Five one-line topics in a single column made a thin ribbon down a wide
+     page. Two columns keeps the section as short as it is important. */
+  @media (min-width: 40rem) {
+    .topics {
+      columns: 2;
+      column-gap: var(--space-2xl);
+    }
+
+    .topics li {
+      break-inside: avoid;
+    }
+  }
+</style>

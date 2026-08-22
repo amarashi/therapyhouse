@@ -1,0 +1,41 @@
+---
+import { withBase } from '../lib/base.js';
+import { callsToAction } from '../data/site.js';
+
+/**
+ * The two calls to action, rendered side by side at equal weight.
+ *
+ * PRODUCT.md: booking online and calling reception carry *equal* weight —
+ * some parents self-serve, others need to talk first, and neither path is the
+ * fallback for the other. That is why the second button is outlined rather
+ * than faded, and why neither is ever rendered alone.
+ */
+const { book, call } = callsToAction;
+---
+
+{/* The portal is a different application. Opening it in place threw away a
+    parent's place in whatever they were reading; a new tab keeps it. */}
+<div class="cta">
+  <a class="btn btn--primary" href={withBase(book.href)} target="_blank" rel="noopener noreferrer">
+    {book.label}<span class="sr-only"> (opens in a new tab)</span>
+  </a>
+  <a class="btn btn--secondary" href={withBase(call.href)}>{call.label}</a>
+</div>
+
+<style>
+  .cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+  }
+
+  @media (max-width: 420px) {
+    .cta {
+      flex-direction: column;
+    }
+
+    .cta :global(.btn) {
+      width: 100%;
+    }
+  }
+</style>

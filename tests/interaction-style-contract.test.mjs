@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-import { roomSceneDefaults } from "../assets/scripts/content-data.js";
+import { roomSceneDefaults } from "../public/assets/scripts/content-data.js";
 
 const root = new URL("../", import.meta.url);
 
@@ -9,8 +9,8 @@ async function readProjectFile(path) {
   return readFile(new URL(path, root), "utf8");
 }
 
-const appScript = await readProjectFile("assets/scripts/app.js");
-const styles = await readProjectFile("assets/styles/main.css");
+const appScript = await readProjectFile("public/assets/scripts/app.js");
+const styles = await readProjectFile("public/assets/styles/main.css");
 
 for (const [roomId, roomScene] of Object.entries(roomSceneDefaults.rooms)) {
   const backHotspot = roomScene.hotspots.find((hotspot) => hotspot.id === "back");

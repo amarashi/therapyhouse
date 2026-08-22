@@ -1,0 +1,227 @@
+---
+import { withBase } from '../lib/base.js';
+import { existsSync } from 'node:fs';
+
+/**
+ * A team portrait that opens as the illustrated version and dissolves to the
+ * photograph.
+ *
+ * Every practitioner has a Pixar-style render of themselves beside their photo.
+ * The illustration is what a visitor meets first — warmer, and it makes a page
+ * of twelve strangers feel like a place rather than a directory — but the
+ * photograph is the one that answers "who would actually be in the room", so it
+ * is never more than a hover away and it is the only thing on the profile page.
+ *
+ * The dissolve is a diagonal wipe rather than a straight cross-fade: a fade
+ * reads as a glitch at these sizes, a wipe reads as one image becoming another.
+ *
+ * Pointer-less devices have no hover to give, and mobile is where most parents
+ * read this, so there the illustration dissolves as the portrait scrolls into
+ * view — everyone sees the real face without having to open a profile.
+ */
+interface Props {
+  /** The photograph, as published in the person's frontmatter. */
+  image: string;
+  alt: string;
+  /** Rendered square via object-fit, so this is both dimensions. */
+  size: number;
+  /**
+   * The width the portrait actually paints at, for the responsive ladder
+   * below. `size` cannot answer this: it is the intrinsic hint on the element,
+   * while the box comes from whatever laid the portrait out — 144px in a team
+   * card's column, ~180px in the home page's grid. Default to `size`, but a
+   * caller whose CSS says otherwise should say so.
+   */
+  sizes?: string;
+  loading?: 'lazy' | 'eager';
+  fetchpriority?: 'high' | 'low' | 'auto';
+}
+
+const { image, alt = '', size, sizes, loading = 'lazy', fetchpriority } = Astro.props;
+
+/**
+ * Two steps, written by `tools/portraits.mjs`: `-280` for the thumbnails and
+ * the bare filename at 560 for the profile page and 2x screens. Nothing on the
+ * site paints a portrait wider than 288 CSS px, so the ladder stops there.
+ *
+ * Without this the team page shipped 1.1 MB of portraits — twelve 560px
+ * photographs and twelve 560px illustrations — into a grid of 130px squares.
+ */
+const step = (file: string) =>
+  `${withBase(file.replace(/\.webp$/, '-280.webp'))} 280w, ${withBase(file)} 560w`;
+const box = sizes ?? `${size}px`;
+
+/**
+ * The illustrated twin sits beside the photograph under the same name.
+ * `tools/portraits.mjs` writes these from the masters in `art-src/team-pix/`.
+ *
+ * Absent — a new starter photographed before they were drawn — and the
+ * photograph simply renders alone. Nothing else on the card changes.
+ */
+const pix = image.replace(/\.(webp|png|jpe?g)$/, '-pix.webp');
+const hasPix = existsSync(`public${pix}`);
+---
+
+<span class="portrait">
+  <img
+    class="portrait__photo"
+    src={withBase(image)}
+    srcset={step(image)}
+    sizes={box}
+    alt={alt}
+    width={size}
+    height={size}
+    loading={loading}
+    fetchpriority={fetchpriority}
+    decoding="async"
+  />
+  {hasPix && (
+    /* Decorative: it is the same person as the photograph underneath, and the
+       link already carries their name. Not lazier than the photograph either —
+       this is the layer that is actually on screen. */
+    <img
+      class="portrait__pix"
+      src={withBase(pix)}
+      srcset={step(pix)}
+      sizes={box}
+      alt=""
+      aria-hidden="true"
+      width={size}
+      height={size}
+      loading={loading}
+      fetchpriority={fetchpriority}
+      decoding="async"
+      draggable="false"
+    />
+  )}
+</span>
+
+<style>
+  .portrait {
+    position: relative;
+    display: block;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: var(--radius-md);
+    background: var(--surface-sunk);
+    /* The gap to the name below belongs to whoever placed the portrait; a
+       custom property crosses the component boundary where a class would not. */
+    margin-bottom: var(--portrait-gap, var(--space-md));
+  }
+
+  .portrait img {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /**
+   * The wipe: a soft-edged diagonal band travelling across an oversized mask.
+   * At rest the portrait sits in the opaque end of the gradient, so the
+   * illustration is whole; revealed, the band has passed and taken it with it.
+   *
+   * Where masks are unsupported the mask is ignored and the opacity below
+   * still runs, which is a plain cross-fade — the effect, minus the flourish.
+   */
+  .portrait__pix {
+    mask-image: linear-gradient(
+      115deg,
+      #000 0 44%,
+      rgba(0, 0, 0, 0.5) 53%,
+      transparent 66%
+    );
+    mask-size: 210% 210%;
+    mask-position: 0% 0%;
+    -webkit-mask-image: linear-gradient(
+      115deg,
+      #000 0 44%,
+      rgba(0, 0, 0, 0.5) 53%,
+      transparent 66%
+    );
+    -webkit-mask-size: 210% 210%;
+    -webkit-mask-position: 0% 0%;
+    /* The way back. Faster than the way out and with no delay on the opacity,
+       so a pointer skimming across a row of cards leaves them settled rather
+       than trailing half-finished dissolves. */
+    transition:
+      mask-position 520ms ease,
+      -webkit-mask-position 520ms ease,
+      opacity 220ms ease,
+      transform 520ms ease;
+  }
+
+  /* Catching the pointer only over the image itself would leave the
+     illustration half-dissolved while someone reads the summary beside it, so
+     the trigger is whatever the portrait was placed inside: its own link where
+     the portrait is the link (the home page faces), or the whole card where a
+     parent marks one with `portrait-trigger`. */
+  :global(a:hover) .portrait__pix,
+  :global(a:focus-visible) .portrait__pix,
+  :global(.portrait-trigger:hover) .portrait__pix,
+  :global(.portrait-trigger:focus-within) .portrait__pix,
+  .portrait.is-revealed .portrait__pix {
+    /* The band leads and the opacity follows late, so what reads is one
+       picture being wiped off another rather than two pictures cross-fading —
+       which at this size looks like a decoding glitch. */
+    transition:
+      mask-position 760ms cubic-bezier(0.4, 0, 0.2, 1),
+      -webkit-mask-position 760ms cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 300ms ease 460ms,
+      transform 760ms cubic-bezier(0.4, 0, 0.2, 1);
+    mask-position: 100% 100%;
+    -webkit-mask-position: 100% 100%;
+    opacity: 0;
+    /* Drifting forward as it goes keeps the two layers from looking like a
+       pair of stacked stickers. */
+    transform: scale(1.04);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .portrait__pix {
+      mask-image: none;
+      -webkit-mask-image: none;
+      transition: opacity 200ms ease;
+    }
+
+    :global(a:hover) .portrait__pix,
+    :global(a:focus-visible) .portrait__pix,
+    :global(.portrait-trigger:hover) .portrait__pix,
+    :global(.portrait-trigger:focus-within) .portrait__pix,
+    .portrait.is-revealed .portrait__pix {
+      /* No wipe to lead, so nothing to hold the fade back for. */
+      transition: opacity 200ms ease;
+      transform: none;
+    }
+  }
+</style>
+
+<script>
+  /* Touch and pen have no hover state to spend the illustration on, so the
+     photograph surfaces on scroll instead. One observer for the page; each
+     portrait is released the moment it has played. */
+  if (!matchMedia('(hover: hover)').matches) {
+    const portraits = document.querySelectorAll('.portrait');
+
+    if (portraits.length > 0 && 'IntersectionObserver' in window) {
+      const seen = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            entry.target.classList.add('is-revealed');
+            seen.unobserve(entry.target);
+          }
+        },
+        /* Well inside the viewport, not at its edge — the dissolve should
+           happen where it can be watched, not off the bottom of the screen. */
+        { rootMargin: '-20% 0px -20% 0px' }
+      );
+
+      portraits.forEach((portrait) => seen.observe(portrait));
+    } else {
+      portraits.forEach((portrait) => portrait.classList.add('is-revealed'));
+    }
+  }
+</script>

@@ -1,0 +1,124 @@
+---
+import { withBase } from '../../lib/base.js';
+import { getCollection } from 'astro:content';
+import PlainLayout from '../../layouts/PlainLayout.astro';
+import HeroReveal from '../../components/HeroReveal.astro';
+import PersonCard from '../../components/PersonCard.astro';
+import { isAcceptingNewClients } from '../../data/site.js';
+
+const everyone = (await getCollection('team')).sort((a, b) => a.data.order - b.data.order);
+const practitioners = everyone.filter((p) => p.data.kind === 'practitioner');
+const support = everyone.filter((p) => p.data.kind === 'support');
+const dogs = everyone.filter((p) => p.data.kind === 'dog');
+
+const acceptingNow = practitioners.filter((p) => isAcceptingNewClients(p.data.availability));
+
+// Languages beyond English, collected across the team.
+const otherLanguages = [
+  ...new Set(
+    practitioners.flatMap((p) => (p.data.languages ?? []).filter((l) => l !== 'English'))
+  ),
+];
+
+/* `join(' and ')` reads correctly for the two the team speaks today and turns
+   into "Farsi and Tagalog and Auslan" the day a third is added. `ListFormat`
+   is the browser's own answer and gets the Oxford comma right at every count. */
+const otherLanguageList = new Intl.ListFormat('en-AU', {
+  style: 'long',
+  type: 'conjunction',
+}).format(otherLanguages);
+
+const title = 'Our Team';
+const description =
+  'Meet the psychologists, counsellors and support team at Therapy House in The Gap, Brisbane — including who is currently accepting new clients.';
+---
+
+<PlainLayout title={title} description={description}>
+  <HeroReveal
+    slot="hero"
+    title={title}
+    lede="The people who would actually be in the room. Each profile says who they work with and how they work."
+    image={withBase("/assets/rooms/team-parlour-out.webp")}
+    imageSmall={withBase("/assets/rooms/team-parlour-out-720.webp")}
+    imageMedium={withBase("/assets/rooms/team-parlour-out-1080.webp")}
+    imageMediumWidth={1086}
+    imageAlt="The team parlour — a comfortable sitting room where the team meets"
+    imageWidth={1448}
+    imageHeight={1086}
+  />
+
+  <div class="wrap">
+    <div class="prose--flush prose stack">
+      {/* The caveat is outside the count's guard. At zero the whole paragraph
+          used to disappear, which took the pointer to reception with it — and
+          "nobody is accepting this month" is exactly when a parent needs to be
+          told who can tell them otherwise. */}
+      <p>
+        {acceptingNow.length > 0 && (
+          <>
+            <strong>
+              {acceptingNow.length === 1
+                ? '1 practitioner is'
+                : `${acceptingNow.length} practitioners are`} currently accepting new clients.
+            </strong>{' '}
+          </>
+        )}
+        Availability changes — reception will know the current position and the
+        likely wait.
+      </p>
+      {otherLanguages.length > 0 && (
+        <p>
+          Sessions are also available in {otherLanguageList}.
+        </p>
+      )}
+    </div>
+
+    <section aria-labelledby="practitioners">
+      <div class="section-head"><h2 id="practitioners">Psychologists and counsellors</h2></div>
+      <ul class="people">
+        {practitioners.map((person) => (
+          <li><PersonCard person={person} /></li>
+        ))}
+      </ul>
+    </section>
+
+    <section aria-labelledby="support">
+      <div class="section-head"><h2 id="support">Client support</h2></div>
+      <ul class="people">
+        {support.map((person) => (
+          <li><PersonCard person={person} /></li>
+        ))}
+      </ul>
+    </section>
+
+    <section aria-labelledby="dogs">
+      <div class="section-head"><h2 id="dogs">The dogs</h2></div>
+      <ul class="people">
+        {dogs.map((person) => (
+          <li><PersonCard person={person} /></li>
+        ))}
+      </ul>
+    </section>
+  </div>
+</PlainLayout>
+
+<style>
+  /* Two up at reading widths, never more. A third column would take each card
+     back under 26rem, where the card stacks its portrait again and grows to
+     three times its width in height — the shape this page had. */
+  .people {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--space-2xl);
+    display: grid;
+    gap: var(--space-lg);
+    grid-template-columns: repeat(auto-fill, minmax(min(26rem, 100%), 1fr));
+  }
+
+  /* The card sizes itself against this box rather than the viewport, and
+     stretching the item is what makes a row of cards end level. */
+  .people > li {
+    container-type: inline-size;
+    display: grid;
+  }
+</style>

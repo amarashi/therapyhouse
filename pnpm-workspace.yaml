@@ -1,0 +1,5 @@
+# pnpm 11 reads settings from here, not from a "pnpm" field in package.json.
+# Astro's toolchain needs these two to run their install scripts.
+allowBuilds:
+  esbuild: true
+  sharp: true

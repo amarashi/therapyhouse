@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-import { roomSceneDefaults, siteContent } from "../assets/scripts/content-data.js";
+import { roomSceneDefaults, siteContent } from "../public/assets/scripts/content-data.js";
 
 const root = new URL("../", import.meta.url);
 
@@ -16,9 +16,9 @@ function getContentByKey(contentKey) {
   }, siteContent);
 }
 
-const appScript = await readProjectFile("assets/scripts/app.js");
-const indexHtml = await readProjectFile("index.html");
-const styles = await readProjectFile("assets/styles/main.css");
+const appScript = await readProjectFile("public/assets/scripts/app.js");
+const indexHtml = await readProjectFile("src/pages/house.astro");
+const styles = await readProjectFile("public/assets/styles/main.css");
 
 for (const [roomId, roomScene] of Object.entries(roomSceneDefaults.rooms)) {
   for (const hotspot of roomScene.hotspots) {
