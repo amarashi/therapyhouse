@@ -1,0 +1,316 @@
+---
+import PersonPortrait from './PersonPortrait.astro';
+import { isAcceptingNewClients } from '../data/site.js';
+
+interface Props {
+  person: {
+    id: string;
+    data: {
+      name: string;
+      role: string;
+      image: string;
+      imageAlt: string;
+      summary: string;
+      credentials?: string;
+      worksWith?: string[];
+      worksOn?: string[];
+      languages?: string[];
+      availability?: string;
+    };
+  };
+}
+
+const { person } = Astro.props;
+const { name, role, image, imageAlt, summary, credentials, worksWith, worksOn, languages, availability } =
+  person.data;
+
+const href = `/team/${person.id}/`;
+
+/**
+ * The two facts a parent is actually scanning for. Rendered as definition rows
+ * (DESIGN.md's detail tile, "the alternative to a card grid, and it should be
+ * reached for first") rather than buried in the summary prose, so comparing
+ * three practitioners is a glance instead of three paragraphs.
+ *
+ * Support staff and the dogs have neither, and the tile is simply absent.
+ */
+const facts = [
+  { term: 'Works with', value: worksWith },
+  { term: 'Works on', value: worksOn },
+].filter((f) => f.value && f.value.length > 0);
+
+/**
+ * Availability is the first thing a parent checks, so it is a visible marker
+ * rather than a line of prose. "Accepting" reads as the positive state; every
+ * other status is neutral, never alarming.
+ */
+const accepting = isAcceptingNewClients(availability);
+---
+
+{/* `portrait-trigger` hands the portrait dissolve to the whole card, so it
+    plays while someone is reading the summary rather than only while the
+    pointer is over the name. */}
+<article class="person portrait-trigger">
+  {/* The same destination twice would be announced twice and tabbed through
+      twice, so the portrait link is hidden from assistive technology and from
+      the tab order: it exists to make the face a click target, and the name
+      below is the link of record. */}
+  <a class="person__portrait" href={href} tabindex="-1" aria-hidden="true">
+    {/* 144px is the widest the portrait column below ever gets
+        (`clamp(7rem, 26%, 9rem)`), so that is the box the ladder is told
+        about — not the 320 intrinsic hint on the element. */}
+    <PersonPortrait image={image} alt="" size={320} sizes="144px" />
+  </a>
+
+  {/* Who they are travels with the face; what they do sits underneath at full
+      card width. On a phone that keeps the portrait beside the name instead of
+      eating a whole screen above it. */}
+  <div class="person__head">
+    {/* The name is right there in the link. A described portrait beside it
+        would make it announce "Portrait of Dr Amelia Shay, developmental
+        psychologist at Therapy House in Brisbane Dr Amelia Shay". The
+        description belongs on the profile page, where the image stands alone. */}
+    <h3 class="person__name"><a class="person__link" href={href}>{name}</a></h3>
+    <p class="person__role">{role}</p>
+    {/* Credentials are the rung that decides a booking, so they belong on the
+        card and not only on the profile — at full contrast, not as fine print. */}
+    {credentials && <p class="person__credentials">{credentials}</p>}
+  </div>
+
+  {/* Its own row rather than part of the head: beside a portrait on a phone
+      the head column is too narrow to hold "Not currently accepting new
+      clients" on one line, and a pill that wraps stops reading as a pill. */}
+  {availability && (
+    <p class:list={['person__availability', accepting && 'is-accepting']}>{availability}</p>
+  )}
+
+  <div class="person__detail">
+    {facts.length > 0 && (
+      <dl class="person__facts">
+        {facts.map((fact) => (
+          <div>
+            <dt>{fact.term}</dt>
+            <dd>{fact.value.join(' · ')}</dd>
+          </div>
+        ))}
+      </dl>
+    )}
+    <p class="person__summary">{summary}</p>
+    {languages && languages.length > 1 && (
+      <p class="person__languages">
+        <span class="sr-only">Languages: </span>{languages.join(' · ')}
+      </p>
+    )}
+  </div>
+</article>
+
+<style>
+  /* The card is always on its side; only how far the portrait reaches down it
+     changes. Stacking the portrait full-width above the text was giving the
+     summary 32 characters a line and running the card 900px tall in a 284px
+     column, which is why a row of four never ended level.
+     Sizing comes from the card's own container, not the viewport, so the same
+     component behaves in a two-up grid, a one-up column and a phone. */
+  .person {
+    height: 100%;
+    display: grid;
+    grid-template-columns: clamp(5.5rem, 30%, 7rem) minmax(0, 1fr);
+    grid-template-areas:
+      'portrait head'
+      'status status'
+      'detail detail';
+    column-gap: var(--space-lg);
+    /* Rows are separated by the text's own margins — a grid gap on top of them
+       would open a second, larger seam in the middle of one block of prose. */
+    row-gap: 0;
+    align-content: start;
+    background: var(--surface-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    box-shadow: var(--shadow-sm);
+    /* The grid owns the spacing now; the portrait's own trailing margin would
+       add a second one. */
+    --portrait-gap: 0;
+  }
+
+  .person__portrait {
+    grid-area: portrait;
+    display: block;
+    align-self: start;
+  }
+
+  .person__head {
+    grid-area: head;
+    min-width: 0;
+    margin-bottom: var(--space-md);
+  }
+
+  .person__detail {
+    grid-area: detail;
+    min-width: 0;
+  }
+
+  /* One padding at the bottom of the card, not padding plus a trailing
+     paragraph margin. */
+  .person__head > :last-child,
+  .person__detail > :last-child {
+    margin-bottom: 0;
+  }
+
+  /* Wide enough to pair the portrait with the identity beside it, which is
+     what turns a tall stack into a landscape card. The fact tile and the
+     summary then run the card's full width underneath: that is what keeps
+     "Children · Young people · Families" on one line instead of three, and it
+     leaves no dead column under the portrait. */
+  @container (min-width: 26rem) {
+    .person {
+      grid-template-columns: clamp(7rem, 26%, 9rem) minmax(0, 1fr);
+      grid-template-areas:
+        'portrait head'
+        'portrait status'
+        'detail detail';
+      /* The portrait is usually taller than the name and role beside it, and a
+         spanning item hands its surplus to every row it crosses. Pinning the
+         first row to its own content sends all of it to the second instead,
+         where it falls below the availability marker as slack next to the
+         portrait rather than opening a gap under the credentials. */
+      grid-template-rows: max-content;
+    }
+
+    .person__availability {
+      align-self: start;
+    }
+
+    /* Support staff and the dogs have no fact tile — one paragraph is nothing
+       to give the full width to, and beside the portrait it stays a row
+       rather than becoming a block with a hole in it. */
+    .person:not(:has(.person__facts)) {
+      grid-template-areas:
+        'portrait head'
+        'portrait status'
+        'portrait detail';
+      /* A flexible last row takes the portrait's surplus height in one piece
+         at the bottom of the card. Left to auto rows, that surplus is shared
+         out between them and opens a gap between the role and the paragraph
+         under it. */
+      grid-template-rows: max-content max-content 1fr;
+    }
+  }
+
+  .person__link {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .person__name {
+    margin: 0 0 var(--space-xs);
+  }
+
+  /* The whole card is the hover target — a name that only underlines when the
+     pointer is exactly on it reads as un-clickable while someone is scanning
+     the face beside it. */
+  .person:hover .person__link {
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+
+  .person__role {
+    color: var(--ink-soft);
+    font-size: var(--text-secondary);
+    line-height: var(--lh-compact);
+    margin-bottom: var(--space-xs);
+  }
+
+  .person__credentials {
+    color: var(--ink);
+    font-weight: 700;
+    font-size: var(--text-secondary);
+    line-height: var(--lh-compact);
+    font-variant-numeric: lining-nums tabular-nums;
+    margin-bottom: var(--space-md);
+  }
+
+  .person__availability {
+    grid-area: status;
+    justify-self: start;
+    display: inline-block;
+    font-size: var(--text-meta);
+    font-weight: 700;
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-pill);
+    background: var(--surface-sunk);
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    margin-bottom: var(--space-md);
+  }
+
+  .person__availability.is-accepting {
+    background: var(--surface-accent);
+    border-color: var(--hedge-green);
+    color: var(--hedge-green-deep);
+  }
+
+  /* The detail tile: an opaque warm surface, a tracked label column and a
+     plain value. No card inside a card — no border, no second shadow. */
+  /* A cream tile on a white card, separated by three percent of lightness and
+     nothing else, read as a printing artefact rather than as a block. The
+     hairline and the lit top edge are what the rest of the system uses to say
+     "this is a surface", so the tile uses them too. */
+  .person__facts {
+    margin: 0 0 var(--space-md);
+    padding: var(--space-md) var(--space-lg);
+    background: var(--surface-sunk);
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius-md);
+    box-shadow: var(--edge-lit);
+    display: grid;
+    gap: var(--space-sm);
+  }
+
+  /* Label above value while the card is narrow: a 6.5rem label column there
+     would leave the values wrapping to four lines, which defeats the point of
+     making them scannable. */
+  .person__facts > div {
+    display: grid;
+    gap: 2px;
+  }
+
+  /* Wide enough for the proper two-column tile, and it is worth the width:
+     with the terms in a column, "Works with" lines up down the page and the
+     values become the thing being compared. */
+  @container (min-width: 30rem) {
+    .person__facts > div {
+      grid-template-columns: 6.5rem minmax(0, 1fr);
+      gap: var(--space-md);
+      align-items: baseline;
+    }
+  }
+
+  .person__facts dt {
+    font-size: var(--text-label);
+    font-weight: 800;
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .person__facts dd {
+    margin: 0;
+    color: var(--ink);
+  }
+
+  .person__summary {
+    margin-bottom: var(--space-sm);
+    /* The card can be the full width of the page when it is alone in its row;
+       the prose stays a reading measure regardless. */
+    max-width: 62ch;
+  }
+
+  .person__languages {
+    color: var(--chestnut);
+    font-size: var(--text-secondary);
+    font-weight: 600;
+    margin: 0;
+  }
+</style>

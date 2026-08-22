@@ -1,0 +1,460 @@
+---
+import { getEntry, render } from 'astro:content';
+import PlainLayout from '../layouts/PlainLayout.astro';
+import HeroReveal from '../components/HeroReveal.astro';
+
+const page = await getEntry('pages', 'assessments');
+if (!page) throw new Error('Missing content: src/content/pages/assessments.md');
+
+const { Content } = await render(page);
+const { title, description, lede, process, documents, packages, goodToKnow, lastReviewed } =
+  page.data;
+
+const reviewedLabel = lastReviewed
+  ? new Intl.DateTimeFormat('en-AU', { month: 'long', year: 'numeric' }).format(lastReviewed)
+  : null;
+
+/* A school observation is an extra, not a fifth way to be assessed. Kept as a
+   separate row group so the two lists never have to be compared. */
+const corePackages = packages?.filter((pkg) => !pkg.addOn) ?? [];
+const addOns = packages?.filter((pkg) => pkg.addOn) ?? [];
+
+/* What a package covers, as one line under its name. The inclusions are the
+   content file's list, joined rather than rewritten — as a bulleted list inside
+   a table cell they made the first row five times the height of the others and
+   cost the price column the alignment it exists for. An inventory rather than a
+   sentence, because one of the inclusions already contains an "and". */
+const listFormat = new Intl.ListFormat('en-AU', { style: 'long', type: 'unit' });
+const startLower = (item: string) =>
+  /^[A-Z]{2,}/.test(item) ? item : item.charAt(0).toLowerCase() + item.slice(1);
+
+const detailFor = (pkg: (typeof corePackages)[number]) =>
+  pkg.inclusions?.length
+    ? `Includes ${listFormat.format(pkg.inclusions.map(startLower))}.`
+    : (pkg.description ?? null);
+
+/* One pass over the table, two row groups: what you can be assessed for, and
+   what can be added to it. */
+const groups = [
+  { label: null, items: corePackages },
+  ...(addOns.length > 0 ? [{ label: 'Add-ons', items: addOns }] : []),
+];
+---
+
+<PlainLayout title={title} description={description}>
+  <HeroReveal
+    slot="hero"
+    title={title}
+    lede={lede}
+    image="/assets/rooms/assessment-room-out.webp"
+    imageSmall="/assets/rooms/assessment-room-out-720.webp"
+    imageMedium="/assets/rooms/assessment-room-out-1080.webp"
+    imageMediumWidth={1086}
+    imageAlt="The assessment room — a desk with materials laid out ready for a session"
+    imageWidth={1448}
+    imageHeight={1086}
+  />
+
+  <div class="wrap page">
+    <div class="prose--flush prose stack">
+      <Content />
+    </div>
+
+    {/*
+      One question — what your part of this looks like — so the sequence and the
+      folder you bring to it sit in one band rather than in two identical stacks
+      a screen apart. It is also what the empty half of every wide screen was
+      waiting for: the steps keep the page's reading measure and the checklist
+      takes the width beside them.
+    */}
+    <div class="your-part">
+      <section aria-labelledby="process">
+        <h2 id="process">How the process works</h2>
+        {/*
+          `--i` and `--last` are the thread's arithmetic, not decoration: each
+          step's connector reads its own place in the sequence against a single
+          drawing front shared by the whole list. See the motion note in the
+          stylesheet.
+        */}
+        <ol class="step-list steps" style={`--last:${Math.max(0, (process?.length ?? 0) - 1)}`}>
+          {process?.map((step, i) => <li style={`--i:${i}`}>{step}</li>)}
+        </ol>
+      </section>
+
+      <aside class="bring" aria-labelledby="documents">
+        <h2 id="documents">What to bring</h2>
+        <p>Anything you already have that describes how things have been going:</p>
+        <ul class="tick-list bring__list">
+          {documents?.map((item) => <li>{item}</li>)}
+        </ul>
+      </aside>
+    </div>
+
+    {/*
+      The page's payload. Five figures a parent is comparing against another
+      clinic have to sit in one column to be comparable at all, which a grid of
+      cards cannot do at any width — so this is the same fee table /services
+      uses, with the second practitioner column the assessments have and the
+      session fees do not.
+    */}
+    <section class="fees" aria-labelledby="packages">
+      <h2 id="packages">Assessment packages</h2>
+
+      <div class="table-scroll">
+        <table class="fee-table fees__table">
+          <caption>
+            {reviewedLabel && <>Prices current as of {reviewedLabel}. </>}
+            Every report is signed off by a fully registered psychologist.
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Assessment</th>
+              <th scope="col" class="amount">
+                <span class="fees__hd">With a registered psychologist</span>
+                <span class="fees__hd-short" aria-hidden="true">Registered</span>
+              </th>
+              <th scope="col" class="amount">
+                <span class="fees__hd">With a provisional psychologist</span>
+                <span class="fees__hd-short" aria-hidden="true">Provisional</span>
+              </th>
+            </tr>
+          </thead>
+
+          {groups.map((group) => (
+            <tbody class:list={[group.label && 'fee-table__group']}>
+              {group.label && (
+                <tr>
+                  <th scope="rowgroup" colspan="3">{group.label}</th>
+                </tr>
+              )}
+
+              {group.items.map((pkg) => (
+                <>
+                  <tr class="fees__row">
+                    <th scope="row">{pkg.title}</th>
+                    <td class="amount fees__price">{pkg.price}</td>
+                    <td class="amount fees__price fees__price--provisional">
+                      {pkg.provisionalPrice ?? (
+                        <>
+                          <span aria-hidden="true">—</span>
+                          <span class="sr-only">Not offered</span>
+                        </>
+                      )}
+                    </td>
+                  </tr>
+
+                  {/* What the package covers gets the row's whole width rather
+                      than the name column's share of it — squeezed into the
+                      first column of a phone-width table it hyphenated its way
+                      through eight lines beside an empty price column. */}
+                  {detailFor(pkg) && (
+                    <tr class="fees__row-detail">
+                      <td colspan="3">
+                        <span class="fees__detail">{detailFor(pkg)}</span>
+                      </td>
+                    </tr>
+                  )}
+                </>
+              ))}
+            </tbody>
+          ))}
+        </table>
+      </div>
+    </section>
+
+    <section class="notes" aria-labelledby="good-to-know">
+      <h2 id="good-to-know">Good to know</h2>
+      <ul class="tick-list notes__list">
+        {goodToKnow?.map((item) => <li>{item}</li>)}
+      </ul>
+    </section>
+  </div>
+</PlainLayout>
+
+<style>
+  /* Three questions on one page: what your part is, what it costs, what else
+     is worth knowing. The break between two questions is the page's largest
+     interval and the only one at this size; inside a question, the heading's
+     own margin is the whole gap. Every section used to open on the same 64px,
+     which is what left four headings reading as one undifferentiated stack. */
+  .page > * + * {
+    margin-top: var(--space-section);
+  }
+
+  /* The section owns that interval now, so the global heading margin would
+     double it. */
+  .page h2 {
+    margin-top: 0;
+  }
+
+  /* ---- What your part looks like ---- */
+
+  .your-part {
+    display: grid;
+    gap: var(--space-2xl);
+    align-items: start;
+  }
+
+  @media (min-width: 64rem) {
+    .your-part {
+      grid-template-columns: minmax(0, var(--content-max)) minmax(15rem, 1fr);
+      column-gap: clamp(var(--space-2xl), 4.5vw, 5rem);
+    }
+  }
+
+  /* A folder you assemble before you arrive, not a passage you read once.
+     Its own quiet ground is what stops it competing with the sequence beside
+     it — and what keeps it findable when a parent comes back for it a week
+     later. */
+  .bring {
+    background: var(--surface-sunk);
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+  }
+
+  /* ---- The one moment on this page ----
+
+     Eight numbered discs down the left of a column are a list of eight
+     instructions. A parent reading them is not asking what the eight things
+     are; they are asking what happens to their child and how long it takes —
+     and the answer to that is that these are one process, in order, with a
+     start and an end. So the discs get the thing that says so: a thread
+     between them.
+
+     The thread is a page element before it is a piece of motion. Its full
+     extent is always painted, pale, from the first disc to the last — which is
+     what makes eight steps read as a sequence with no script running at all,
+     on reduced motion, and in a browser that has never heard of a scroll
+     timeline. What the scroll adds is only which part of it is solid: the
+     reader's own movement lays the line down step by step, stops when they
+     stop, and runs back up when they do.
+
+     Nothing else on this page moves. The fees are the answer the page is for
+     and they are on screen the instant it paints; the checklist beside the
+     steps is a folder to assemble, not a reveal. The stillness around the
+     thread is what keeps it a moment rather than a page of decoration.
+     =================================================================== */
+
+  /* How far down the sequence the line has been drawn, in steps: 0 is the
+     first disc, `--last` the final one. Registered so it can be interpolated,
+     and inherited so that one animation on the list drives every segment in
+     it.
+
+     One shared front rather than a timeline per row is the whole reason this
+     reads as a line. Given its own range, each segment starts and finishes on
+     its own row's arrival — several rows are in the viewport at once, so
+     several segments are part-drawn at once, and a line with four gaps in it
+     is not a line. */
+  @property --step-draw {
+    syntax: '<number>';
+    inherits: true;
+    initial-value: 1;
+  }
+
+  /* Drawn is the resting state, and every fallback below simply keeps it. */
+  .steps {
+    --step-draw: 1;
+  }
+
+  /* One segment per step, from the foot of its own disc to the head of the
+     next one — so the geometry belongs to the discs rather than to the list
+     box, and the thread stops at the last disc instead of trailing off under
+     the last paragraph. The 0.25rem at each end is the breath that keeps it
+     reading as a join between two objects and not as one long stroke with
+     beads on it.
+
+     The pale track is the background colour and the drawn part is a gradient
+     over it, so a segment is one element and one animated property. */
+  .steps li::after {
+    content: '';
+    position: absolute;
+    left: calc(1rem - 1px);
+    /* The disc is 2rem tall and sits at -0.15em (see `.step-list li::before`),
+       so these two offsets are its bottom edge and the next disc's top edge. */
+    top: calc(2rem - 0.15em + 0.25rem);
+    bottom: calc(0.15em + 0.25rem - var(--space-lg));
+    width: 2px;
+    border-radius: var(--radius-pill);
+    background-color: color-mix(in srgb, var(--hedge-green) 20%, transparent);
+    background-image: linear-gradient(var(--hedge-green), var(--hedge-green));
+    background-repeat: no-repeat;
+    /* This segment's share of the front. Behind it the term is negative and
+       clamps to nothing; ahead of it, past 1 and clamped to full — so the
+       segments before the front are solid, the one at it is part-drawn, and
+       the ones after it are the pale track alone. */
+    background-size: 100% clamp(0%, calc((var(--step-draw) * var(--last) - var(--i)) * 100%), 100%);
+  }
+
+  /* Nothing after the last step to join it to. */
+  .steps li:last-child::after {
+    content: none;
+  }
+
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .steps {
+        /* Linear, because the scroll is the easing — the same call the age
+           bands on /group-therapy make, and for the same reason: an ease here
+           detaches the mark from the hand moving the page. */
+        animation: step-thread linear both;
+        animation-timeline: view();
+        /* The list's own travel through the viewport is the clock, and these
+           two figures are what put the drawing front near the middle of the
+           screen — where the reader is actually looking — rather than at the
+           bottom edge on the way in and the top edge on the way out. A front
+           that tracks the centre starts at `(vh/2) / (listHeight + vh)` and
+           ends a listHeight later; measured, that is 32–68% on a laptop and
+           27–73% on a phone, and the pair below is the one range that is
+           within a few percent of both. */
+        animation-range: cover 28% cover 71%;
+      }
+    }
+  }
+
+  @keyframes step-thread {
+    from {
+      --step-draw: 0;
+    }
+    to {
+      --step-draw: 1;
+    }
+  }
+
+  /* Supporting, and sized to say so — the same words at headline scale wrap to
+     two lines in a column this narrow and read as a second page heading. */
+  .bring h2 {
+    font-size: var(--text-subhead);
+    line-height: var(--lh-subhead);
+  }
+
+  .bring__list {
+    margin-bottom: 0;
+  }
+
+  /* ---- What it costs ---- */
+
+  .fees__table {
+    /* Wider than the reading measure, because it is the answer the page is
+       for; short of the full wrap, because an amount 1,100px from the name it
+       belongs to is not a comparison. */
+    max-width: 58rem;
+  }
+
+  .fees caption {
+    max-width: 46rem;
+  }
+
+  /* Two money columns need a gutter between them of their own: the shared
+     table rule zeroes the padding on both sides of an amount, which at phone
+     widths — where the columns are exactly as wide as their figures — ran the
+     two prices together. */
+  .fees__table .amount + .amount {
+    padding-left: var(--space-lg);
+  }
+
+  /* On a phone the full column head is four wrapped lines, and the width it
+     claims is width the assessment names need. The short head takes over
+     visually; the full one stays in the accessibility tree, so a screen reader
+     hears the same column name at every size. */
+  .fees__hd-short {
+    display: none;
+  }
+
+  .fees__table th[scope='row'] {
+    padding-right: var(--space-2xl);
+  }
+
+  /* A package and its description are one band: the rule that separates
+     packages waits until after the description. */
+  .fees__row:has(+ .fees__row-detail) > * {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .fees__row-detail > td {
+    padding-top: var(--space-xs);
+  }
+
+  .fees__detail {
+    display: block;
+    /* Its own measure — the row is wider than prose is meant to run. */
+    max-width: 62ch;
+    font-weight: 400;
+    color: var(--ink-soft);
+    font-size: var(--text-secondary);
+    line-height: var(--lh-compact);
+  }
+
+  /* Quieter than the registered price, not hidden: it is a real option, and
+     the caption above says who signs the report. */
+  .fee-table .fees__price--provisional {
+    font-size: var(--text-cardtitle);
+    color: var(--ink-soft);
+  }
+
+  /* ---- What else is worth knowing ---- */
+
+  /* Four facts that do not depend on each other, so they read across rather
+     than down — a fourth full-length bulleted list in the same column was what
+     made the tail of the page feel like filler. */
+  @media (min-width: 64rem) {
+    .notes__list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: clamp(var(--space-2xl), 4.5vw, 5rem);
+      row-gap: var(--space-md);
+      max-width: 68rem;
+      margin-bottom: 0;
+    }
+
+    .notes__list li {
+      margin-bottom: 0;
+    }
+  }
+
+  /* ---- Narrow ----
+     Last in the sheet so these win over the rules above at equal specificity.
+     Below this width the table has ~366px for three columns, so every pixel
+     the heads and the gutters are not using goes to the names. */
+  @media (max-width: 52rem) {
+    .fees__hd {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    .fees__hd-short {
+      display: inline;
+    }
+
+    .fee-table .fees__price {
+      font-size: var(--text-cardtitle);
+    }
+
+    .fee-table .fees__price--provisional {
+      font-size: var(--text-body);
+    }
+
+    .fees__table .amount + .amount {
+      padding-left: var(--space-xs);
+    }
+
+    .fees__table th[scope='row'] {
+      padding-right: var(--space-xs);
+      /* "Psycho-educational" alone is a third of the column; letting it break
+         is what keeps the whole table inside the screen. */
+      hyphens: auto;
+      overflow-wrap: break-word;
+    }
+
+    .fees__table thead .amount {
+      font-size: var(--text-secondary);
+    }
+  }
+</style>

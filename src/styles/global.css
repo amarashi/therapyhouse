@@ -1,0 +1,485 @@
+@import './tokens.css';
+
+/* Therapy House — plain reading pages.
+ *
+ * "House to arrive, plain to read." These pages carry the answers a parent came
+ * for, so they stay quiet, scannable and fast. No webfonts, no ambient motion,
+ * no JavaScript.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  /* The scrollbar is part of the page. Left alone it ships the browser's
+     blue-grey, which is the one cool colour on an otherwise lamplit site. */
+  scrollbar-color: var(--chestnut) var(--surface-sunk);
+  scrollbar-width: thin;
+  accent-color: var(--hedge-green);
+}
+
+::selection {
+  background: var(--candle-gold);
+  color: var(--bark-ink);
+}
+
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: var(--lh-body);
+  caret-color: var(--hedge-green);
+  /* No `-webkit-font-smoothing: antialiased`. On macOS it swaps subpixel
+     rendering for grayscale, which thins dark-on-cream text and costs the
+     visitor most likely to be squinting the one thing they need. */
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  color: var(--heading);
+  margin: 0 0 var(--space-md);
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: var(--text-display);
+  line-height: var(--lh-display);
+  letter-spacing: var(--track-display);
+}
+
+h2 {
+  font-size: var(--text-headline);
+  line-height: var(--lh-headline);
+  letter-spacing: var(--track-headline);
+  margin-top: var(--space-3xl);
+}
+
+/* h3 used to be 18.4px against a 17px body — 1.08x, the same face and the
+   same colour as a bold lead-in. It is a subsection of a long answer, so it
+   is sized as one: half the step down from h2 rather than a rounding error
+   above the paragraph under it. */
+h3 {
+  font-size: var(--text-subhead);
+  line-height: var(--lh-subhead);
+  margin-top: var(--space-xl);
+}
+
+p,
+li {
+  text-wrap: pretty;
+}
+
+p {
+  margin: 0 0 var(--space-lg);
+}
+
+a {
+  color: var(--link);
+  text-underline-offset: 0.18em;
+}
+
+a:hover {
+  color: var(--link-hover);
+}
+
+/* Visible focus everywhere — keyboard access is a stated commitment. */
+:focus-visible {
+  outline: 3px solid var(--focus-blue);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ---- Target size ----
+ * A link that is the whole of its container is a target, not prose: a number in
+ * a definition list, an article title, a person's name, a back link. Body type
+ * sets a 21px box, so that is what several of them were — under the 24px WCAG
+ * 2.5.8 asks for at AA, and well under the 44px every button on this site
+ * honours. The rule was being re-derived per component; it belongs here, so a
+ * standalone link written next month is right without anyone remembering.
+ *
+ * Grown with a pseudo-element rather than with padding, so the box a reader
+ * sees and the rhythm of the list it sits in are both untouched — the only
+ * thing that changes is where a thumb may land. The `min(0px, …)` means the
+ * area only ever grows: a title that already wraps to two lines is left exactly
+ * as it is.
+ *
+ * Deliberately not `li > a`: a list item whose link is the whole row is already
+ * a row-sized target, and the homepage rooms are 400px tall.
+ *
+ * And deliberately not `p > a:only-child`, which looks like the same idea and
+ * is not: `:only-child` counts elements, so it also matches a link sitting in
+ * the middle of a sentence — "…their own process, timeline and pricing, see
+ * the assessment packages." Growing that one puts a 44px band over the words
+ * on the lines above and below it, and a reader tapping a word gets navigated.
+ * CSS cannot ask whether a link has text for a sibling, so a paragraph opts in
+ * by hand with `.standalone-link`; `dd` and the headings are safe structurally,
+ * because a term's value and a title are the link and nothing else.
+ */
+:where(dd, h1, h2, h3, h4, h5, h6) > a:only-child,
+a.standalone-link {
+  position: relative;
+}
+
+:where(dd, h1, h2, h3, h4, h5, h6) > a:only-child::after,
+a.standalone-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: min(0px, calc((100% - 44px) / 2));
+  bottom: min(0px, calc((100% - 44px) / 2));
+}
+
+/* ---- Layout primitives ---- */
+
+/* Gutters grow with the viewport rather than staying at a fixed 40px, so the
+   page reads as laid out for the screen it is on. */
+.wrap {
+  width: min(var(--wide-max), 100% - var(--gutter));
+  margin-inline: auto;
+}
+
+/* The reading column, centred inside the wider wrap. This is right on a page
+   that is entirely prose; a page that also has full-width sections uses
+   `.prose--flush` below so everything shares one left edge. */
+.prose {
+  width: min(var(--content-max), 100%);
+  margin-inline: auto;
+}
+
+/* On a page whose other sections span the full wrap, the reading column shares
+   their left edge. Centred, it sat ~200px right of every heading around it,
+   which reads as a stray margin rather than as the deliberate narrow/wide
+   contrast it was meant to be. One left edge per page. */
+.prose--flush {
+  margin-inline: 0;
+}
+
+.lede {
+  font-size: var(--text-lede);
+  line-height: var(--lh-lede);
+  color: var(--ink-soft);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--space-sm);
+  top: -4rem;
+  z-index: 50;
+  padding: var(--space-sm) var(--space-lg);
+  background: var(--hedge-green);
+  color: #fffdf7;
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+  text-decoration: none;
+  transition: top 120ms ease;
+}
+
+.skip-link:focus {
+  top: var(--space-sm);
+  color: #fffdf7;
+}
+
+/* ---- Buttons ---- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  min-height: 44px;
+  padding: 0 var(--space-xl);
+  border: 2px solid transparent;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-size: var(--text-secondary);
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn--primary {
+  background: var(--hedge-green);
+  color: #fffdf7;
+}
+
+.btn--primary:hover {
+  background: var(--hedge-green-deep);
+  color: #fffdf7;
+}
+
+/* Secondary is outlined, not faded — per PRODUCT.md the two CTAs carry equal
+   weight, so neither may read as the lesser option. */
+.btn--secondary {
+  background: var(--surface-raised);
+  color: var(--hedge-green);
+  border-color: var(--hedge-green);
+}
+
+.btn--secondary:hover {
+  background: var(--surface-sunk);
+  color: var(--hedge-green-deep);
+}
+
+/* ---- Reusable blocks ---- */
+
+/* The lit top edge is not decoration here: the closing card is cream on cream
+   and the "what to bring" card is white on warm white, so the hairline and the
+   soft shadow were the only things saying "this is standing on the page". With
+   the highlight the card catches the same light everything else in this house
+   is lit by, and reads as an object rather than as a tint. */
+.card {
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  box-shadow: var(--edge-lit), var(--shadow-sm);
+}
+
+.stack > * + * {
+  margin-top: var(--space-lg);
+}
+
+.tick-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--space-lg);
+}
+
+.tick-list li {
+  position: relative;
+  padding-left: 1.6rem;
+  margin-bottom: var(--space-sm);
+}
+
+.tick-list li::before {
+  content: '';
+  position: absolute;
+  left: 0.25rem;
+  top: 0.62em;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--chestnut);
+}
+
+.step-list {
+  counter-reset: step;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.step-list li {
+  counter-increment: step;
+  position: relative;
+  padding-left: 3rem;
+  margin-bottom: var(--space-lg);
+  min-height: 2rem;
+}
+
+.step-list li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: -0.15em;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--hedge-green);
+  color: #fffdf7;
+  font-size: var(--text-meta);
+  font-weight: 700;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+/* Wide content must scroll inside itself, never push the page sideways. */
+.table-scroll {
+  overflow-x: auto;
+  margin-bottom: var(--space-lg);
+}
+
+/* No shrink. These tables carry the fees and the session lengths — the
+   answers the pages exist for — so they are set at reading size like the
+   prose around them. */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+caption {
+  text-align: left;
+  color: var(--ink-faint);
+  font-size: var(--text-meta);
+  line-height: var(--lh-compact);
+  padding-bottom: var(--space-sm);
+}
+
+th,
+td {
+  text-align: left;
+  padding: var(--space-md) var(--space-lg) var(--space-md) 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+th {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+td.amount,
+th.amount {
+  text-align: right;
+  padding-right: 0;
+  /* `lining-nums` as well as `tabular-nums`: the display face defaults to
+     old-style figures, which drop the 3, 4, 7 and 9 below the baseline. In a
+     column of prices being read against another clinic's, a ragged baseline
+     is the one thing the column must not have. */
+  font-variant-numeric: lining-nums tabular-nums;
+  white-space: nowrap;
+}
+
+/* ---- Fee tables ----
+ * Both money pages publish figures a visitor is comparing against another
+ * clinic, so they share one treatment rather than drifting apart: the amounts
+ * in the display face at a documented step, right-aligned on tabular numerals
+ * so the column reads as a column, and anything that is not a comparable
+ * figure — an add-on, an adjustment — in its own labelled row group so it
+ * never joins that column of numbers.
+ */
+.fee-table .amount {
+  font-family: var(--font-display);
+  font-size: var(--text-subhead);
+  line-height: var(--lh-subhead);
+  font-weight: 700;
+  color: var(--heading);
+}
+
+/* The heads are labels, not figures: body face, wrapping, sitting on the
+   baseline of the tallest one. */
+.fee-table thead .amount {
+  font-family: var(--font-body);
+  font-size: var(--text-secondary);
+  line-height: var(--lh-compact);
+  letter-spacing: normal;
+  color: var(--ink-soft);
+  white-space: normal;
+  vertical-align: bottom;
+}
+
+/* What a line covers, or what is added to it, under its name. */
+.fee-table__note {
+  display: block;
+  margin-top: var(--space-xs);
+  font-weight: 400;
+  font-size: var(--text-secondary);
+  line-height: var(--lh-compact);
+  color: var(--ink-soft);
+}
+
+.fee-table__group th[scope='rowgroup'] {
+  padding-top: var(--space-2xl);
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  font-weight: 800;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  border-bottom-color: var(--line-soft);
+}
+
+/* The amounts in a group are the ones with prose in them — "plus travel",
+   "added to the session". They may wrap rather than setting the width of every
+   figure above them. */
+.fee-table__group .amount {
+  white-space: normal;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* A heading introducing a full-width grid spans that grid's width, so it lines
+   up with the cards it labels rather than with the narrow reading column. */
+.section-head {
+  width: 100%;
+}
+
+/* ---- Travelling by lift ----
+ * Set by the rail's script when a floor is taken (`data-lift-leaving`), and by
+ * the head script on the page it arrives at (`data-lift-arriving`), which also
+ * publishes `--lift-dir`: 1 going down the menu, -1 going up.
+ *
+ * The rail is deliberately excluded from both. The lift holds still and the
+ * building travels past it, in the opposite direction to the car — which is
+ * what makes the two pages read as two floors rather than as two documents.
+ * Sixteen pixels; the fade is doing the work, not the distance.
+ */
+html[data-lift-leaving] body > *:not(.rail) {
+  opacity: 0;
+  transform: translateY(calc(var(--lift-dir, 1) * -16px));
+  transition: opacity 140ms ease-in, transform 140ms ease-in;
+}
+
+@keyframes lift-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(calc(var(--lift-dir, 1) * 18px));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+html[data-lift-arriving] body > *:not(.rail) {
+  animation: lift-arrive 360ms cubic-bezier(0.2, 0.72, 0.2, 1) both;
+}
+
+/* The global reduce block above already flattens both to nothing; this makes
+   the resting values explicit rather than leaving them to a 0.01ms animation. */
+@media (prefers-reduced-motion: reduce) {
+  html[data-lift-leaving] body > *:not(.rail),
+  html[data-lift-arriving] body > *:not(.rail) {
+    opacity: 1;
+    transform: none;
+    animation: none !important;
+  }
+}

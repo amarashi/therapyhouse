@@ -1,0 +1,270 @@
+---
+import { getEntry, render } from 'astro:content';
+import PlainLayout from '../layouts/PlainLayout.astro';
+import HeroReveal from '../components/HeroReveal.astro';
+import LibraryShelf from '../components/LibraryShelf.astro';
+import { siteContent } from '../../public/assets/scripts/content-data.js';
+
+const page = await getEntry('pages', 'library');
+if (!page) throw new Error('Missing content: src/content/pages/library.md');
+
+const { Content } = await render(page);
+const { title, description, lede, publicationsNote, mediaItems } = page.data;
+
+/**
+ * Articles are still read from the content model rather than a collection: only
+ * their titles, dates and excerpts live in the repo. The full bodies are in the
+ * gitignored `archive/live-site-scrape/html/`, so each entry still points at
+ * the article on the current site.
+ *
+ * Before cutover these must become `/library/<slug>/` pages — see
+ * SITE_CONTENT.md. Until then an external link is honest; a dead internal one
+ * would not be.
+ */
+const articles = [...siteContent.library.blogArticles].sort((a, b) =>
+  b.date.localeCompare(a.date)
+);
+
+/**
+ * Twenty-three articles in one undifferentiated column is a wall, not an index.
+ * The one structure this content genuinely has is its chronology, so the list
+ * is cut into years: the year becomes the group marker, and the entries below
+ * it only need the day and month.
+ */
+const years = articles.reduce<{ year: string; items: typeof articles }[]>((groups, article) => {
+  const year = article.date.slice(0, 4);
+  const current = groups.at(-1);
+  if (current?.year === year) current.items.push(article);
+  else groups.push({ year, items: [article] });
+  return groups;
+}, []);
+
+const formatDayMonth = (iso: string) =>
+  new Intl.DateTimeFormat('en-AU', { day: 'numeric', month: 'long' }).format(new Date(iso));
+---
+
+<PlainLayout title={title} description={description}>
+  <HeroReveal
+    slot="hero"
+    title={title}
+    lede={lede}
+    image="/assets/rooms/library-room-out.webp"
+    imageSmall="/assets/rooms/library-room-out-720.webp"
+    imageMedium="/assets/rooms/library-room-out-1080.webp"
+    imageMediumWidth={1086}
+    imageAlt="The library — shelves of books, a reading chair and warm lamplight"
+    imageWidth={1448}
+    imageHeight={1086}
+  />
+
+  <div class="wrap">
+    {/*
+      The books and the videos were two of four bullet lists in a band across
+      the top of this page — the clinic's own published work, set at the same
+      weight as a footnote. They are now the shelf: real covers, real interior
+      spreads, the actual recordings. Everything the band did for them is done
+      better by the list underneath it, which is where the facts live.
+    */}
+    <LibraryShelf />
+
+    {/*
+      The two collections that stay typographic. Publications is a citation
+      list and a spine would hide the citation, which is the content; the media
+      appearances are the clinic's only third-party proof and belong in reading
+      order, not in a carousel.
+    */}
+    <div class="shelves">
+      <section class="collection" aria-labelledby="publications">
+        <h2 id="publications">Publications</h2>
+        <p class="collection__note">{publicationsNote}</p>
+      </section>
+
+      <section class="collection" aria-labelledby="media">
+        <h2 id="media">In the media</h2>
+        <ul class="tick-list">
+          {mediaItems?.map((item) => <li>{item}</li>)}
+        </ul>
+      </section>
+    </div>
+
+    <section class="index" aria-labelledby="articles">
+      <h2 id="articles">Articles</h2>
+
+      {/* The page's own note is about the articles specifically, so it sits
+          with them at reading measure rather than opening the page. */}
+      <div class="prose prose--flush index__note"><Content /></div>
+
+      {years.map((group) => (
+        <section class="year" aria-labelledby={`year-${group.year}`}>
+          <h3 class="year__marker" id={`year-${group.year}`}>{group.year}</h3>
+          <ul class="year__list">
+            {group.items.map((article) => (
+              <li class="article">
+                <p class="article__date">
+                  <time datetime={article.date}>{formatDayMonth(article.date)}</time>
+                </p>
+                <h4 class="article__title">
+                  <a href={article.url} rel="noopener">{article.title}</a>
+                </h4>
+                <p class="article__excerpt">{article.excerpt}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </section>
+  </div>
+</PlainLayout>
+
+<style>
+  /* ---- The two typographic collections ----
+     One hairline runs the width of the page and they stand on it. No boxes:
+     the rule and the gaps do the grouping, so two lists of visibly different
+     lengths never settle into a card pair. */
+
+  .shelves {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-2xl) var(--space-3xl);
+    margin-top: var(--space-section);
+  }
+
+  @media (min-width: 48rem) {
+    .shelves {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .collection {
+    border-top: 1px solid var(--line);
+    padding-top: var(--space-md);
+  }
+
+  /* A shelf label, not a section title: these are peers introducing a few
+     lines each, and at 38px they would outshout the archive they sit above. */
+  .collection h2 {
+    margin-top: 0;
+    margin-bottom: var(--space-md);
+    font-size: var(--text-subhead);
+    line-height: var(--lh-subhead);
+  }
+
+  .collection :global(.tick-list) {
+    margin-bottom: 0;
+  }
+
+  .collection__note {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: var(--text-secondary);
+    line-height: var(--lh-compact);
+  }
+
+  /* ---- The archive ---- */
+
+  .index {
+    margin-top: var(--space-3xl);
+  }
+
+  .index > h2 {
+    margin-top: 0;
+  }
+
+  .index__note {
+    margin-bottom: var(--space-2xl);
+  }
+
+  /* Each year is a shelf too — same rule, same meaning. It is the only
+     separator in twenty-three entries, which is what lets the entries
+     themselves be grouped by spacing alone. */
+  .year {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+    border-top: 1px solid var(--line);
+    padding-top: var(--space-lg);
+    margin-top: var(--space-2xl);
+  }
+
+  .year__marker {
+    margin: 0;
+    font-size: var(--text-subhead);
+    line-height: var(--lh-subhead);
+    color: var(--heading-accent);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+
+  /* The year steps out into its own column and stays with its entries while
+     they scroll. The empty left margin was the page's largest unused surface;
+     this is what it is for. */
+  @media (min-width: 62rem) {
+    .year {
+      grid-template-columns: minmax(0, 6rem) minmax(0, 1fr);
+      column-gap: var(--space-2xl);
+    }
+
+    /* The marker keeps its `--text-subhead` size in the rail. A larger year would
+       want a fourth serif step, and the two steps in tokens.css are the whole
+       ramp — the sage and the empty column are already doing the work. */
+    .year__marker {
+      position: sticky;
+      top: var(--space-2xl);
+      align-self: start;
+    }
+  }
+
+  /* Two columns once there is room for two full measures. Twenty-three entries
+     down a single 42rem column ran to five thousand pixels; the wrap is 92rem
+     wide and was carrying four hundred of them empty. */
+  .year__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: var(--space-2xl);
+    grid-template-columns: repeat(auto-fit, minmax(min(22rem, 100%), 1fr));
+  }
+
+  /* Six pixels to the title, ten to the excerpt, forty to the next entry. The
+     entry holds together on proximity, so it needs no rule of its own. */
+  .article {
+    max-width: 34rem;
+  }
+
+  .article__date {
+    margin: 0 0 var(--space-xs);
+    color: var(--ink-faint);
+    font-size: var(--text-meta);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+
+  .article__title {
+    margin: 0 0 var(--space-sm);
+    font-family: var(--font-display);
+    font-size: var(--text-cardtitle);
+    line-height: var(--lh-subhead);
+    color: var(--heading);
+    text-wrap: balance;
+  }
+
+  /* These titles are the links. Undecorated, they read as twenty-three
+     headings and the fact that any of them open anything is invisible. */
+  .article__title a {
+    color: var(--link);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+
+  .article__title a:hover {
+    color: var(--link-hover);
+    text-decoration-thickness: 2px;
+  }
+
+  .article__excerpt {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: var(--text-secondary);
+    line-height: var(--lh-compact);
+  }
+</style>

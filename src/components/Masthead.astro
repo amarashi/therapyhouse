@@ -1,0 +1,147 @@
+---
+import { site, contact, callsToAction } from '../data/site.js';
+
+/**
+ * The page's anchor. Western eyes land top-left and, until now, found nothing
+ * there — no wordmark, no logo, no name. The site said "Therapy House" for the
+ * first time in its footer.
+ *
+ * Typographic, not the logo file: `logo3d.webp` is a 3D render whose letters
+ * are scrambled and illegible below about 200px, so it cannot carry a masthead.
+ * Georgia in hedge green is the system's own voice and reads at any size.
+ *
+ * The two actions sit here as quiet links rather than as the pair of pills that
+ * used to interrupt the hero. They stay on every page, which is what PRODUCT.md
+ * asks for — equal weight, always reachable — without either one shouting.
+ */
+const { book, call } = callsToAction;
+---
+
+<header class="masthead">
+  <a class="masthead__mark" href="/">
+    <span class="masthead__name">{site.name}</span>
+    <span class="masthead__place">The Gap, Brisbane</span>
+  </a>
+
+  <nav class="masthead__actions" aria-label="Contact">
+    <a class="masthead__link" href={book.href} target="_blank" rel="noopener noreferrer">
+      Book an appointment<span class="sr-only"> (opens in a new tab)</span>
+    </a>
+    <a class="masthead__link masthead__link--phone" href={call.href}>{contact.phone}</a>
+  </nav>
+</header>
+
+<style>
+  .masthead {
+    position: relative;
+    z-index: 40;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-md) var(--space-xl);
+    padding-block: clamp(var(--space-lg), 2.4vh, var(--space-xl));
+    padding-inline: var(--page-inset);
+  }
+
+  /* Over the hero only where the navigation is the right-hand rail and nothing
+     else is competing for the top of the page. Below that the nav is a bar, so
+     masthead and bar stack in normal flow instead of overlapping. */
+  @media (min-width: 90rem) {
+    :global(body.has-hero) .masthead {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+    }
+  }
+
+  .masthead__mark {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    text-decoration: none;
+  }
+
+  .masthead__name {
+    font-family: var(--font-display);
+    font-size: var(--text-wordmark);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: var(--track-headline);
+    color: var(--heading);
+  }
+
+  .masthead__mark:hover .masthead__name {
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+  }
+
+  .masthead__place {
+    font-size: var(--text-label);
+    font-weight: 700;
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .masthead__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-md) var(--space-xl);
+  }
+
+  .masthead__link {
+    font-size: var(--text-secondary);
+    font-weight: 700;
+    text-decoration: none;
+    /* Underlined on hover rather than at rest: at rest this is furniture, and
+       the hero should be the only thing asking for attention. */
+    padding-block: 2px;
+  }
+
+  .masthead__link:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+  }
+
+  .masthead__link--phone {
+    color: var(--chestnut);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+
+  .masthead__link--phone:hover {
+    color: var(--wood-brown);
+  }
+
+  /* ---- Phones ----
+     The masthead is the wordmark and nothing else here. Both actions moved to
+     the bar in the thumb zone (ActionBar.astro), where they are 48px pills
+     rather than a 143x26px text link in the corner furthest from a thumb — and
+     leaving a second copy in the masthead would only be spending the top of
+     the first screen to repeat what is already on screen at the bottom of it.
+     The place line goes with them: the address is in the footer and on the
+     map, and the top of a phone screen is the most expensive space on the
+     site. */
+  @media (max-width: 44rem) {
+    .masthead {
+      gap: var(--space-sm) var(--space-lg);
+      padding-block: var(--space-sm);
+    }
+
+    .masthead__place,
+    .masthead__actions {
+      display: none;
+    }
+
+    /* The wordmark was a 19px-tall target — the shortest on the page, and the
+       one every visitor reaches for to get home. The name keeps its size; the
+       box around it grows to the 44px the rest of the site honours. */
+    .masthead__mark {
+      display: flex;
+      align-items: center;
+      min-height: 44px;
+    }
+  }
+</style>

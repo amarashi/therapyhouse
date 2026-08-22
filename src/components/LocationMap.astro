@@ -1,0 +1,195 @@
+---
+import { contact } from '../data/site.js';
+
+/**
+ * The clinic's place on a hand-drawn map, as one clickable object.
+ *
+ * A parent working out whether to drive here does not want a grey embedded
+ * Google frame with a cookie banner in it — that is the psychology-clinic
+ * template arriving through a side door, and it is 900 KB of third-party
+ * script sitting on the path to a phone number. So the map is a picture: the
+ * same modelled, storybook world the rooms are drawn in, with the pin already
+ * dropped on Waterworks Rd. The real Google map is one tap behind it.
+ *
+ * The whole card is the link — image, plate and all — because a map you can
+ * see but not touch is a screenshot, and everyone tries to touch a map.
+ */
+interface Props {
+  /**
+   * The `sizes` hint for the artwork. It differs per placement — beside the
+   * text on the home page, full measure on the contact page — and a wrong
+   * value here is the difference between a 115 KB file and a 295 KB one.
+   *
+   * It must not contain a `var()`. `sizes` is read by the preload scanner,
+   * outside the cascade, so a custom property in it cannot resolve and the
+   * whole source-size list is thrown away — the browser falls back to 100vw
+   * and takes the master at every width. Write the value out.
+   *
+   * The 800w rung exists for the same reason in the other direction: a phone
+   * at 366 CSS px and DPR 2 asks for 732, and with the ladder running
+   * 724 → 1448 an eight-pixel shortfall cost 179 KB.
+   */
+  sizes: string;
+  /** Both placements sit well below the fold. */
+  loading?: 'lazy' | 'eager';
+}
+
+const { sizes, loading = 'lazy' } = Astro.props;
+
+/* Searched by address rather than by a place ID: the address is the one this
+   site already publishes in four places, so the pin and the printed line can
+   never drift apart. */
+const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contact.address)}`;
+---
+
+{/* The maps app is somewhere a parent goes and comes back from — often with a
+    car already started. A new tab keeps their place on this page. */}
+<a class="map" href={mapsUrl} target="_blank" rel="noopener noreferrer">
+  <img
+    class="map__art"
+    src="/assets/media/map3d.webp"
+    srcset="/assets/media/map3d-480.webp 480w, /assets/media/map3d-720.webp 724w, /assets/media/map3d-800.webp 800w, /assets/media/map3d.webp 1448w"
+    sizes={sizes}
+    width="1448"
+    height="1086"
+    alt="Illustrated map with Therapy House pinned on Waterworks Rd, The Gap."
+    loading={loading}
+    decoding="async"
+  />
+
+  {/* The pin's label, in the map's own idiom rather than the page's. Opaque
+      cream, not glass: it carries an address, and an address read through a
+      blur of streets is not read. */}
+  <span class="map__plate">
+    <span class="map__address">{contact.address}</span>
+    <span class="map__go">
+      Open in Google Maps<span class="sr-only"> (opens in a new tab)</span>
+      <span class="map__arrow" aria-hidden="true">→</span>
+    </span>
+  </span>
+</a>
+
+<style>
+  .map {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border-radius: var(--radius-xl);
+    text-decoration: none;
+    color: inherit;
+    /* Warm brown, never neutral — a grey shadow lights this scene by a screen
+       instead of by an afternoon. The hairline keeps the map's sandy edge from
+       dissolving into the warm-white page. */
+    box-shadow:
+      0 0 0 1px var(--line),
+      0 16px 36px rgba(48, 25, 8, 0.16);
+    transition:
+      transform 240ms cubic-bezier(0.2, 0.72, 0.2, 1),
+      box-shadow 240ms cubic-bezier(0.2, 0.72, 0.2, 1);
+  }
+
+  .map__art {
+    display: block;
+    width: 100%;
+    height: auto;
+    transition: transform 420ms cubic-bezier(0.2, 0.72, 0.2, 1);
+  }
+
+  .map__plate {
+    position: absolute;
+    left: var(--space-md);
+    bottom: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    /* Proportional as well as capped: on the home page's narrower column a
+       fixed 24rem plate covered two thirds of the streets it points at. */
+    max-width: min(24rem, 62%);
+    padding: 11px 15px;
+    border-radius: var(--radius-md);
+    background: var(--lamplit-cream);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.86),
+      0 10px 22px rgba(60, 35, 12, 0.18);
+  }
+
+  .map__address {
+    /* The printed address, and the reason the plate exists. It was set at
+       15px — smaller than the body text of every page it appears on — in a
+       face chosen for names. It is a name. */
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--text-cardtitle);
+    line-height: var(--lh-subhead);
+    color: var(--heading);
+    /* Two even lines instead of a full line and an orphaned "QLD, 4061". */
+    text-wrap: balance;
+  }
+
+  .map__go {
+    /* The label step from DESIGN.md, sentence case rather than the tracked
+       uppercase — this is an action, not a field name. */
+    font-size: var(--text-label);
+    font-weight: 800;
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+    line-height: 1.2;
+    color: var(--link);
+  }
+
+  .map__arrow {
+    display: inline-block;
+    transition: transform 240ms cubic-bezier(0.2, 0.72, 0.2, 1);
+  }
+
+  /* Reaching for it makes it warmer, not heavier: the second shadow layer is
+     amber, so the card picks up a little lamplight rather than a darker edge. */
+  .map:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 0 0 1px var(--line),
+      0 20px 44px rgba(48, 25, 8, 0.2),
+      0 0 30px rgba(255, 190, 68, 0.34);
+  }
+
+  .map:hover .map__art {
+    transform: scale(1.015);
+  }
+
+  .map:hover .map__go {
+    color: var(--link-hover);
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+  }
+
+  .map:hover .map__arrow {
+    transform: translateX(3px);
+  }
+
+  /* The plate stops being a callout and becomes the card's footer: at this
+     width it would otherwise cover the streets it is pointing at. */
+  @media (max-width: 34rem) {
+    .map__plate {
+      position: static;
+      max-width: none;
+      padding: 12px var(--space-md) 13px;
+      border-radius: 0;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.86);
+      border-top: 1px solid var(--line);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .map,
+    .map__art,
+    .map__arrow {
+      transition: none;
+    }
+
+    .map:hover,
+    .map:hover .map__art,
+    .map:hover .map__arrow {
+      transform: none;
+    }
+  }
+</style>

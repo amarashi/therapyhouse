@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-const { roomIds, roomNavigation, siteContent } = await import("../assets/scripts/content-data.js");
+const { roomIds, roomNavigation, siteContent } = await import("../public/assets/scripts/content-data.js");
 
 const expectedRoomIds = ["exterior", "welcome", "team", "services", "assessments", "groups", "library", "contact", "work-with-us"];
 

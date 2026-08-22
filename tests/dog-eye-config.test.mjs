@@ -7,12 +7,12 @@ async function readProjectFile(path) {
   return readFile(new URL(path, root), "utf8");
 }
 
-const settings = JSON.parse(await readProjectFile("therapyhouse-dog-eye-settings.json"));
-const indexHtml = await readProjectFile("index.html");
-const siteData = await readProjectFile("assets/scripts/site-data.js");
-const appScript = await readProjectFile("assets/scripts/app.js");
-const controllerScript = await readProjectFile("assets/scripts/dog-eye-controller.js");
-const styles = await readProjectFile("assets/styles/main.css");
+const settings = JSON.parse(await readProjectFile("public/therapyhouse-dog-eye-settings.json"));
+const indexHtml = await readProjectFile("src/pages/house.astro");
+const siteData = await readProjectFile("public/assets/scripts/site-data.js");
+const appScript = await readProjectFile("public/assets/scripts/app.js");
+const controllerScript = await readProjectFile("public/assets/scripts/dog-eye-controller.js");
+const styles = await readProjectFile("public/assets/styles/main.css");
 
 assert.equal(settings.insideImageSize.width, 1672);
 assert.equal(settings.insideImageSize.height, 940);

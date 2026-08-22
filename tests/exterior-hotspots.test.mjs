@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-import { exteriorHotspots, siteContent } from "../assets/scripts/content-data.js";
+import { exteriorHotspots, siteContent } from "../public/assets/scripts/content-data.js";
 
 const root = new URL("../", import.meta.url);
 
@@ -9,10 +9,10 @@ async function readProjectFile(path) {
   return readFile(new URL(path, root), "utf8");
 }
 
-const appScript = await readProjectFile("assets/scripts/app.js");
-const turntableScript = await readProjectFile("assets/scripts/turntable-viewer.js");
-const indexHtml = await readProjectFile("index.html");
-const styles = await readProjectFile("assets/styles/main.css");
+const appScript = await readProjectFile("public/assets/scripts/app.js");
+const turntableScript = await readProjectFile("public/assets/scripts/turntable-viewer.js");
+const indexHtml = await readProjectFile("src/pages/house.astro");
+const styles = await readProjectFile("public/assets/styles/main.css");
 
 const expectedIds = ["main-door", "services-window", "group-window", "blogs-sign", "team-sign", "mailbox", "staff-side-door"];
 const expectedTargets = ["welcome", "services", "groups", "library", "team", "contact", "work-with-us"];

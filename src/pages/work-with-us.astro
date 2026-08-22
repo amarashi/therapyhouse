@@ -1,0 +1,72 @@
+---
+import { getEntry, render } from 'astro:content';
+import PlainLayout from '../layouts/PlainLayout.astro';
+import HeroReveal from '../components/HeroReveal.astro';
+import { contact } from '../data/site.js';
+
+const page = await getEntry('pages', 'work-with-us');
+if (!page) throw new Error('Missing content: src/content/pages/work-with-us.md');
+
+const { Content } = await render(page);
+const { title, description, lede, values, culture } = page.data;
+---
+
+<PlainLayout title={title} description={description}>
+  <HeroReveal
+    slot="hero"
+    title={title}
+    lede={lede}
+    image="/assets/rooms/work-with-us-room-out.webp"
+    imageSmall="/assets/rooms/work-with-us-room-out-720.webp"
+    imageMedium="/assets/rooms/work-with-us-room-out-1080.webp"
+    imageMediumWidth={1086}
+    imageAlt="The staff room — a noticeboard and a table set for the team"
+    imageWidth={1448}
+    imageHeight={1086}
+  />
+
+  <div class="wrap">
+    <div class="prose stack">
+      <Content />
+    </div>
+
+    <section class="prose" aria-labelledby="values">
+      <h2 id="values">What we work by</h2>
+      <ul class="values">
+        {values?.map((value) => <li>{value}</li>)}
+      </ul>
+    </section>
+
+    <section class="prose" aria-labelledby="culture">
+      <h2 id="culture">The clinic</h2>
+      {culture?.map((line) => <p>{line}</p>)}
+      <p>
+        <a class="btn btn--primary" href={`mailto:${contact.email}?subject=Working%20at%20Therapy%20House`}>
+          Email reception
+        </a>
+      </p>
+    </section>
+  </div>
+</PlainLayout>
+
+<style>
+  .values {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+  }
+
+  .values li {
+    font-family: var(--font-display);
+    font-size: var(--text-cardtitle);
+    font-weight: 700;
+    color: var(--heading);
+    background: var(--surface-sunk);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    padding: var(--space-sm) var(--space-xl);
+    margin: 0;
+  }
+</style>

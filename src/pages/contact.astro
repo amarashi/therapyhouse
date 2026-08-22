@@ -1,0 +1,255 @@
+---
+import { getEntry, render } from 'astro:content';
+import PlainLayout from '../layouts/PlainLayout.astro';
+import HeroReveal from '../components/HeroReveal.astro';
+import LocationMap from '../components/LocationMap.astro';
+import CallToAction from '../components/CallToAction.astro';
+import { contact, callsToAction } from '../data/site.js';
+
+const page = await getEntry('pages', 'contact');
+if (!page) throw new Error('Missing content: src/content/pages/contact.md');
+
+const { Content } = await render(page);
+const { title, description, lede, practicalNotes } = page.data;
+
+const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contact.address)}`;
+---
+
+{/*
+  The generic closing block asks the visitor to book or call. This page is that
+  block — and its copy is very nearly the hero's lede word for word, so leaving
+  it on says the same sentence twice and puts the buttons a second time under
+  the ones that already carry them.
+*/}
+<PlainLayout title={title} description={description} showClosing={false}>
+  {/* Still, not scrolling: a visitor on the contact page has already decided,
+      and the phone number belongs on the first screen. */}
+  <HeroReveal
+    slot="hero"
+    title={title}
+    lede={lede}
+    image="/assets/rooms/reception-room-out.webp"
+    imageSmall="/assets/rooms/reception-room-out-720.webp"
+    imageMedium="/assets/rooms/reception-room-out-1080.webp"
+    imageMediumWidth={1086}
+    imageAlt="Therapy House reception — armchairs, a welcome sign and a noticeboard"
+    imageWidth={1448}
+    imageHeight={1086}
+  />
+
+  <div class="wrap">
+    {/*
+      The answer, before anything a visitor has to travel for. The two actions
+      used to be the last thing above the footer — on a phone, nineteen hundred
+      pixels below the map and the parking notes — which is the one thing
+      PRODUCT.md says must never happen to them. The sentence beside them is
+      the page's whole argument for using either, so it leads at reading size
+      rather than sitting in body copy, and the clinic's details stand opposite
+      as the reference they actually are.
+    */}
+    <div class="answer">
+      <div class="answer__open">
+        <div class="answer__note stack"><Content /></div>
+        <div class="answer__cta"><CallToAction /></div>
+      </div>
+
+      <section class="facts" aria-labelledby="details">
+        <h2 id="details">Clinic details</h2>
+        <dl class="details">
+          <div>
+            <dt>Phone</dt>
+            <dd><a href={callsToAction.call.href}>{contact.phone}</a></dd>
+          </div>
+          <div>
+            <dt>Email</dt>
+            <dd><a href={`mailto:${contact.email}`}>{contact.email}</a></dd>
+          </div>
+          <div>
+            <dt>Address</dt>
+            <dd><a href={mapsUrl}>{contact.address}</a></dd>
+          </div>
+          <div>
+            <dt>Booking</dt>
+            <dd>
+              <a href={contact.bookingUrl} target="_blank" rel="noopener noreferrer">
+                Power Diary client portal<span class="sr-only"> (opens in a new tab)</span>
+              </a>
+            </dd>
+          </div>
+          <div>
+            <dt>Fax</dt>
+            <dd>{contact.fax}</dd>
+          </div>
+        </dl>
+      </section>
+    </div>
+
+    {/* The picture answers "where is it, and what is around it" before the
+        notes answer "what is it like to arrive". The address is already listed
+        as a fact above; here it is a label on a pin, which is a different
+        thing a parent needs at a different moment. */}
+    <section class="finding" aria-labelledby="finding-us">
+      <h2 id="finding-us">Finding us</h2>
+      <div class="finding__body">
+        <LocationMap sizes="(min-width: 62rem) 46vw, calc(100vw - clamp(1.5rem, 5vw, 7rem))" />
+        <ul class="tick-list finding__notes">
+          {practicalNotes?.map((note) => <li>{note}</li>)}
+        </ul>
+      </div>
+    </section>
+  </div>
+</PlainLayout>
+
+<style>
+  /* ---- The answer band ----
+     Two zones separated by a section-sized gap and nothing else. Every section
+     on this page used to be a centred `.prose` column, which put the body copy
+     two hundred pixels right of the masthead, the page title and the footer —
+     three left edges on one page, and four hundred of the wrap's pixels empty
+     down the side. Both columns now start on the page's one left edge. */
+
+  .answer {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-2xl);
+    margin-top: var(--space-xl);
+  }
+
+  @media (min-width: 62rem) {
+    .answer {
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+      column-gap: var(--space-section);
+      align-items: start;
+    }
+  }
+
+  /* The one piece of prose on the page, and the sentence that gives a
+     hesitating parent permission to call. It is set at the lede step rather
+     than in the same body size as the parking notes. */
+  .answer__note {
+    max-width: 34rem;
+    font-size: var(--text-lede);
+    line-height: var(--lh-lede);
+  }
+
+  .answer__note :global(p:last-child) {
+    margin-bottom: 0;
+  }
+
+  .answer__cta {
+    margin-top: var(--space-xl);
+  }
+
+  /* ---- Clinic details ----
+     Reference, not the main event, which is what the position beside the
+     actions says. The heading is sized to that role — at 38px it would outrank
+     the two buttons it sits next to. */
+
+  .facts h2 {
+    margin-top: 0;
+    margin-bottom: var(--space-lg);
+    font-size: var(--text-subhead);
+    line-height: var(--lh-subhead);
+  }
+
+  .details {
+    margin: 0;
+  }
+
+  /* Hairlines between rows, not around the block: these are subdivisions of one
+     answer, and a rule under the last row closes the list into a ledger in
+     which the fax number weighs the same as the phone number. */
+  .details > div {
+    display: grid;
+    grid-template-columns: 5rem minmax(0, 1fr);
+    gap: var(--space-md);
+    padding-block: var(--space-md);
+    border-bottom: 1px solid var(--line-soft);
+    /* A 12px term beside a 17px value: aligned on their boxes they sit on two
+       different lines, and the row stops reading as a row. Baseline is the
+       alignment a definition list actually wants, and it stays right whatever
+       the browser's text size is set to. */
+    align-items: baseline;
+  }
+
+  .details > div:first-child {
+    padding-top: 0;
+  }
+
+  .details > div:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+
+  /* The same term treatment as the team card and the practitioner profile.
+     This list was setting its terms in the body face at weight 700 while the
+     other two set theirs as the uppercase label — one pattern, three
+     appearances, two of them agreeing. DESIGN.md names the detail tile's term
+     as the uppercase 12px label and explicitly allows a definition-list term
+     to spend the eyebrow budget, so that is the one the odd list moves to.
+     The hairline rows above stay: they are this page's own variation, and a
+     ledger of five facts is a different shape from a two-row tile. */
+  .details dt {
+    font-size: var(--text-label);
+    font-weight: 800;
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .details dd {
+    margin: 0;
+    /* Keeps the postcode with the suburb rather than orphaning "4061" onto a
+       line of its own in the narrower column. */
+    text-wrap: balance;
+  }
+
+  @media (max-width: 30rem) {
+    .details > div {
+      grid-template-columns: 1fr;
+      gap: var(--space-xs);
+    }
+  }
+
+  /* ---- Finding us ----
+     The page's one real section break, so it gets the rule and the section
+     interval. Everything above is one answer; this is the separate question of
+     getting here. */
+
+  .finding {
+    margin-top: var(--space-section);
+    border-top: 1px solid var(--line);
+    padding-top: var(--space-xl);
+  }
+
+  .finding > h2 {
+    margin-top: 0;
+  }
+
+  .finding__body {
+    display: grid;
+    gap: var(--space-xl);
+  }
+
+  /* The map answers "where", the notes answer "what is arriving like" — a
+     picture and its caption, so they sit together rather than the notes
+     trailing half a screen under a map capped at 42rem in a 70rem field. */
+  @media (min-width: 62rem) {
+    .finding__body {
+      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+      column-gap: var(--space-2xl);
+      /* Both begin on one line. Centred, the three short notes floated in the
+         middle of a five-hundred-pixel column with nothing holding them. */
+      align-items: start;
+    }
+  }
+
+  .finding__notes {
+    margin: 0;
+    max-width: 32rem;
+  }
+
+  .finding__notes li:last-child {
+    margin-bottom: 0;
+  }
+</style>

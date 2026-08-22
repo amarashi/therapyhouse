@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Therapy House room preview</title>
+<style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; background: #14110d; color: #f2e9dc; overflow: hidden;
+        font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+    #stage { position: fixed; inset: 0; cursor: grab; }
+    #stage:active { cursor: grabbing; }
+
+    #panel { position: fixed; left: 16px; bottom: 16px; z-index: 10;
+        background: rgba(20, 17, 13, 0.85); backdrop-filter: blur(8px);
+        border: 1px solid rgba(242, 233, 220, 0.16); border-radius: 12px;
+        padding: 14px 16px; width: min(330px, calc(100vw - 32px)); }
+    #panel h1 { margin: 0 0 2px; font-size: 15px; font-weight: 600; }
+    #meta { margin: 0 0 12px; font-size: 12px; opacity: 0.62; }
+    .row { display: flex; align-items: center; gap: 10px; margin-top: 9px; font-size: 12.5px; }
+    .row label { flex: 0 0 86px; opacity: 0.75; }
+    .row input[type=range] { flex: 1; min-width: 0; accent-color: #d8a657; }
+    .row output { flex: 0 0 52px; text-align: right; font-variant-numeric: tabular-nums; opacity: 0.9; }
+    .row select { flex: 1; background: #221d17; color: inherit; border: 1px solid rgba(242,233,220,.2);
+        border-radius: 6px; padding: 4px 6px; font: inherit; font-size: 12.5px; }
+    button.toggle { background: #221d17; color: inherit; border: 1px solid rgba(242,233,220,.2);
+        border-radius: 6px; padding: 4px 10px; font: inherit; font-size: 12.5px; cursor: pointer; }
+    button.toggle[aria-pressed="true"] { background: #d8a657; color: #14110d; border-color: #d8a657; }
+    #note { margin: 11px 0 0; font-size: 11.5px; opacity: 0.5; }
+    #status { position: fixed; inset: 0; display: grid; place-items: center;
+        pointer-events: none; font-size: 13px; opacity: 0.8; }
+    #status[hidden] { display: none; }
+    .marker { position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px;
+        border: 2px solid #7ad6a0; border-radius: 50%; pointer-events: none;
+        box-shadow: 0 0 0 2px rgba(0,0,0,.5); transition: opacity .2s; }
+    .marker::after { content: attr(data-label); position: absolute; left: 26px; top: 1px;
+        white-space: nowrap; color: #eafff2; font: 11.5px system-ui; text-shadow: 0 1px 3px #000; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div id="status">Loading…</div>
+
+<div id="panel">
+    <h1 id="title">Rooms</h1>
+    <p id="meta"></p>
+
+    <div class="row">
+        <label for="room">Room</label>
+        <select id="room"></select>
+    </div>
+    <div class="row">
+        <label for="frame">Viewpoint</label>
+        <input id="frame" type="range" min="0" max="32" step="0.01" value="16">
+        <output id="frameOut">0.0°</output>
+    </div>
+    <div class="row">
+        <label for="tier">Quality</label>
+        <select id="tier">
+            <option value="auto">Auto</option>
+            <option value="desktop">Desktop</option>
+            <option value="mobile">Mobile</option>
+        </select>
+    </div>
+    <div class="row">
+        <label for="idle">Idle drift</label>
+        <button id="idle" class="toggle" type="button" aria-pressed="true">On</button>
+    </div>
+    <div class="row">
+        <label for="spots">Test pins</label>
+        <button id="spots" class="toggle" type="button" aria-pressed="false">Off</button>
+    </div>
+    <p id="note">Drag left and right to look around. Test pins show depth-tracked
+       markers that should stay glued to whatever they sit on.</p>
+</div>
+
+<script type="module">
+import { createRoomFramesViewer, loadRoom } from './assets/scripts/room-frames-viewer.js';
+
+// Hotspots are addressed in this space for every room, whatever the file size.
+const COORD_SIZE = [1672, 940];
+
+// A few points per room to prove tracking sticks. Rough positions, picked by eye.
+const TEST_PINS = {
+    'consulting-room': [
+        { label: 'wall picture', x: 789, y: 259 },
+        { label: 'tissue box', x: 696, y: 596 },
+        { label: 'armchair', x: 349, y: 566 },
+    ],
+    'default': [
+        { label: 'centre', x: 836, y: 470 },
+        { label: 'left', x: 500, y: 560 },
+        { label: 'right', x: 1170, y: 560 },
+    ],
+};
+
+const stage = document.getElementById('stage');
+const statusEl = document.getElementById('status');
+const roomSelect = document.getElementById('room');
+const frame = document.getElementById('frame');
+const frameOut = document.getElementById('frameOut');
+const tierSelect = document.getElementById('tier');
+const idleBtn = document.getElementById('idle');
+const spotsBtn = document.getElementById('spots');
+
+let manifest = null;
+let room = null;
+let handle = null;
+let markers = [];
+let syncTimer = 0;
+
+function angleFor(index) {
+    return (index - room.frames.centreIndex) * room.frames.stepDegrees;
+}
+
+function buildMarkers() {
+    markers.forEach((m) => m.el.remove());
+    markers = [];
+    if (spotsBtn.getAttribute('aria-pressed') !== 'true') return;
+    const pins = TEST_PINS[room.id] || TEST_PINS.default;
+    markers = pins.map((p) => {
+        const el = document.createElement('div');
+        el.className = 'marker';
+        el.dataset.label = p.label;
+        stage.appendChild(el);
+        return { ...p, el };
+    });
+}
+
+async function build() {
+    if (handle) await handle.destroy();
+    markers.forEach((m) => m.el.remove());
+    markers = [];
+    statusEl.hidden = false;
+    statusEl.textContent = 'Loading frames…';
+
+    handle = createRoomFramesViewer({
+        container: stage,
+        room,
+        basePath: './assets/rooms/',
+        coordinateSize: COORD_SIZE,
+        tier: tierSelect.value,
+        idleDrift: idleBtn.getAttribute('aria-pressed') === 'true',
+        onReady: ({ tier, count }) => {
+            statusEl.hidden = true;
+            const spec = room.frames;
+            const size = tier === 'mobile' ? spec.mobile.sizeMB : spec.desktop.sizeMB;
+            document.getElementById('meta').textContent =
+                `${count} frames · ±${spec.arcDegrees}° · ${size} MB · ${tier}`;
+            buildMarkers();
+        },
+        onProgress: (pct) => {
+            if (pct < 100) statusEl.textContent = `Loading frames… ${Math.round(pct)}%`;
+        },
+        onFrame: ({ trackPoint }) => {
+            for (const m of markers) {
+                const p = trackPoint(m.x, m.y);
+                if (!p) continue;
+                m.el.style.left = p.x + 'px';
+                m.el.style.top = p.y + 'px';
+                m.el.style.opacity = p.onScreen ? '1' : '0.2';
+            }
+        },
+        onFallback: (reason) => {
+            statusEl.hidden = false;
+            statusEl.textContent = `Showing poster still (${reason}).`;
+        },
+    });
+    window.roomViewer = handle;
+
+    clearInterval(syncTimer);
+    syncTimer = setInterval(() => {
+        if (!handle || document.activeElement === frame) return;
+        const s = handle.getState();
+        frame.value = s.currentIndex;
+        frameOut.textContent = angleFor(s.currentIndex).toFixed(1) + '°';
+    }, 100);
+}
+
+async function selectRoom(id) {
+    room = manifest.rooms.find((r) => r.id === id);
+    document.getElementById('title').textContent = room.title;
+    frame.max = room.frames.count - 1;
+    frame.value = room.frames.centreIndex;
+    frameOut.textContent = '0.0°';
+    await build();
+}
+
+try {
+    manifest = await (await fetch('./assets/rooms/rooms.json')).json();
+    const withFrames = manifest.rooms.filter((r) => r.frames);
+    for (const r of withFrames) {
+        const opt = document.createElement('option');
+        opt.value = r.id;
+        opt.textContent = r.title;
+        roomSelect.appendChild(opt);
+    }
+    const params = new URLSearchParams(location.search);
+    const start = params.get('room') || withFrames[0].id;
+    roomSelect.value = start;
+    await selectRoom(start);
+} catch (err) {
+    statusEl.textContent = 'Could not load rooms.json: ' + err.message;
+}
+
+roomSelect.addEventListener('change', () => selectRoom(roomSelect.value));
+frame.addEventListener('input', () => {
+    if (!handle) return;
+    handle.setIndex(Number(frame.value));
+    frameOut.textContent = angleFor(Number(frame.value)).toFixed(1) + '°';
+});
+tierSelect.addEventListener('change', build);
+idleBtn.addEventListener('click', () => {
+    const on = idleBtn.getAttribute('aria-pressed') === 'true';
+    idleBtn.setAttribute('aria-pressed', String(!on));
+    idleBtn.textContent = !on ? 'On' : 'Off';
+    build();
+});
+spotsBtn.addEventListener('click', () => {
+    const on = spotsBtn.getAttribute('aria-pressed') === 'true';
+    spotsBtn.setAttribute('aria-pressed', String(!on));
+    spotsBtn.textContent = !on ? 'On' : 'Off';
+    buildMarkers();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,611 @@
+---
+import '../styles/global.css';
+import { site, contact, callsToAction, footerNav } from '../data/site.js';
+import CallToAction from '../components/CallToAction.astro';
+import ActionBar from '../components/ActionBar.astro';
+import Masthead from '../components/Masthead.astro';
+import SideRail from '../components/SideRail.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  /**
+   * Pages that already end with a contextual call to action (a practitioner
+   * profile, say) suppress the generic closing block rather than showing the
+   * same two buttons twice in a row.
+   */
+  showClosing?: boolean;
+}
+
+const { title, description, showClosing = true } = Astro.props;
+
+/* A page that opens on a hero lets the masthead sit over it; a page without one
+   gives the masthead its own band at the top. */
+const hasHero = Astro.slots.has('hero');
+// The home page is already called Therapy House — don't title it twice.
+const pageTitle = title === site.name ? title : `${title} | ${site.name}`;
+const canonical = new URL(Astro.url.pathname, site.origin).href;
+
+const businessSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'MedicalBusiness',
+  name: site.name,
+  url: site.origin,
+  telephone: '+61-7-3300-2170',
+  email: contact.email,
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: '1290 Waterworks Rd',
+    addressLocality: 'The Gap',
+    addressRegion: 'QLD',
+    postalCode: '4061',
+    addressCountry: 'AU',
+  },
+  areaServed: 'Greater Brisbane',
+  medicalSpecialty: ['Psychology', 'Counselling'],
+};
+---
+
+<!doctype html>
+<html lang="en-AU">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta name="theme-color" content="#fffdf8" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={`${site.origin}/assets/media/logo3d.png`} />
+    {/* 8KB, not 269. `logo3d.png` is a 500px 3D render and it was being
+        fetched on every page load to be painted into a 16px square — a quarter
+        of a megabyte, on the site whose second design principle is that nothing
+        ambient sits between a worried parent and a phone number. The 64px cut
+        is the same artwork at the size a tab actually paints.
+        (It is still the clinic's own mark, and at 16px that mark is a blur —
+        see the note in Masthead.astro about the letters being illegible below
+        about 200px. That is a brand question rather than a build one, and it is
+        left for the clinic to answer.) */}
+    <link rel="icon" type="image/png" href="/assets/media/favicon-64.png" sizes="64x64" />
+    <script type="application/ld+json" set:html={JSON.stringify(businessSchema)} />
+    <script is:inline>
+      /*
+       * The other half of the lift in SideRail.astro. A page reached by the
+       * lift arrives with the building still settling in the direction the car
+       * travelled; a page reached any other way — a typed URL, a footer link,
+       * a reload — has no flag to read and animates nothing.
+       *
+       * It runs in the head so the attribute is set before the first paint,
+       * and it clears the flag on read, so a stale one can never make an
+       * ordinary visit animate.
+       */
+      (function () {
+        /* A page left by the lift is faded out before the navigation, and that
+           attribute lives on <html>. Come back to it from the browser's own
+           back button and the document can be restored exactly as it was left
+           — attribute included — which would hand a visitor a page that is
+           there, is scrollable, and paints nothing. Clearing it on `pageshow`
+           costs a listener and removes the whole class of blank restore. */
+        addEventListener('pageshow', function () {
+          document.documentElement.removeAttribute('data-lift-leaving');
+        });
+
+        try {
+          var dir = sessionStorage.getItem('th-lift');
+          if (!dir) return;
+          sessionStorage.removeItem('th-lift');
+          if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+          var root = document.documentElement;
+          root.style.setProperty('--lift-dir', dir);
+          root.setAttribute('data-lift-arriving', '');
+          setTimeout(function () {
+            root.removeAttribute('data-lift-arriving');
+          }, 700);
+        } catch (err) {}
+      })();
+    </script>
+    <slot name="head" />
+  </head>
+
+  <body class:list={[hasHero && 'has-hero']}>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <Masthead />
+
+    <SideRail />
+
+    <slot name="hero" />
+
+    <div class="shell">
+    <main id="main">
+      <slot />
+
+      {showClosing && (
+      <section class="wrap closing" aria-labelledby="closing-heading">
+        <div class="card closing__card">
+          <h2 id="closing-heading">Talk to us</h2>
+          <p>
+            Book online, or call reception and describe what is going on — either
+            way works.
+          </p>
+          <CallToAction />
+        </div>
+      </section>
+      )}
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap site-footer__inner">
+        <div>
+          <p class="site-footer__name">{site.name}</p>
+          <p>
+            <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contact.address)}`}>
+              {contact.address}
+            </a>
+          </p>
+        </div>
+        <div>
+          <p><a href={callsToAction.call.href}>{contact.phone}</a></p>
+          <p><a href={`mailto:${contact.email}`}>{contact.email}</a></p>
+          <p class="site-footer__fax">Fax {contact.fax}</p>
+        </div>
+        {/* The whole map, written down. The lift carries the six floors a
+            parent came for and is a composition rather than a list, which is
+            right — but it left `/work-with-us/` with no inbound link on the
+            site at all and `/philosophy/` with one, on the home page only. And
+            on a phone the menu is a row that scrolls sideways showing four of
+            its seven floors, so the only place the site is ever visible whole
+            is here. Marked `aria-current` so the page you are on is stated
+            rather than guessed at. */}
+        <nav class="site-footer__nav" aria-label="All pages">
+          <p class="site-footer__navhead">Pages</p>
+          <ul>
+            {footerNav.map((item) => (
+              <li>
+                <a
+                  href={item.href}
+                  aria-current={Astro.url.pathname === item.href ? 'page' : undefined}
+                >{item.label}</a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+    </footer>
+    </div>
+
+    {/* Last in the document, which is also last in the tab order — a bar that
+        is on screen the whole time does not need to interrupt the page to be
+        found, and DOM order matching visual order is what a screen reader
+        reads. Phones only; see ActionBar.astro. */}
+    <ActionBar />
+
+    <style>
+
+      /* The hero's runway is overlapped by this block, so it needs its own
+         ground and a layer above the sticky stage it slides over.
+         That ground opens on the cream the hero's gradient ends on and settles
+         into the page surface over the next half-screen, so the hero and the
+         content are one continuous wash rather than two flat panels meeting at
+         a visible seam. */
+      .shell {
+        position: relative;
+        z-index: 1;
+        background-color: var(--surface);
+        background-image: linear-gradient(
+          180deg,
+          var(--lamplit-cream) 0,
+          var(--surface) 52vh
+        );
+        background-repeat: no-repeat;
+      }
+
+      /* At rail widths the content keeps clear of the rail's margin instead of
+         running under it. The hero is outside this block, so it stays
+         full-bleed and centred on the viewport. */
+      @media (min-width: 90rem) {
+        .shell {
+          padding-right: var(--rail-gutter);
+        }
+      }
+
+      .closing {
+        margin-block: var(--space-3xl);
+      }
+
+      /* Centred: this is the one block on the page that is asking rather than
+         telling, and it is the last thing before the footer. Everything else
+         holds the left edge; this steps out of that column deliberately. */
+      .closing__card {
+        background: var(--surface-sunk);
+        text-align: center;
+      }
+
+      .closing__card h2 {
+        margin-top: 0;
+      }
+
+      /* The card spans the full wrap, so its copy needs its own measure —
+         otherwise the line runs to ~120 characters against the system's
+         65–75ch rule. */
+      .closing__card p {
+        max-width: var(--content-max);
+        margin-inline: auto;
+      }
+
+      .closing__card :global(.cta) {
+        justify-content: center;
+      }
+
+      .site-footer {
+        border-top: 1px solid var(--line);
+        background: var(--surface-raised);
+        padding-block: var(--space-2xl);
+        font-size: var(--text-secondary);
+      }
+
+      .site-footer__inner {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2xl);
+        justify-content: space-between;
+      }
+
+      .site-footer p {
+        margin: 0 0 var(--space-xs);
+      }
+
+      /* The address, the number and the email were 20 to 22px tall at every
+         width — under the 24px a pointer is owed, let alone the 44 a thumb is.
+         Padding on an inline-block grows the target without touching the type;
+         the phone figure below takes it further. */
+      .site-footer a {
+        display: inline-block;
+        padding-block: 6px;
+      }
+
+      /* Opted out of the global standalone-link target rule. Here the links are
+         stacked six pixels apart, so growing each hit area to 44px would have
+         them overlap and the lower one would take the band belonging to the
+         one above — a thumb aimed at the email address dialling the phone.
+         This block sizes its own targets instead: 32px at reading widths, and
+         the full 44 on a phone, where the paragraph gives up its margin to pay
+         for it. */
+      .site-footer a::after {
+        content: none;
+      }
+
+      .site-footer__name {
+        font-family: var(--font-display);
+        font-weight: 700;
+        color: var(--heading);
+      }
+
+      /* ---- The site map ----
+         Two columns of short links rather than one long one: eight destinations
+         stacked run the footer past the height of the block beside it and turn
+         the last thing on the page into a list to read. In two columns the
+         whole site is one glance. */
+      .site-footer__nav ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: var(--space-xl);
+      }
+
+      .site-footer__navhead {
+        font-size: var(--text-label);
+        font-weight: 800;
+        letter-spacing: var(--track-label);
+        text-transform: uppercase;
+        color: var(--ink-faint);
+        margin-bottom: var(--space-xs);
+      }
+
+      /* The page you are on is named, not linked away from — and it keeps the
+         row so the map stays the same shape on every page. */
+      .site-footer__nav a[aria-current='page'] {
+        color: var(--heading);
+        font-weight: 700;
+      }
+
+      .site-footer__fax {
+        color: var(--ink-faint);
+      }
+
+      /* ---- Phones ----
+         The footer reserves the action bar's strip, so the bar stands on the
+         footer's own white rather than on a band of page ground below it, and
+         the last line of the page is never hidden behind it.
+
+         The links here were the smallest targets on the site — 20 to 21px tall,
+         a phone number, an email and a street address stacked close enough that
+         a thumb aimed at one could take the next. Padding on an inline-block
+         expands the target without changing the type; the paragraph gives up
+         its margin to pay for it, so the block is the same height it was. */
+      @media (max-width: 44rem) {
+        .site-footer {
+          padding-bottom: calc(var(--space-2xl) + var(--action-bar-h));
+        }
+
+        .site-footer p {
+          margin-bottom: 0;
+        }
+
+        .site-footer a {
+          padding-block: 11px;
+        }
+      }
+
+    </style>
+    <script is:inline>
+      /*
+       * Publishes the hero's scroll position as `--p` (0→1), and the three
+       * lengths the title's travel needs. Everything visual is CSS off those
+       * four values; this only measures. Navigation does not depend on it —
+       * the rail is present with or without this script, and since the lift
+       * became the navigation it is present over the hero too: the page keeps
+       * a margin clear for it rather than the rail standing back (see
+       * `--rail-gutter`).
+       *
+       * Scroll reads happen inside rAF and the listener is passive, and the
+       * geometry below is read on load and on resize but never while
+       * scrolling, so scrolling never waits on layout. If the script never
+       * runs the page is still complete — the hero simply stays at its
+       * resting state.
+       */
+      (function () {
+        function start() {
+          var hero = document.querySelector('[data-hero]');
+          if (!hero) return;
+
+          var root = document.documentElement;
+          var stage = hero.querySelector('.hero__stage');
+          var copy = hero.querySelector('.hero__copy');
+          var art = hero.querySelector('.hero__art img');
+          var artBox = hero.querySelector('.hero__art');
+          var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+          var ticking = false;
+
+          /*
+           * How far the title has to go to land in the middle of the screen,
+           * and how much it can grow on the way without running out of stage.
+           *
+           * Measured rather than written down: the same block starts in four
+           * different places across the two hero frames and three
+           * breakpoints, so any hand-written offset would be correct in one
+           * of them. `offsetLeft`/`offsetTop` are layout positions and ignore
+           * the transform already on the element, which is what makes this
+           * safe to re-run mid-scroll on a resize.
+           */
+          /* Offset of an element inside the stage, summed up the offsetParent
+             chain rather than read off `offsetParent` directly: the group the
+             picture sits in declares `will-change: transform`, which makes it a
+             containing block, and Chrome hands that back as the offset parent.
+             Summing does not depend on which ancestors happen to be containing
+             blocks. Null if the walk never reaches the stage. */
+          function offsetWithin(el, root) {
+            var x = 0;
+            var y = 0;
+            var node = el;
+            while (node && node !== root) {
+              x += node.offsetLeft;
+              y += node.offsetTop;
+              node = node.offsetParent;
+            }
+            return node === root ? { x: x, y: y } : null;
+          }
+
+          function place() {
+            if (!stage || !copy || reduced.matches) return;
+            // The stage is only the offset parent while it is pinned. If it
+            // is not — reduced motion, a `still` hero — there is no
+            // transition to measure for.
+            if (copy.offsetParent !== stage) return;
+
+            var css = getComputedStyle(stage);
+            var padLeft = parseFloat(css.paddingLeft) || 0;
+            var padRight = parseFloat(css.paddingRight) || 0;
+            var inner = stage.clientWidth - padLeft - padRight;
+            var boxW = copy.offsetWidth;
+            var boxH = copy.offsetHeight;
+            if (inner <= 0 || boxW <= 0 || boxH <= 0) return;
+
+            /*
+             * The words, not the box they are laid out in. The title is
+             * left-aligned and capped at a measure, so a heading that wraps
+             * leaves its box a good deal wider than the longest line in it —
+             * centre the box and the eye reads a title sitting left of centre,
+             * because the eye is looking at ink. So this walks the text nodes
+             * and unions their line boxes, which is the ink and nothing else.
+             * (A range over the block instead returns the block's own rect,
+             * which is the box again and the whole problem.)
+             *
+             * Taken as a fraction of the box rather than in pixels: these rects
+             * come back with the live transform already applied, and all by the
+             * same amount, so the ratio between them is the one number that
+             * survives being measured part-way through a scroll.
+             */
+            var boxRect = copy.getBoundingClientRect();
+            var inkX = 0;
+            var inkY = 0;
+            var inkW = boxW;
+            var inkH = boxH;
+            if (boxRect.width > 0 && boxRect.height > 0) {
+              var walker = document.createTreeWalker(copy, NodeFilter.SHOW_TEXT);
+              var range = document.createRange();
+              var left = Infinity;
+              var right = -Infinity;
+              var top = Infinity;
+              var bottom = -Infinity;
+              var node;
+              while ((node = walker.nextNode())) {
+                if (!node.nodeValue || !node.nodeValue.trim()) continue;
+                range.selectNodeContents(node);
+                var lines = range.getClientRects();
+                for (var i = 0; i < lines.length; i++) {
+                  var line = lines[i];
+                  if (!line.width || !line.height) continue;
+                  if (line.left < left) left = line.left;
+                  if (line.right > right) right = line.right;
+                  if (line.top < top) top = line.top;
+                  if (line.bottom > bottom) bottom = line.bottom;
+                }
+              }
+              if (right > left && bottom > top) {
+                inkX = ((left - boxRect.left) / boxRect.width) * boxW;
+                inkY = ((top - boxRect.top) / boxRect.height) * boxH;
+                inkW = ((right - left) / boxRect.width) * boxW;
+                inkH = ((bottom - top) / boxRect.height) * boxH;
+              }
+            }
+
+            /* Never wider than the stage can hold. On a phone the title
+               already fills most of the width, and one that grows off both
+               edges is not a flourish, it is a clipped heading. */
+            var grow = Math.min(0.38, Math.max(0, (inner * 0.9) / inkW - 1));
+
+            /* Across: the middle of the room the stage actually has, which
+               above 90rem stops at the lift's shaft rather than at the screen
+               edge. Down: three fifths rather than a half, because the masthead
+               holds the top of the frame and the room withdraws upward into it.
+               The middle of what is left to look at sits a little below the
+               middle of the screen, and landing there also keeps the title off
+               the middle of the house rather than across its floor. */
+            var toStageX = padLeft + inner / 2;
+            var toStageY = stage.offsetHeight * 0.6;
+            /* The block scales about its own centre, and that carries the ink
+               with it, so the travel is what is left over once the growth has
+               been accounted for — not simply the distance between two points. */
+            var boxCX = copy.offsetLeft + boxW / 2;
+            var boxCY = copy.offsetTop + boxH / 2;
+            var inkCX = copy.offsetLeft + inkX + inkW / 2;
+            var inkCY = copy.offsetTop + inkY + inkH / 2;
+            var toX = toStageX - boxCX - (1 + grow) * (inkCX - boxCX);
+            var toY = toStageY - boxCY - (1 + grow) * (inkCY - boxCY);
+
+            hero.style.setProperty('--copy-dx', toX.toFixed(1) + 'px');
+            hero.style.setProperty('--copy-dy', toY.toFixed(1) + 'px');
+            hero.style.setProperty('--copy-grow', grow.toFixed(3));
+
+            /* And how far the room has to come the other way. It withdraws to
+               the middle of the same stage — measured off the picture rather
+               than off the group it sits in, because on the wide layouts that
+               group is a stretched grid cell and the picture is not centred in
+               it. On every page but the homepage this lands within a pixel or
+               two of zero, which is correct: those rooms already open centred. */
+            var picAt = art && offsetWithin(art, stage);
+            var groupAt = artBox && offsetWithin(artBox, stage);
+            if (picAt && groupAt) {
+              hero.style.setProperty(
+                '--art-dx',
+                (toStageX - (picAt.x + art.offsetWidth / 2)).toFixed(1) + 'px'
+              );
+
+              /*
+               * And how far it lifts. This was a vh figure per breakpoint, and
+               * a room that cleared the title on a laptop sat across it on the
+               * next screen along — the title comes to rest where its own ink
+               * says it does, which depends on how many lines the heading takes
+               * and how much width it found to grow into. Where the room has to
+               * stop is not something one number can know for nine pages and
+               * four breakpoints.
+               *
+               * So the shrink stays written down — that is the aesthetic call,
+               * how far away the room should read — and the lift is derived
+               * from it: whatever puts the bottom edge of the settled room a
+               * clear margin above the top of the settled title. The white
+               * between the two is then the same everywhere, which is the only
+               * way it reads as a decision rather than as whatever was left
+               * over.
+               */
+              var artCss = getComputedStyle(artBox);
+              var zoom = parseFloat(artCss.getPropertyValue('--art-zoom'));
+              var shrink = parseFloat(artCss.getPropertyValue('--art-shrink'));
+              if (!isFinite(zoom)) zoom = 1;
+              if (!isFinite(shrink)) shrink = 0.6;
+              var settled = Math.max(0.05, zoom - shrink);
+
+              /* The group scales about its own centre, so every edge of the
+                 picture moves toward that centre by the same ratio. */
+              var groupCY = groupAt.y + artBox.offsetHeight / 2;
+              var edge = function (y) {
+                return groupCY + (y - groupCY) * settled;
+              };
+
+              /* Where the title stops: its ink centres on `toStageY`, at
+                 `1 + grow` times the height it was laid out at. */
+              var titleTop = toStageY - (inkH * (1 + grow)) / 2;
+              var stageH = stage.offsetHeight;
+              var rise = titleTop - stageH * 0.07 - edge(picAt.y + art.offsetHeight);
+
+              /* Never downward, and never so far up that the room leaves by the
+                 top of the frame: a clipped room reads as cropped, not as
+                 distant, and the masthead is already sitting up there. */
+              rise = Math.min(0, Math.max(rise, stageH * 0.05 - edge(picAt.y)));
+
+              artBox.style.setProperty('--art-rise', rise.toFixed(1) + 'px');
+            }
+          }
+
+          function measure() {
+            ticking = false;
+            if (reduced.matches) {
+              root.style.setProperty('--p', '0');
+              return;
+            }
+            // The hero does not start at the top of the document — the nav bar
+            // sits above it below 90rem — so progress is measured from the
+            // hero's own top. Measuring from scrollY alone finished the
+            // recession early and left the stage sitting empty for the rest of
+            // its runway.
+            var heroTop = hero.getBoundingClientRect().top + window.scrollY;
+            // Runway = how far the sticky stage can be scrolled before it lets go.
+            var runway = Math.max(1, hero.offsetHeight - window.innerHeight);
+            var p = Math.min(1, Math.max(0, (window.scrollY - heroTop) / runway));
+            root.style.setProperty('--p', p.toFixed(4));
+            /* Once the title has landed it rides the scroll rather than the
+               transition, and a fraction of the runway is not a distance — so
+               the runway goes out in pixels for the CSS to convert progress
+               back into the travel it stands for. Already measured above; this
+               costs no extra read. */
+            hero.style.setProperty('--runway', runway + 'px');
+          }
+
+          function onScroll() {
+            if (!ticking) {
+              ticking = true;
+              requestAnimationFrame(measure);
+            }
+          }
+
+          function onResize() {
+            place();
+            onScroll();
+          }
+
+          addEventListener('scroll', onScroll, { passive: true });
+          addEventListener('resize', onResize, { passive: true });
+          reduced.addEventListener('change', onResize);
+          place();
+          measure();
+          // The room carries width and height, so nothing reflows as it
+          // decodes — but a font that resolves late would move the title, and
+          // its travel is measured off where the title actually sits.
+          if (document.fonts && document.fonts.ready) document.fonts.ready.then(place);
+        }
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', start);
+        } else {
+          start();
+        }
+      })();
+    </script>
+  </body>
+</html>
