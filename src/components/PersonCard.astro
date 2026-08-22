@@ -1,4 +1,5 @@
 ---
+import { withBase } from '../lib/base.js';
 import PersonPortrait from './PersonPortrait.astro';
 import { isAcceptingNewClients } from '../data/site.js';
 
@@ -24,7 +25,7 @@ const { person } = Astro.props;
 const { name, role, image, imageAlt, summary, credentials, worksWith, worksOn, languages, availability } =
   person.data;
 
-const href = `/team/${person.id}/`;
+const href = withBase(`/team/${person.id}/`);
 
 /**
  * The two facts a parent is actually scanning for. Rendered as definition rows

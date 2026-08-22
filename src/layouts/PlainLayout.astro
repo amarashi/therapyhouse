@@ -1,4 +1,5 @@
 ---
+import { withBase, stripBase } from '../lib/base.js';
 import '../styles/global.css';
 import { site, contact, callsToAction, footerNav } from '../data/site.js';
 import CallToAction from '../components/CallToAction.astro';
@@ -24,7 +25,12 @@ const { title, description, showClosing = true } = Astro.props;
 const hasHero = Astro.slots.has('hero');
 // The home page is already called Therapy House — don't title it twice.
 const pageTitle = title === site.name ? title : `${title} | ${site.name}`;
-const canonical = new URL(Astro.url.pathname, site.origin).href;
+/* The canonical URL has to be the page's real address, which on GitHub Pages
+   is the project subpath rather than the clinic's domain. `Astro.site` is
+   whatever the config is currently deploying to, and `Astro.url.pathname`
+   already carries the base — so this follows the config instead of pinning
+   a domain the build may not actually be served from. */
+const canonical = new URL(Astro.url.pathname, Astro.site ?? site.origin).href;
 
 const businessSchema = {
   '@context': 'https://schema.org',
@@ -59,7 +65,7 @@ const businessSchema = {
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonical} />
-    <meta property="og:image" content={`${site.origin}/assets/media/logo3d.png`} />
+    <meta property="og:image" content={new URL(withBase("/assets/media/logo3d.png"), Astro.site ?? site.origin).href} />
     {/* 8KB, not 269. `logo3d.png` is a 500px 3D render and it was being
         fetched on every page load to be painted into a 16px square — a quarter
         of a megabyte, on the site whose second design principle is that nothing
@@ -69,7 +75,7 @@ const businessSchema = {
         see the note in Masthead.astro about the letters being illegible below
         about 200px. That is a brand question rather than a build one, and it is
         left for the clinic to answer.) */}
-    <link rel="icon" type="image/png" href="/assets/media/favicon-64.png" sizes="64x64" />
+    <link rel="icon" type="image/png" href={withBase("/assets/media/favicon-64.png")} sizes="64x64" />
     <script type="application/ld+json" set:html={JSON.stringify(businessSchema)} />
     <script is:inline>
       /*
@@ -166,8 +172,8 @@ const businessSchema = {
             {footerNav.map((item) => (
               <li>
                 <a
-                  href={item.href}
-                  aria-current={Astro.url.pathname === item.href ? 'page' : undefined}
+                  href={withBase(item.href)}
+                  aria-current={stripBase(Astro.url.pathname) === item.href ? 'page' : undefined}
                 >{item.label}</a>
               </li>
             ))}

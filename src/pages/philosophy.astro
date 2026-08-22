@@ -1,4 +1,5 @@
 ---
+import { withBase } from '../lib/base.js';
 import { getEntry, render } from 'astro:content';
 import PlainLayout from '../layouts/PlainLayout.astro';
 import HeroReveal from '../components/HeroReveal.astro';
@@ -15,9 +16,9 @@ const { title, description, lede, principles, closing } = page.data;
     slot="hero"
     title={title}
     lede={lede}
-    image="/assets/rooms/library-attic-room-out.webp"
-    imageSmall="/assets/rooms/library-attic-room-out-720.webp"
-    imageMedium="/assets/rooms/library-attic-room-out-1080.webp"
+    image={withBase("/assets/rooms/library-attic-room-out.webp")}
+    imageSmall={withBase("/assets/rooms/library-attic-room-out-720.webp")}
+    imageMedium={withBase("/assets/rooms/library-attic-room-out-1080.webp")}
     imageMediumWidth={1086}
     imageAlt="The attic reading room — soft light under the eaves"
     imageWidth={1448}

@@ -1,4 +1,5 @@
 ---
+import { withBase } from '../lib/base.js';
 import { getCollection, getEntry, render } from 'astro:content';
 import PlainLayout from '../layouts/PlainLayout.astro';
 import HeroReveal from '../components/HeroReveal.astro';
@@ -56,13 +57,13 @@ const faces = [
     layout="anchored"
     title="Welcome to Therapy House"
     lede="A place for all children, and anyone who has once been a child."
-    image="/assets/media/house-hero-loop-poster.webp"
-    imageSmall="/assets/media/house-hero-loop-poster-597.webp"
+    image={withBase("/assets/media/house-hero-loop-poster.webp")}
+    imageSmall={withBase("/assets/media/house-hero-loop-poster-597.webp")}
     imageAlt="The Therapy House cottage, with children sitting on the lawn and signs for each part of the clinic"
     imageWidth={1194}
     imageHeight={884}
-    video="/assets/media/house-hero-loop.mp4"
-    videoSmall="/assets/media/house-hero-loop-720.mp4"
+    video={withBase("/assets/media/house-hero-loop.mp4")}
+    videoSmall={withBase("/assets/media/house-hero-loop-720.mp4")}
     showCue
   />
 
@@ -73,7 +74,7 @@ const faces = [
     <div class="prose--flush prose stack intro">
       <Content />
       {philosophy && (
-        <p class="intro__more"><a class="standalone-link" href="/philosophy/">How we work, and what we believe →</a></p>
+        <p class="intro__more"><a class="standalone-link" href={withBase("/philosophy/")}>How we work, and what we believe →</a></p>
       )}
     </div>
 
@@ -89,13 +90,13 @@ const faces = [
       <ul class="rooms">
         {routes?.map((route) => (
           <li class="room">
-            <a class="room__link" href={route.href}>
+            <a class="room__link" href={withBase(route.href)}>
               {/* The heading and description name the destination; a described
                   room would only lengthen the link's accessible name. */}
               <img
                 class="room__art"
-                src={route.image}
-                srcset={`${route.image} 360w, ${route.image?.replace('-360.webp', '-720.webp')} 720w`}
+                src={withBase(route.image)}
+                srcset={`${withBase(route.image)} 360w, ${withBase(route.image?.replace('-360.webp', '-720.webp'))} 720w`}
                 sizes="(max-width: 44rem) 260px, 280px"
                 alt=""
                 width="360"
@@ -144,7 +145,7 @@ const faces = [
       <ul class="faces">
         {faces.map((person) => (
           <li>
-            <a href={`/team/${person.id}/`}>
+            <a href={withBase(`/team/${person.id}/`)}>
               {/* Name and role follow in the same link, so a described
                   portrait would make the link announce both twice. */}
               {/* Not lazy: six faces rendering as blank cream squares is the
@@ -192,7 +193,7 @@ const faces = [
           </li>
         ))}
       </ul>
-      <p class="section-head"><a class="standalone-link" href="/team/">Meet the whole team →</a></p>
+      <p class="section-head"><a class="standalone-link" href={withBase("/team/")}>Meet the whole team →</a></p>
     </section>
     )}
 
@@ -224,7 +225,7 @@ const faces = [
             {practicalNotes?.map((note) => <li>{note}</li>)}
           </ul>
           <p class="finding__reception">
-            Reception: <a href={callsToAction.call.href}>{contact.phone}</a> ·{' '}
+            Reception: <a href={withBase(callsToAction.call.href)}>{contact.phone}</a> ·{' '}
             <a href={`mailto:${contact.email}`}>{contact.email}</a>
           </p>
         </div>

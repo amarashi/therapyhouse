@@ -1,4 +1,5 @@
 ---
+import { withBase } from '../lib/base.js';
 import { getEntry, render } from 'astro:content';
 import PlainLayout from '../layouts/PlainLayout.astro';
 import HeroReveal from '../components/HeroReveal.astro';
@@ -80,9 +81,9 @@ const at = (age) => `${(((age - ageMin) / ageSpan) * 100).toFixed(3)}%`;
     slot="hero"
     title={title}
     lede={lede}
-    image="/assets/rooms/group-room-out.webp"
-    imageSmall="/assets/rooms/group-room-out-720.webp"
-    imageMedium="/assets/rooms/group-room-out-1080.webp"
+    image={withBase("/assets/rooms/group-room-out.webp")}
+    imageSmall={withBase("/assets/rooms/group-room-out-720.webp")}
+    imageMedium={withBase("/assets/rooms/group-room-out-1080.webp")}
     imageMediumWidth={1086}
     imageAlt="The group room — a circle of chairs and cushions in a bright open space"
     imageWidth={1448}

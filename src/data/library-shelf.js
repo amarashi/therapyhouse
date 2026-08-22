@@ -14,6 +14,8 @@
  * the shelf without also appearing in the list a visitor gets with JS off.
  */
 
+import { withBase } from '../lib/base.js';
+
 /* Four videos on the live site are Dr Amelia's Persian-language personal
  * channel content — three on dating and one on women and sexuality. They are
  * real and they are hers, but a parent browsing a child-psychology library is
@@ -54,7 +56,7 @@ const video = ({ id, title, titleLang, gloss, note, deck, series, seed }) => ({
   series,
   seed,
   href: `https://www.youtube.com/watch?v=${id}`,
-  thumbnail: `/assets/library/videos/${id}.webp`,
+  thumbnail: withBase(`/assets/library/videos/${id}.webp`),
   /* Hedge green cloth, candle gold foil — the two committed colours, used on
      an object rather than on a page. */
   color: '#234f2f',
@@ -82,14 +84,14 @@ export const volumes = [
       label: 'Buy with card',
       href: 'https://checkout.square.site/buy/HKWVROXO2C2SCQXGZVVWEBL2?src=embed',
     },
-    cover: '/assets/library/books/koala-cover.webp',
+    cover: withBase('/assets/library/books/koala-cover.webp'),
     /* Real interior spreads: illustration on the verso, story on the recto.
        Four of them, which is exactly the reference's four-leaf book. */
     spreads: [
-      { image: '/assets/library/books/koala-spread-1.webp', label: 'The koala who would not go' },
-      { image: '/assets/library/books/koala-spread-2.webp', label: 'Asking his mother' },
-      { image: '/assets/library/books/koala-spread-3.webp', label: 'The queasy feeling' },
-      { image: '/assets/library/books/koala-spread-4.webp', label: 'Listening for sounds' },
+      { image: withBase('/assets/library/books/koala-spread-1.webp'), label: 'The koala who would not go' },
+      { image: withBase('/assets/library/books/koala-spread-2.webp'), label: 'Asking his mother' },
+      { image: withBase('/assets/library/books/koala-spread-3.webp'), label: 'The queasy feeling' },
+      { image: withBase('/assets/library/books/koala-spread-4.webp'), label: 'Listening for sounds' },
     ],
     color: '#f2b62c',
     foil: '#8a5a12',
@@ -118,10 +120,10 @@ export const volumes = [
       label: 'Email to order',
       href: 'mailto:admin@therapyhouse.com.au?subject=Order%3A%20What%20Is%20Going%20On%20In%20My%20Head',
     },
-    cover: '/assets/library/books/head-cover.webp',
+    cover: withBase('/assets/library/books/head-cover.webp'),
     spreads: [
-      { image: '/assets/library/books/head-spread-1.webp', label: 'The Woop Woop in my head' },
-      { image: '/assets/library/books/head-spread-2.webp', label: 'What is your body doing?' },
+      { image: withBase('/assets/library/books/head-spread-1.webp'), label: 'The Woop Woop in my head' },
+      { image: withBase('/assets/library/books/head-spread-2.webp'), label: 'What is your body doing?' },
     ],
     color: '#1f4f8a',
     foil: '#e0b463',

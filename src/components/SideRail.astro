@@ -1,4 +1,5 @@
 ---
+import { withBase, stripBase } from '../lib/base.js';
 import { readyNav, contact, callsToAction } from '../data/site.js';
 
 /**
@@ -29,7 +30,9 @@ import { readyNav, contact, callsToAction } from '../data/site.js';
  * from the first paint, and nothing about the menu depends on a script having
  * run.
  */
-const path = Astro.url.pathname;
+/* Compared against the clean hrefs in the nav data, so the deployment's
+   base prefix comes off before any of the matching below. */
+const path = stripBase(Astro.url.pathname);
 const items = [{ label: 'Home', href: '/' }, ...readyNav];
 
 /* Which floor the car is parked on. An exact match first; failing that, the
@@ -60,7 +63,7 @@ const floor = here === -1 ? 0 : here;
       <span class="rail__lamp"></span>
       <img
         class="rail__car"
-        src="/assets/media/lift-car.webp"
+        src={withBase("/assets/media/lift-car.webp")}
         alt=""
         width="114"
         height="272"
@@ -81,7 +84,7 @@ const floor = here === -1 ? 0 : here;
         return (
           <li>
             <a
-              href={item.href}
+              href={withBase(item.href)}
               data-floor={i}
               data-astro-prefetch
               data-here={i === here ? '' : undefined}
@@ -94,7 +97,7 @@ const floor = here === -1 ? 0 : here;
         );
       })}
       <li class="rail__phone">
-        <a href={callsToAction.call.href}>
+        <a href={withBase(callsToAction.call.href)}>
           <span class="rail__tick" aria-hidden="true"></span>
           <span class="rail__label">{contact.phone}</span>
         </a>

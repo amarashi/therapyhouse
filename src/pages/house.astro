@@ -1,3 +1,18 @@
+---
+import { withBase, basePrefix } from '../lib/base.js';
+
+/*
+ * The legacy single-page experience, preserved intact through the migration.
+ * Its scripts live in `public/assets/scripts/` and are served as-is, so they
+ * cannot read Astro's config the way a bundled module can. Instead they read
+ * `window.__ASSET_BASE__`, set in the head below, and prefix their own asset
+ * paths with it — see the note at the top of `site-data.js`.
+ *
+ * The trailing slash matters: those paths are relative (`assets/…`), so the
+ * base has to be a directory.
+ */
+const assetBase = `${basePrefix}/`;
+---
 <!doctype html>
 <html lang="en-AU">
 <head>
@@ -9,9 +24,10 @@
   <meta property="og:description" content="Warm, inclusive psychology and counselling support for children, adults, couples and families in Brisbane.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="https://www.therapyhouse.com.au/assets/media/logo3d.png">
-  <link rel="icon" type="image/png" href="/assets/media/logo3d.png">
+  <link rel="icon" type="image/png" href={withBase("/assets/media/logo3d.png")}>
+  <script is:inline define:vars={{ assetBase }}>window.__ASSET_BASE__ = assetBase;</script>
   <title>Therapy House | Psychology and Counselling in The Gap, Brisbane</title>
-  <link rel="stylesheet" href="/assets/styles/main.css?v=20260529-eye-scale">
+  <link rel="stylesheet" href={withBase("/assets/styles/main.css?v=20260529-eye-scale")}>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -42,7 +58,7 @@
   <aside class="orientation-lock" aria-live="polite">
     <div class="orientation-lock__content">
       <div class="orientation-lock__logo-frame" aria-hidden="true">
-        <img class="orientation-lock__logo" src="/assets/media/logo3d.png" alt="Therapy House logo" draggable="false" decoding="async">
+        <img class="orientation-lock__logo" src={withBase("/assets/media/logo3d.png")} alt="Therapy House logo" draggable="false" decoding="async">
       </div>
       <span class="orientation-lock__rotate-mark" aria-hidden="true"></span>
       <p class="orientation-lock__title">Please rotate your phone</p>
@@ -71,15 +87,15 @@
     </button>
     <div class="exterior-hotspot-layer" id="exteriorHotspotLayer" aria-label="Therapy House exterior room navigation"></div>
     <video class="transition-video" id="doorVideo" playsinline preload="metadata">
-      <source src="/assets/media/door-transition.mp4" type="video/mp4">
+      <source src={withBase("/assets/media/door-transition.mp4")} type="video/mp4">
     </video>
     <div class="inside-view" id="insideView" aria-label="Inside Therapy House">
       <div class="inside-parallax" id="insideParallax">
-        <img class="inside-parallax__layer inside-parallax__layer--background" src="/assets/media/inside-layer-1.webp" alt="Layered illustration of the warm Therapy House clinic interior" draggable="false" decoding="async">
+        <img class="inside-parallax__layer inside-parallax__layer--background" src={withBase("/assets/media/inside-layer-1.webp")} alt="Layered illustration of the warm Therapy House clinic interior" draggable="false" decoding="async">
         <div class="inside-firelight-layer" id="insideFirelightLayer" aria-hidden="true"></div>
-        <img class="inside-parallax__layer inside-parallax__layer--middle" src="/assets/media/inside-layer-2.webp" alt="Middle layer of the Therapy House counselling room scene" draggable="false" decoding="async">
+        <img class="inside-parallax__layer inside-parallax__layer--middle" src={withBase("/assets/media/inside-layer-2.webp")} alt="Middle layer of the Therapy House counselling room scene" draggable="false" decoding="async">
         <div class="dog-eye-layer" id="dogEyeLayer" aria-hidden="true"></div>
-        <img class="inside-parallax__layer inside-parallax__layer--foreground" src="/assets/media/inside-layer-3.webp" alt="Foreground layer of the welcoming Therapy House interior" draggable="false" decoding="async">
+        <img class="inside-parallax__layer inside-parallax__layer--foreground" src={withBase("/assets/media/inside-layer-3.webp")} alt="Foreground layer of the welcoming Therapy House interior" draggable="false" decoding="async">
       </div>
       <div class="scene-sign-layer" id="sceneSignLayer" aria-hidden="false">
         <button class="scene-sign scene-sign--table" type="button" data-action="about" data-x="840" data-y="265" data-perspective="900" data-depth="60" data-rotate-x="0" data-rotate-y="0" data-rotate="0" data-skew-x="0" data-skew-y="0" data-scale="0.78" data-scale-x="1" data-scale-y="1" aria-label="Meet the Therapy House team">
@@ -115,7 +131,7 @@
           <p class="philosophy-modal__eyebrow">Therapy House</p>
           <h2 class="philosophy-modal__title" id="philosophyTitle">Our Philosophy</h2>
           <div class="philosophy-modal__rule" aria-hidden="true">o</div>
-          <img class="philosophy-modal__image" src="/assets/media/bookworm.png" width="600" height="450" alt="Friendly reader with books, representing Therapy House's warm psychology and counselling approach">
+          <img class="philosophy-modal__image" src={withBase("/assets/media/bookworm.png")} width="600" height="450" alt="Friendly reader with books, representing Therapy House's warm psychology and counselling approach">
           <p class="philosophy-modal__intro">Counselling and psychology should feel warm and inviting. Our clinic is a nurturing place where people can feel safe, understood and supported.</p>
           <p class="philosophy-modal__subheading">Our care is built on these principles.</p>
           <ul class="philosophy-modal__list">
@@ -156,7 +172,7 @@
         <section class="contact-modal__panel">
           <button class="contact-modal__close" id="contactModalClose" type="button" aria-label="Close contact window">&times;</button>
           <div class="contact-modal__art">
-            <img src="/assets/media/phone.webp" alt="Illustration for contacting Therapy House reception" width="660" height="660" loading="lazy" decoding="async">
+            <img src={withBase("/assets/media/phone.webp")} alt="Illustration for contacting Therapy House reception" width="660" height="660" loading="lazy" decoding="async">
           </div>
           <div class="contact-modal__body">
             <p class="contact-modal__eyebrow">Visit or call</p>
@@ -257,7 +273,7 @@
       </section>
     </div>
   </section>
-  <script type="module" src="/assets/scripts/app.js?v=20260529-eye-scale"></script>
+  <script type="module" src={withBase("/assets/scripts/app.js?v=20260529-eye-scale")}></script>
 </body>
 </html>
 

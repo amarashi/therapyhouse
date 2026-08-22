@@ -1,4 +1,5 @@
 ---
+import { withBase } from '../../lib/base.js';
 import { getCollection, render } from 'astro:content';
 import PlainLayout from '../../layouts/PlainLayout.astro';
 import CallToAction from '../../components/CallToAction.astro';
@@ -42,8 +43,8 @@ const personSchema =
         jobTitle: role,
         ...(credentials ? { hasCredential: credentials } : {}),
         ...(languages ? { knowsLanguage: languages } : {}),
-        image: new URL(image, site.origin).href,
-        url: new URL(`/team/${person.id}/`, site.origin).href,
+        image: new URL(withBase(image), Astro.site ?? site.origin).href,
+        url: new URL(withBase(`/team/${person.id}/`), Astro.site ?? site.origin).href,
         worksFor: { '@type': 'MedicalBusiness', name: site.name, url: site.origin },
       };
 ---
@@ -58,7 +59,7 @@ const personSchema =
   )}
 
   <div class="wrap profile">
-    <p class="profile__back"><a class="standalone-link" href="/team/">← All of the team</a></p>
+    <p class="profile__back"><a class="standalone-link" href={withBase("/team/")}>← All of the team</a></p>
 
     <div class="profile__grid">
       {/* 18rem in the two-column grid below, 14rem once it stacks — so a
@@ -66,8 +67,8 @@ const personSchema =
           takes a photograph wider than the page can paint. */}
       <img
         class="profile__photo"
-        src={image}
-        srcset={`${image.replace(/\.webp$/, '-280.webp')} 280w, ${image} 560w`}
+        src={withBase(image)}
+        srcset={`${withBase(image.replace(/\.webp$/, '-280.webp'))} 280w, ${withBase(image)} 560w`}
         sizes="(max-width: 46rem) 14rem, 18rem"
         alt={imageAlt}
         width="420"

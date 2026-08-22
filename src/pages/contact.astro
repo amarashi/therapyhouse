@@ -1,4 +1,5 @@
 ---
+import { withBase } from '../lib/base.js';
 import { getEntry, render } from 'astro:content';
 import PlainLayout from '../layouts/PlainLayout.astro';
 import HeroReveal from '../components/HeroReveal.astro';
@@ -28,9 +29,9 @@ const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComp
     slot="hero"
     title={title}
     lede={lede}
-    image="/assets/rooms/reception-room-out.webp"
-    imageSmall="/assets/rooms/reception-room-out-720.webp"
-    imageMedium="/assets/rooms/reception-room-out-1080.webp"
+    image={withBase("/assets/rooms/reception-room-out.webp")}
+    imageSmall={withBase("/assets/rooms/reception-room-out-720.webp")}
+    imageMedium={withBase("/assets/rooms/reception-room-out-1080.webp")}
     imageMediumWidth={1086}
     imageAlt="Therapy House reception — armchairs, a welcome sign and a noticeboard"
     imageWidth={1448}

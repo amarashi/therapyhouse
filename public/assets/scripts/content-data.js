@@ -1,3 +1,5 @@
+import { asset } from "./site-data.js";
+
 export const roomIds = ["exterior", "welcome", "team", "services", "assessments", "groups", "library", "contact", "work-with-us"];
 
 export const roomNavigation = {
@@ -216,17 +218,17 @@ export const roomSceneDefaults = {
       background: {
         layers: [
           {
-            src: "assets/media/inside-layer-1.webp",
+            src: asset("assets/media/inside-layer-1.webp"),
             className: "inside-parallax__layer--background",
             alt: "Layered illustration of the warm Therapy House clinic interior"
           },
           {
-            src: "assets/media/inside-layer-2.webp",
+            src: asset("assets/media/inside-layer-2.webp"),
             className: "inside-parallax__layer--middle",
             alt: "Middle layer of the Therapy House counselling room scene"
           },
           {
-            src: "assets/media/inside-layer-3.webp",
+            src: asset("assets/media/inside-layer-3.webp"),
             className: "inside-parallax__layer--foreground",
             alt: "Foreground layer of the welcoming Therapy House interior"
           }
@@ -303,7 +305,7 @@ export const roomSceneDefaults = {
       background: {
         layers: [
           {
-            src: "assets/rooms/team-parlour.webp",
+            src: asset("assets/rooms/team-parlour.webp"),
             alt: "Storybook team parlour inside Therapy House"
           }
         ]
@@ -323,7 +325,7 @@ export const roomSceneDefaults = {
       background: {
         layers: [
           {
-            src: "assets/rooms/consulting-room.webp",
+            src: asset("assets/rooms/consulting-room.webp"),
             alt: "Warm consulting room inside Therapy House"
           }
         ]
@@ -346,7 +348,7 @@ export const roomSceneDefaults = {
       background: {
         layers: [
           {
-            src: "assets/rooms/assessment-room.webp",
+            src: asset("assets/rooms/assessment-room.webp"),
             alt: "Child-friendly assessment room inside Therapy House"
           }
         ]
@@ -371,7 +373,7 @@ export const roomSceneDefaults = {
       background: {
         layers: [
           {
-            src: "assets/rooms/group-room.webp",
+            src: asset("assets/rooms/group-room.webp"),
             alt: "Group therapy room inside Therapy House"
           }
         ]
@@ -395,7 +397,7 @@ export const roomSceneDefaults = {
       background: {
         layers: [
           {
-            src: "assets/rooms/library-room.webp",
+            src: asset("assets/rooms/library-room.webp"),
             alt: "Cosy Therapy House library and resource room"
           }
         ]
@@ -417,7 +419,7 @@ export const roomSceneDefaults = {
       background: {
         layers: [
           {
-            src: "assets/rooms/reception-room.webp",
+            src: asset("assets/rooms/reception-room.webp"),
             alt: "Therapy House reception room"
           }
         ]
@@ -439,7 +441,7 @@ export const roomSceneDefaults = {
       background: {
         layers: [
           {
-            src: "assets/rooms/work-with-us-room.webp",
+            src: asset("assets/rooms/work-with-us-room.webp"),
             alt: "Therapy House staff room and work with us noticeboard"
           }
         ]

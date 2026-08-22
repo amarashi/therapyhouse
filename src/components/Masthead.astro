@@ -1,4 +1,5 @@
 ---
+import { withBase } from '../lib/base.js';
 import { site, contact, callsToAction } from '../data/site.js';
 
 /**
@@ -18,16 +19,16 @@ const { book, call } = callsToAction;
 ---
 
 <header class="masthead">
-  <a class="masthead__mark" href="/">
+  <a class="masthead__mark" href={withBase("/")}>
     <span class="masthead__name">{site.name}</span>
     <span class="masthead__place">The Gap, Brisbane</span>
   </a>
 
   <nav class="masthead__actions" aria-label="Contact">
-    <a class="masthead__link" href={book.href} target="_blank" rel="noopener noreferrer">
+    <a class="masthead__link" href={withBase(book.href)} target="_blank" rel="noopener noreferrer">
       Book an appointment<span class="sr-only"> (opens in a new tab)</span>
     </a>
-    <a class="masthead__link masthead__link--phone" href={call.href}>{contact.phone}</a>
+    <a class="masthead__link masthead__link--phone" href={withBase(call.href)}>{contact.phone}</a>
   </nav>
 </header>
 

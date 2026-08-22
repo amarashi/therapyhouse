@@ -1,4 +1,5 @@
 import {
+  asset,
   defaultFirelightSettings,
   defaultDogEyeSettings,
   dogEyeDownloadName,
@@ -69,7 +70,7 @@ const firelightController = createFirelightController({
   fields: firelightFields,
   insideImageSize,
   storageKey: firelightStorageKey,
-  sourceUrl: firelightDownloadName
+  sourceUrl: asset(firelightDownloadName)
 });
 
 const dogEyeController = createDogEyeController({
@@ -79,7 +80,7 @@ const dogEyeController = createDogEyeController({
   fields: dogEyeFields,
   insideImageSize,
   storageKey: dogEyeStorageKey,
-  sourceUrl: dogEyeDownloadName
+  sourceUrl: asset(dogEyeDownloadName)
 });
 
 const turntable = createTurntableViewer({

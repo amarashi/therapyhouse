@@ -1,4 +1,5 @@
 ---
+import { withBase, srcsetWithBase } from '../lib/base.js';
 import { contact } from '../data/site.js';
 
 /**
@@ -47,8 +48,10 @@ const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComp
 <a class="map" href={mapsUrl} target="_blank" rel="noopener noreferrer">
   <img
     class="map__art"
-    src="/assets/media/map3d.webp"
-    srcset="/assets/media/map3d-480.webp 480w, /assets/media/map3d-720.webp 724w, /assets/media/map3d-800.webp 800w, /assets/media/map3d.webp 1448w"
+    src={withBase("/assets/media/map3d.webp")}
+    srcset={srcsetWithBase(
+      "/assets/media/map3d-480.webp 480w, /assets/media/map3d-720.webp 724w, /assets/media/map3d-800.webp 800w, /assets/media/map3d.webp 1448w"
+    )}
     sizes={sizes}
     width="1448"
     height="1086"

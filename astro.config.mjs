@@ -11,7 +11,14 @@ import { defineConfig } from 'astro/config';
 // The plain content pages come next, and those are the ones that must ship zero
 // JavaScript — hence static output and no framework integration here.
 export default defineConfig({
-  site: 'https://www.therapyhouse.com.au',
+  // Published to GitHub Pages as a project site, so the whole thing hangs off
+  // the `/therapyhouse` prefix rather than a domain root. `base` is what every
+  // internal URL is built from — see `src/lib/base.js` — and it is also what
+  // the legacy `/house` experience hands its scripts via `__ASSET_BASE__`.
+  // Swap these two lines for `site: 'https://www.therapyhouse.com.au'` with no
+  // `base` on the day the custom domain is pointed here.
+  site: 'https://amarashi.github.io',
+  base: '/therapyhouse',
   output: 'static',
   /* Opt-in only: the rail's links carry `data-astro-prefetch`, so hovering a
      floor both calls the lift and fetches that floor. By the time the car has

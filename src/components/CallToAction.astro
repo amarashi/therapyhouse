@@ -1,4 +1,5 @@
 ---
+import { withBase } from '../lib/base.js';
 import { callsToAction } from '../data/site.js';
 
 /**
@@ -15,10 +16,10 @@ const { book, call } = callsToAction;
 {/* The portal is a different application. Opening it in place threw away a
     parent's place in whatever they were reading; a new tab keeps it. */}
 <div class="cta">
-  <a class="btn btn--primary" href={book.href} target="_blank" rel="noopener noreferrer">
+  <a class="btn btn--primary" href={withBase(book.href)} target="_blank" rel="noopener noreferrer">
     {book.label}<span class="sr-only"> (opens in a new tab)</span>
   </a>
-  <a class="btn btn--secondary" href={call.href}>{call.label}</a>
+  <a class="btn btn--secondary" href={withBase(call.href)}>{call.label}</a>
 </div>
 
 <style>

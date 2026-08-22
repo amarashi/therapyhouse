@@ -1,4 +1,5 @@
 ---
+import { withBase } from '../lib/base.js';
 import { getEntry, render } from 'astro:content';
 import PlainLayout from '../layouts/PlainLayout.astro';
 import HeroReveal from '../components/HeroReveal.astro';
@@ -48,9 +49,9 @@ const formatDayMonth = (iso: string) =>
     slot="hero"
     title={title}
     lede={lede}
-    image="/assets/rooms/library-room-out.webp"
-    imageSmall="/assets/rooms/library-room-out-720.webp"
-    imageMedium="/assets/rooms/library-room-out-1080.webp"
+    image={withBase("/assets/rooms/library-room-out.webp")}
+    imageSmall={withBase("/assets/rooms/library-room-out-720.webp")}
+    imageMedium={withBase("/assets/rooms/library-room-out-1080.webp")}
     imageMediumWidth={1086}
     imageAlt="The library — shelves of books, a reading chair and warm lamplight"
     imageWidth={1448}

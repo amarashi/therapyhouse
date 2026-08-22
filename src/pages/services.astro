@@ -1,4 +1,5 @@
 ---
+import { withBase } from '../lib/base.js';
 import { getEntry, render } from 'astro:content';
 import PlainLayout from '../layouts/PlainLayout.astro';
 import HeroReveal from '../components/HeroReveal.astro';
@@ -30,9 +31,9 @@ const feeGroups = [
     slot="hero"
     title={title}
     lede={lede}
-    image="/assets/rooms/consulting-room-out.webp"
-    imageSmall="/assets/rooms/consulting-room-out-720.webp"
-    imageMedium="/assets/rooms/consulting-room-out-1080.webp"
+    image={withBase("/assets/rooms/consulting-room-out.webp")}
+    imageSmall={withBase("/assets/rooms/consulting-room-out-720.webp")}
+    imageMedium={withBase("/assets/rooms/consulting-room-out-1080.webp")}
     imageMediumWidth={1086}
     imageAlt="The consulting room — armchairs, lamplight and a window onto the garden"
     imageWidth={1448}
@@ -58,7 +59,7 @@ const feeGroups = [
         </ul>
         <p class="band__aside-note">
           Assessments have their own process, timeline and pricing —
-          <a href="/assessments/">see the assessment packages</a>.
+          <a href={withBase("/assessments/")}>see the assessment packages</a>.
         </p>
       </section>
 

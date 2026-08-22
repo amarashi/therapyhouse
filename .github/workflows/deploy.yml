@@ -1,0 +1,65 @@
+# Builds the Astro site and publishes it to GitHub Pages.
+#
+# The site is a project page, so it is served from `/therapyhouse` rather than
+# a domain root — `base` in astro.config.mjs is what makes the built URLs match
+# that, and the two have to be changed together if this ever moves to the
+# clinic's own domain.
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # So a broken build can be re-run, or a deploy triggered without a commit.
+  workflow_dispatch:
+
+# Pages deployment needs to mint an ID token; nothing here writes to the repo.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deploys race. In-progress runs are left to finish rather than
+# cancelled, so a half-uploaded artifact is never what gets published.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        # Version comes from the `packageManager` field in package.json.
+        uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # The suite is what guards the published content — specialisms, contact
+      # details, the responsive portrait ladder — so a failure here should stop
+      # the deploy rather than ship the page it describes.
+      - run: pnpm test
+
+      - run: pnpm build
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,4 +1,5 @@
 ---
+import { withBase } from '../lib/base.js';
 import PlainLayout from '../layouts/PlainLayout.astro';
 import { footerNav, contact, callsToAction } from '../data/site.js';
 
@@ -32,7 +33,7 @@ import { footerNav, contact, callsToAction } from '../data/site.js';
       <ul class="doors">
         {footerNav.map((item) => (
           <li>
-            <a href={item.href}>{item.label}</a>
+            <a href={withBase(item.href)}>{item.label}</a>
           </li>
         ))}
       </ul>
@@ -42,7 +43,7 @@ import { footerNav, contact, callsToAction } from '../data/site.js';
       <h2 id="ask">Or just ask</h2>
       <p>
         Reception can point you at the right page, or answer the question directly:
-        <a href={callsToAction.call.href}>{contact.phone}</a> ·{' '}
+        <a href={withBase(callsToAction.call.href)}>{contact.phone}</a> ·{' '}
         <a href={`mailto:${contact.email}`}>{contact.email}</a>
       </p>
     </section>

@@ -1,4 +1,5 @@
 ---
+import { withBase } from '../lib/base.js';
 interface Props {
   /** First clause of the heading, in hedge-green. */
   title: string;
@@ -91,9 +92,9 @@ const stacked = !anchored;
  */
 const srcset = imageSmall
   ? [
-      `${imageSmall} ${Math.round(imageWidth / 2)}w`,
-      imageMedium && imageMediumWidth ? `${imageMedium} ${imageMediumWidth}w` : null,
-      `${image} ${imageWidth}w`,
+      `${withBase(imageSmall)} ${Math.round(imageWidth / 2)}w`,
+      imageMedium && imageMediumWidth ? `${withBase(imageMedium)} ${imageMediumWidth}w` : null,
+      `${withBase(image)} ${imageWidth}w`,
     ]
       .filter(Boolean)
       .join(', ')
@@ -152,7 +153,7 @@ const sizes = imageSmall
     */}
     <div class="hero__art">
       <img
-        src={image}
+        src={withBase(image)}
         srcset={srcset}
         sizes={sizes}
         alt={imageAlt}
@@ -169,8 +170,8 @@ const sizes = imageSmall
           <video
             class="hero__loop"
             data-hero-loop
-            data-loop-src={video}
-            data-loop-src-small={videoSmall ?? video}
+            data-loop-src={withBase(video)}
+            data-loop-src-small={withBase(videoSmall ?? video)}
             width={imageWidth}
             height={imageHeight}
             loop

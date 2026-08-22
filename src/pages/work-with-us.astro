@@ -1,4 +1,5 @@
 ---
+import { withBase } from '../lib/base.js';
 import { getEntry, render } from 'astro:content';
 import PlainLayout from '../layouts/PlainLayout.astro';
 import HeroReveal from '../components/HeroReveal.astro';
@@ -16,9 +17,9 @@ const { title, description, lede, values, culture } = page.data;
     slot="hero"
     title={title}
     lede={lede}
-    image="/assets/rooms/work-with-us-room-out.webp"
-    imageSmall="/assets/rooms/work-with-us-room-out-720.webp"
-    imageMedium="/assets/rooms/work-with-us-room-out-1080.webp"
+    image={withBase("/assets/rooms/work-with-us-room-out.webp")}
+    imageSmall={withBase("/assets/rooms/work-with-us-room-out-720.webp")}
+    imageMedium={withBase("/assets/rooms/work-with-us-room-out-1080.webp")}
     imageMediumWidth={1086}
     imageAlt="The staff room — a noticeboard and a table set for the team"
     imageWidth={1448}

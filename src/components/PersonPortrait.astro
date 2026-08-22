@@ -1,4 +1,5 @@
 ---
+import { withBase } from '../lib/base.js';
 import { existsSync } from 'node:fs';
 
 /**
@@ -46,7 +47,8 @@ const { image, alt = '', size, sizes, loading = 'lazy', fetchpriority } = Astro.
  * Without this the team page shipped 1.1 MB of portraits — twelve 560px
  * photographs and twelve 560px illustrations — into a grid of 130px squares.
  */
-const step = (file: string) => `${file.replace(/\.webp$/, '-280.webp')} 280w, ${file} 560w`;
+const step = (file: string) =>
+  `${withBase(file.replace(/\.webp$/, '-280.webp'))} 280w, ${withBase(file)} 560w`;
 const box = sizes ?? `${size}px`;
 
 /**
@@ -63,7 +65,7 @@ const hasPix = existsSync(`public${pix}`);
 <span class="portrait">
   <img
     class="portrait__photo"
-    src={image}
+    src={withBase(image)}
     srcset={step(image)}
     sizes={box}
     alt={alt}
@@ -79,7 +81,7 @@ const hasPix = existsSync(`public${pix}`);
        this is the layer that is actually on screen. */
     <img
       class="portrait__pix"
-      src={pix}
+      src={withBase(pix)}
       srcset={step(pix)}
       sizes={box}
       alt=""

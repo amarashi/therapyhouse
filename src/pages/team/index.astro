@@ -1,4 +1,5 @@
 ---
+import { withBase } from '../../lib/base.js';
 import { getCollection } from 'astro:content';
 import PlainLayout from '../../layouts/PlainLayout.astro';
 import HeroReveal from '../../components/HeroReveal.astro';
@@ -37,9 +38,9 @@ const description =
     slot="hero"
     title={title}
     lede="The people who would actually be in the room. Each profile says who they work with and how they work."
-    image="/assets/rooms/team-parlour-out.webp"
-    imageSmall="/assets/rooms/team-parlour-out-720.webp"
-    imageMedium="/assets/rooms/team-parlour-out-1080.webp"
+    image={withBase("/assets/rooms/team-parlour-out.webp")}
+    imageSmall={withBase("/assets/rooms/team-parlour-out-720.webp")}
+    imageMedium={withBase("/assets/rooms/team-parlour-out-1080.webp")}
     imageMediumWidth={1086}
     imageAlt="The team parlour — a comfortable sitting room where the team meets"
     imageWidth={1448}
