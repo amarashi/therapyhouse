@@ -1,7 +1,7 @@
 ---
 import { withBase, stripBase } from '../lib/base.js';
 import '../styles/global.css';
-import { site, contact, callsToAction, footerNav } from '../data/site.js';
+import { site, contact, callsToAction, footerNav, staffLink } from '../data/site.js';
 import CallToAction from '../components/CallToAction.astro';
 import ActionBar from '../components/ActionBar.astro';
 import Masthead from '../components/Masthead.astro';
@@ -178,6 +178,14 @@ const businessSchema = {
               </li>
             ))}
           </ul>
+          {/* Not a page of the site — a separate, logged-in handbook for the
+              therapists and admin. It sits under the map rather than in it,
+              labelled with who it is for, so staff can reach it from any page
+              without a parent mistaking it for something they should read. */}
+          <p class="site-footer__staff">
+            <a href={staffLink.href} rel="noopener">{staffLink.label}</a>
+            <span class="site-footer__staffnote">{staffLink.note}</span>
+          </p>
         </nav>
       </div>
     </footer>
@@ -322,6 +330,22 @@ const businessSchema = {
 
       .site-footer__fax {
         color: var(--ink-faint);
+      }
+
+      /* Spans the two columns of the map above it, set apart by a rule so it
+         reads as a different kind of destination rather than a ninth page. */
+      .site-footer__staff {
+        margin-top: var(--space-md);
+        padding-top: var(--space-sm);
+        border-top: 1px solid var(--line);
+      }
+
+      .site-footer__staffnote {
+        margin-left: var(--space-xs);
+        color: var(--ink-faint);
+        font-size: var(--text-label);
+        letter-spacing: var(--track-label);
+        text-transform: uppercase;
       }
 
       /* ---- Phones ----

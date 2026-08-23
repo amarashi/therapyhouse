@@ -92,3 +92,20 @@ export function isAcceptingNewClients(status) {
   if (!status) return false;
   return /accepting/i.test(status) && !/\bnot\b/i.test(status);
 }
+
+/**
+ * The staff handbook, which is not part of the site.
+ *
+ * It lives at its own address, is written for the therapists and admin rather
+ * than for parents, and is gated behind a Therapy House login. So it is not a
+ * page of the site map and does not belong in `footerNav` — every entry there
+ * is an internal path the footer resolves with `withBase()`, and this one is
+ * an absolute URL to somewhere else. The footer carries it as its own line,
+ * named for who it is for, so a therapist can find it from any page and a
+ * parent can see at a glance that it isn't for them.
+ */
+export const staffLink = {
+  label: 'Employee handbook',
+  href: 'https://therapyhouse.pages.dev/',
+  note: 'Staff login',
+};
