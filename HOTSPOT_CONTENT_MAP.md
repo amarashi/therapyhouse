@@ -5,6 +5,7 @@ This map documents the current clickable surfaces in `assets/scripts/content-dat
 ## Behaviour Rules
 
 - Exterior hotspots open an interior room.
+- A reading page can open a room directly: `/house/?room=<id>` skips the exterior and walks in, and `&from=<path>` is where the "Back to the website" control points. Unknown ids fall through to the exterior.
 - Interior hotspots with `action: "content"` open the warm content modal, unless they also have a `targetRoom`; in that case they navigate to the target room.
 - `action: "about"` opens the team carousel.
 - `action: "philosophy"` opens the philosophy modal.
@@ -143,6 +144,28 @@ Room content:
 | `videos` | Videos | Opens content modal | - | `library.videos` | Video topics and source page. |
 | `publications` | Publications | Opens content modal | - | `library.publications` | Publication description and source page. |
 | `media` | Media | Opens content modal | - | `library.media` | Media appearance items and source page. |
+| `attic` | Our Philosophy | Navigates to target room | `philosophy` | `rooms.philosophy` | Attic reading room summary. |
+| `back` | Back | Returns to exterior | `exterior` by behaviour | - | No content modal. |
+
+### `philosophy` - Attic Reading Room
+
+Background asset:
+
+- `assets/rooms/library-attic-room.webp`
+
+Room content:
+
+- The five principles the clinic works to, hung on the objects in the room rather than listed.
+- Reached from the library (up the ladder) and directly from the Our Philosophy page, whose hero is a picture of this room.
+
+| Hotspot ID | Visible Label | Behaviour | Target Room | Content Key | Content Opened |
+| --- | --- | --- | --- | --- | --- |
+| `philosophy-overview` | Our Philosophy | Opens content modal | - | `philosophy` | Intro, closing and all five principles. |
+| `holistic-care` | Holistic Care | Opens content modal | - | `philosophy.principles.0` | One principle. |
+| `inclusive-environment` | Inclusive Environment | Opens content modal | - | `philosophy.principles.1` | One principle. |
+| `sanctuary` | Sanctuary For Wellness | Opens content modal | - | `philosophy.principles.2` | One principle. |
+| `meaningful-connections` | Meaningful Connections | Opens content modal | - | `philosophy.principles.3` | One principle. |
+| `authenticity` | Authenticity | Opens content modal | - | `philosophy.principles.4` | One principle. |
 | `back` | Back | Returns to exterior | `exterior` by behaviour | - | No content modal. |
 
 ### `contact` - Reception

@@ -1,6 +1,6 @@
 import { asset } from "./site-data.js";
 
-export const roomIds = ["exterior", "welcome", "team", "services", "assessments", "groups", "library", "contact", "work-with-us"];
+export const roomIds = ["exterior", "welcome", "team", "services", "assessments", "groups", "library", "philosophy", "contact", "work-with-us"];
 
 export const roomNavigation = {
   initialRoomId: "exterior",
@@ -63,6 +63,14 @@ export const roomNavigation = {
       label: "Library",
       exteriorEntry: "Left blogs sign / tower window",
       route: "#library"
+    },
+    philosophy: {
+      id: "philosophy",
+      title: "Attic Reading Room",
+      type: "interior",
+      label: "Our Philosophy",
+      exteriorEntry: "Up the library ladder",
+      route: "#philosophy"
     },
     contact: {
       id: "contact",
@@ -409,7 +417,39 @@ export const roomSceneDefaults = {
         hotspot({ id: "videos", label: "Videos", contentKey: "library.videos", x: 835, y: 430 }),
         hotspot({ id: "publications", label: "Publications", contentKey: "library.publications", x: 1240, y: 750 }),
         hotspot({ id: "media", label: "Media", contentKey: "library.media", x: 1450, y: 410 }),
+        hotspot({ id: "attic", label: "Our Philosophy", targetRoom: "philosophy", contentKey: "rooms.philosophy", x: 500, y: 105 }),
         hotspot({ id: "back", label: "Back", action: "back", x: 180, y: 180 })
+      ]
+    },
+
+    /*
+     * The attic over the library. It is the room the philosophy page opens on,
+     * so the picture a visitor clicks there is the room they arrive in — and
+     * the principles are hung on the objects rather than listed on a wall:
+     * the whole story on the shelves, the many-pictured frame, the window you
+     * reach at your own pace, the birdhouse someone built for someone else,
+     * and a book left open.
+     */
+    philosophy: {
+      id: "philosophy",
+      imageSize: roomImageSize,
+      background: {
+        layers: [
+          {
+            src: asset("assets/rooms/library-attic-room.webp"),
+            alt: "The Therapy House attic reading room, with bookshelves, a round window and a table with an open book"
+          }
+        ]
+      },
+      effects: { firelight: false, dogEyes: false },
+      hotspots: [
+        hotspot({ id: "philosophy-overview", label: "Our Philosophy", contentKey: "philosophy", x: 650, y: 620 }),
+        hotspot({ id: "holistic-care", label: "Holistic Care", contentKey: "philosophy.principles.0", x: 245, y: 265 }),
+        hotspot({ id: "inclusive-environment", label: "Inclusive Environment", contentKey: "philosophy.principles.1", x: 1190, y: 300 }),
+        hotspot({ id: "sanctuary", label: "Sanctuary For Wellness", contentKey: "philosophy.principles.2", x: 838, y: 320 }),
+        hotspot({ id: "meaningful-connections", label: "Meaningful Connections", contentKey: "philosophy.principles.3", x: 1400, y: 440 }),
+        hotspot({ id: "authenticity", label: "Authenticity", contentKey: "philosophy.principles.4", x: 420, y: 755 }),
+        hotspot({ id: "back", label: "Back", action: "back", x: 455, y: 470 })
       ]
     },
 
@@ -612,7 +652,24 @@ export const siteContent = {
         { id: "products", label: "Books", contentKey: "library.products" },
         { id: "videos", label: "Videos", contentKey: "library.videos" },
         { id: "publications", label: "Publications", contentKey: "library.publications" },
-        { id: "media", label: "Media", contentKey: "library.media" }
+        { id: "media", label: "Media", contentKey: "library.media" },
+        { id: "attic", label: "Our Philosophy", contentKey: "rooms.philosophy" }
+      ]
+    },
+
+    philosophy: {
+      id: "philosophy",
+      title: "Attic Reading Room",
+      exteriorEntry: "Up the library ladder",
+      sourceUrls: ["https://www.therapyhouse.com.au/our-philosophy/"],
+      summary: "The attic over the library, where the five principles the clinic works to are hung on the objects in the room.",
+      hotspots: [
+        { id: "philosophy-overview", label: "Our Philosophy", contentKey: "philosophy" },
+        { id: "holistic-care", label: "Holistic Care", contentKey: "philosophy.principles.0" },
+        { id: "inclusive-environment", label: "Inclusive Environment", contentKey: "philosophy.principles.1" },
+        { id: "sanctuary", label: "Sanctuary For Wellness", contentKey: "philosophy.principles.2" },
+        { id: "meaningful-connections", label: "Meaningful Connections", contentKey: "philosophy.principles.3" },
+        { id: "authenticity", label: "Authenticity", contentKey: "philosophy.principles.4" }
       ]
     },
 
@@ -650,11 +707,11 @@ export const siteContent = {
     title: "Our Philosophy",
     intro: "Counselling and psychology should feel warm and inviting. Our clinic is a nurturing place where people can feel safe, understood and supported.",
     principles: [
-      { title: "Holistic Care", body: "We focus on your whole story, not only a diagnosis." },
-      { title: "Inclusive Environment", body: "Our space is safe, neuro-affirming and welcoming for LGBTQIA+ people." },
-      { title: "Sanctuary for Wellness", body: "You can work towards wellbeing at your own pace." },
-      { title: "Meaningful Connections", body: "We build purposeful relationships so you feel heard and valued." },
-      { title: "Authenticity", body: "We bring genuine care to the counselling process." }
+      { title: "Holistic Care", description: "We focus on your whole story, not only a diagnosis." },
+      { title: "Inclusive Environment", description: "Our space is safe, neuro-affirming and welcoming for LGBTQIA+ people." },
+      { title: "Sanctuary for Wellness", description: "You can work towards wellbeing at your own pace." },
+      { title: "Meaningful Connections", description: "We build purposeful relationships so you feel heard and valued." },
+      { title: "Authenticity", description: "We bring genuine care to the counselling process." }
     ],
     closing: "Your wellbeing matters. We are here to support you."
   },

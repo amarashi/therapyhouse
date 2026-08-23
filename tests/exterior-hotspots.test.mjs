@@ -40,3 +40,22 @@ assert.match(turntableScript, /function renderExteriorHotspots/);
 assert.match(turntableScript, /function updateExteriorHotspots/);
 assert.match(appScript, /exteriorHotspots/);
 assert.match(appScript, /onExteriorHotspot/);
+
+/*
+ * The exterior doors are painted onto the turntable, at `z-index: 3` with hit
+ * areas of their own. Nothing about opening a room moves them: unless the
+ * stylesheet takes the layer out, six invisible rectangles keep sitting over
+ * the room artwork, lighting up a label for a room the visitor is already
+ * standing in and answering the Tab key from behind the scene. `display: none`
+ * rather than `pointer-events: none`, because the tab order has to go too.
+ */
+const insideHiddenRule = styles.match(/\.stage\.is-inside[^{]*\{\s*display:\s*none;/);
+assert.ok(insideHiddenRule, "expected a rule hiding the exterior chrome once a room is open");
+assert.match(insideHiddenRule[0], /\.stage\.is-inside \.exterior-hotspot-layer/);
+assert.match(insideHiddenRule[0], /\.stage\.is-inside \.door-hotspot/);
+
+/* Same during the entrance video: the doors are mid-transition scenery, not
+   something to click through. */
+const playingInertRule = styles.match(/\.stage\.is-playing[^{]*\{\s*opacity:\s*0;\s*pointer-events:\s*none;/);
+assert.ok(playingInertRule, "expected a rule making the exterior chrome inert while the door video plays");
+assert.match(playingInertRule[0], /\.stage\.is-playing \.exterior-hotspot-layer/);

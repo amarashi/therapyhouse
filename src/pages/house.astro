@@ -27,7 +27,7 @@ const assetBase = `${basePrefix}/`;
   <link rel="icon" type="image/png" href={withBase("/assets/media/logo3d.png")}>
   <script is:inline define:vars={{ assetBase }}>window.__ASSET_BASE__ = assetBase;</script>
   <title>Therapy House | Psychology and Counselling in The Gap, Brisbane</title>
-  <link rel="stylesheet" href={withBase("/assets/styles/main.css?v=20260529-eye-scale")}>
+  <link rel="stylesheet" href={withBase("/assets/styles/main.css?v=20260823-room-doors")}>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -55,6 +55,17 @@ const assetBase = `${basePrefix}/`;
 </head>
 <body>
   <a class="skip-link" href="#siteOverview">Skip to Therapy House information</a>
+  {/* The house is a full screen with none of the site's chrome on it, and the
+      rooms are now reachable straight from the reading pages — so there has to
+      be a plain way back to the one you left. `app.js` points this at the
+      `?from` path when there is one, and at the front page when there is not. */}
+  <a class="house-exit" id="houseExit" href={withBase("/")}>
+    <svg class="house-exit__mark" width="15" height="14" viewBox="0 0 15 14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M13.75 7H2.4"></path>
+      <path d="M6.6 2.1 1.7 7l4.9 4.9"></path>
+    </svg>
+    <span>Back to the website</span>
+  </a>
   <aside class="orientation-lock" aria-live="polite">
     <div class="orientation-lock__content">
       <div class="orientation-lock__logo-frame" aria-hidden="true">
@@ -273,7 +284,7 @@ const assetBase = `${basePrefix}/`;
       </section>
     </div>
   </section>
-  <script type="module" src={withBase("/assets/scripts/app.js?v=20260529-eye-scale")}></script>
+  <script type="module" src={withBase("/assets/scripts/app.js?v=20260823-room-doors")}></script>
 </body>
 </html>
 

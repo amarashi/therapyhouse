@@ -62,6 +62,21 @@ interface Props {
    * out to need the answer above everything else.
    */
   still?: boolean;
+  /**
+   * The room in the interactive house this artwork is a picture of — the id
+   * `content-data.js` knows it by (`services`, `team`, `philosophy`, and
+   * `exterior` for the house itself). Given one, the picture becomes the door
+   * into it: the whole artwork is a link, and a small plate rests on it saying
+   * so. Left out, the hero is a picture and nothing else.
+   */
+  room?: string;
+  /** The phrase that finishes `enterLabel` in the link's accessible name —
+      "the consulting room", "the attic reading room". Leave it out only where
+      the label is already a whole sentence on its own. */
+  roomName?: string;
+  /** The words on the plate. "Step inside" everywhere a room is a room; the
+      homepage opens on the whole building instead. */
+  enterLabel?: string;
 }
 
 const {
@@ -80,10 +95,32 @@ const {
   showCue = false,
   still = false,
   layout = 'stacked',
+  room,
+  roomName,
+  enterLabel = 'Step inside',
 } = Astro.props;
 
 const anchored = layout === 'anchored';
 const stacked = !anchored;
+
+/*
+ * Where the door goes. The house is the legacy full-screen experience at
+ * `/house/`, and it opens on the exterior turntable unless a room is named —
+ * so the homepage, whose artwork *is* the exterior, asks for no room at all.
+ *
+ * `from` is the page the visitor is standing on, which the house reads back
+ * off the query string to point its own way out at. Without it a parent who
+ * got curious halfway down the fees page comes back to the front door instead
+ * of to the fees.
+ */
+const roomHref = room
+  ? withBase(
+      room === 'exterior'
+        ? `/house/?from=${encodeURIComponent(Astro.url.pathname)}`
+        : `/house/?room=${encodeURIComponent(room)}&from=${encodeURIComponent(Astro.url.pathname)}`
+    )
+  : undefined;
+const enterAria = roomName ? `${enterLabel} ${roomName}` : enterLabel;
 
 /**
  * Tells the browser the box the artwork actually paints into, so a phone never
@@ -133,6 +170,7 @@ const sizes = imageSmall
     anchored && 'hero--anchored',
     stacked && 'hero--stacked',
     still && 'hero--still',
+    roomHref && 'hero--has-door',
   ]}
   data-hero={still ? undefined : true}
 >
@@ -152,6 +190,13 @@ const sizes = imageSmall
       autoplay — is left with exactly the frame the loop opens on.
     */}
     <div class="hero__art">
+      {/*
+        The picture and nothing else — everything that recedes with the room
+        lives in here, and the plate that names the door does not, because a
+        label scaled to a third of itself is no longer a label. See the
+        transition block in the stylesheet.
+      */}
+      <div class="hero__scene">
       <img
         src={withBase(image)}
         srcset={srcset}
@@ -194,6 +239,28 @@ const sizes = imageSmall
             </svg>
           </button>
         </>
+      )}
+
+      {/* The room itself, clickable. It carries no accessible name and no tab
+          stop: the plate below is the one control, and a second link saying the
+          same thing would only be read out twice. This is the hit area, laid
+          over the artwork and moving with it, so the whole picture behaves the
+          way a picture of a door ought to. */}
+      {roomHref && <a class="hero__doorway" href={roomHref} tabindex="-1" aria-hidden="true"></a>}
+      </div>
+
+      {/* And the plate that says so. Quiet at rest — this is an invitation,
+          not the answer anyone came for — and it warms, lifts and underlines
+          when reached for, which is what everything in this house does. */}
+      {roomHref && (
+        <a class="hero__door" href={roomHref} aria-label={enterAria}>
+          <svg class="hero__door-mark" width="15" height="17" viewBox="0 0 15 17" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M2.4 15.6V6.55a5.1 5.1 0 0 1 10.2 0v9.05"></path>
+            <path d="M.9 15.6h13.2"></path>
+            <circle cx="10.15" cy="9.6" r=".95" fill="currentColor" stroke="none"></circle>
+          </svg>
+          <span class="hero__door-label">{enterLabel}</span>
+        </a>
       )}
     </div>
 
@@ -384,6 +451,11 @@ const sizes = imageSmall
      offset from the top while the artwork centred itself in the viewport, so
      the two never related to each other at any window size. */
   .hero__stage {
+    /* Positioned in its own right, not only when it is pinned: on the room
+       pages the door plate is measured off the frame rather than off the
+       artwork (see `.hero__door`), and that has to hold under reduced motion
+       too, where nothing here is sticky. */
+    position: relative;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
@@ -507,16 +579,156 @@ const sizes = imageSmall
        whatever ground it happens to be on and leaves the illustration alone —
        the page tints it by about a percent, which is the point. Applied to the
        group rather than to each layer, so the still and the loop still
-       cross-fade normally instead of multiplying with each other mid-fade. */
+       cross-fade normally instead of multiplying with each other mid-fade.
+
+       Two multiplies now, not one, and both are load-bearing. This one carries
+       the picture down onto the page's own ground; the one on `.hero__scene`
+       carries it down onto the lamplight that comes up under it when the door
+       is reached for. `z-index` here already makes this a stacking context, so
+       a single blend on the inner group would have seen the glow and stopped
+       there, and the white field would have come back as a rectangle. */
     mix-blend-mode: multiply;
+  }
+
+  /* Everything that travels with the room. The plate that names the door is
+     deliberately not in here — see the transition block. */
+  .hero__scene {
+    grid-area: 1 / 1;
+    display: grid;
+    mix-blend-mode: multiply;
+  }
+
+  /* The lamp coming up under the room. It sits behind the artwork inside the
+     blend group, so the picture's white field multiplies down into it and the
+     glow takes the shape of the cut-out rather than of its bounding box — the
+     room ends up standing in a pool of light instead of inside a glowing
+     rectangle. Warm, and never a halo: DESIGN.md's rule is that things get
+     warmer when you reach for them, not heavier. */
+  .hero__art::before {
+    content: '';
+    grid-area: 1 / 1;
+    z-index: 0;
+    margin: -6%;
+    border-radius: 50%;
+    background: radial-gradient(
+      closest-side,
+      rgba(255, 226, 150, 0.62),
+      rgba(255, 238, 190, 0.3) 62%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    opacity: 0;
+    transition: opacity 220ms ease;
+    pointer-events: none;
+  }
+
+  .hero__art:has(.hero__doorway:hover)::before,
+  .hero__art:has(.hero__door:hover)::before,
+  .hero__art:has(.hero__door:focus-visible)::before {
+    opacity: 1;
   }
 
   /* The still, the loop and the pause control share one grid cell, so the loop
      tracks the still's box without absolute positioning. */
-  .hero__art > img,
+  .hero__scene > img,
   .hero__loop,
+  .hero__doorway,
   .hero__loop-toggle {
     grid-area: 1 / 1;
+  }
+
+  /* ---- The door ----
+
+     The whole picture is the hit area, and it is stretched over the artwork
+     rather than wrapped around it so the `alt` text stays a description of a
+     room instead of becoming the name of a link. */
+  .hero__doorway {
+    z-index: 1;
+    cursor: pointer;
+  }
+
+  /* The plate. Small, cream, lit along its top edge — the same object the
+     house uses for a hotspot label, standing on the artwork rather than
+     floating over it. Muted ink at rest and full contrast either way: this
+     goes quiet by being small and low-chroma, never by being faint. */
+  .hero__door {
+    grid-area: 1 / 1;
+    z-index: 3;
+    justify-self: start;
+    align-self: end;
+    margin: clamp(10px, 1.6vw, 20px);
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 40px;
+    padding: 0 16px 0 13px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    background: var(--paper-white);
+    box-shadow: 0 10px 24px rgba(45, 25, 9, 0.15), var(--edge-lit);
+    color: var(--ink-soft);
+    font-family: var(--font-body);
+    font-size: var(--text-label);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+  }
+
+  .hero__door-mark {
+    flex: none;
+    /* The doorway sits a shade low against uppercase letterforms, which have
+       no descenders to balance it. */
+    margin-bottom: -1px;
+    color: var(--heading);
+    transition: color 200ms ease;
+  }
+
+  .hero__door-label {
+    text-decoration: underline 2px transparent;
+    text-underline-offset: 4px;
+    transition: text-decoration-color 200ms ease;
+  }
+
+  .hero__art:has(.hero__doorway:hover) .hero__door,
+  .hero__door:hover,
+  .hero__door:focus-visible {
+    color: var(--heading);
+    box-shadow: 0 12px 26px rgba(45, 25, 9, 0.18), 0 0 28px rgba(255, 234, 172, 0.4),
+      var(--edge-lit);
+    transform: translateY(-2px);
+  }
+
+  .hero__art:has(.hero__doorway:hover) .hero__door-label,
+  .hero__door:hover .hero__door-label,
+  .hero__door:focus-visible .hero__door-label {
+    text-decoration-color: currentColor;
+  }
+
+  .hero__door:focus-visible {
+    outline: 3px solid var(--focus-blue);
+    outline-offset: 2px;
+  }
+
+  /* Above 64rem the room pages open *inside* the room: the artwork is wider
+     and taller than the frame can hold, and its bottom edge is some hundreds
+     of pixels below the fold. A plate hung off that edge is a plate nobody
+     ever sees at rest — which is the one moment it exists for.
+
+     So on those pages it is measured off the frame instead: the page's own
+     left edge, the same one the title and every heading below it hold, and the
+     floor of the stage. It still reads as standing in the room, because at
+     this size the room is the whole frame. */
+  @media (min-width: 64rem) {
+    .hero--stacked .hero__door {
+      position: absolute;
+      z-index: 4;
+      left: calc(var(--page-inset) + clamp(10px, 1.6vw, 20px));
+      bottom: clamp(var(--space-xl), 5vh, 48px);
+      margin: 0;
+    }
   }
 
   .hero__art img,
@@ -689,6 +901,12 @@ const sizes = imageSmall
     .hero--anchored .hero__loop-toggle {
       justify-self: start;
     }
+
+    /* Which is the corner the plate stands in. They stack rather than collide:
+       the door on the ground, the control above it. */
+    .hero--anchored.hero--has-door .hero__loop-toggle {
+      margin-bottom: 62px;
+    }
   }
 
   /* ---- The loop and its control ---- */
@@ -712,7 +930,9 @@ const sizes = imageSmall
     justify-self: end;
     align-self: end;
     margin: 10px;
-    z-index: 1;
+    /* Above the door's hit area, which covers the whole picture — otherwise
+       the only control that can stop the moving artwork is unreachable. */
+    z-index: 2;
     display: grid;
     place-items: center;
     /* The control that stops the only thing moving on the page, at the size
@@ -791,6 +1011,23 @@ const sizes = imageSmall
     .hero__loop,
     .hero__loop-toggle {
       display: none;
+    }
+
+    /* The door still answers — it warms and it underlines — it just stops
+       moving to do it. The clinic serves neurodivergent families, and a plate
+       that hops under the pointer is exactly the sort of small unasked-for
+       movement this setting is turning off. */
+    .hero__art::before,
+    .hero__door,
+    .hero__door-mark,
+    .hero__door-label {
+      transition: none;
+    }
+
+    .hero__art:has(.hero__doorway:hover) .hero__door,
+    .hero__door:hover,
+    .hero__door:focus-visible {
+      transform: none;
     }
   }
 
@@ -875,14 +1112,30 @@ const sizes = imageSmall
          was still shrinking while the title was already leaving, so the
          composition this movement exists for — small room, clear air, title
          under it — was never a frame anyone saw, only a moment the scroll
-         passed through. */
+         passed through.
+
+         Declared here rather than on the group that moves, because the layout
+         script reads both this and `--art-zoom` off `.hero__art` when it works
+         out how far the room has to lift. They inherit down to the scene from
+         here, so there is still one place either number is written. */
       --art-shrink: 0.68;
+    }
+
+    /* The picture travels; its box does not. Everything glued to the artwork —
+       the still, the loop, and the door's hit area — takes the same transform,
+       so the region a click lands in stays exactly the region the room is
+       painted in, all the way back. */
+    .hero:not(.hero--still) .hero__scene,
+    .hero:not(.hero--still) .hero__doorway {
       transform: translateX(calc(var(--cp) * var(--art-dx, 0px)))
         translateY(
           calc(var(--cp) * var(--art-rise, -30vh) - var(--exit, 0px))
         )
         scale(calc(var(--art-zoom, 1) - var(--cp) * var(--art-shrink, 0.6)));
       transform-origin: center center;
+    }
+
+    .hero:not(.hero--still) .hero__scene {
       /* Aerial perspective, and the reason the title can cross the room rather
          than having to dodge it: distance takes contrast out of a thing before
          it takes size. A room that only shrank would keep reading as the same
@@ -891,6 +1144,37 @@ const sizes = imageSmall
          fade, enough to put air between the two. */
       opacity: calc(1 - var(--cp) * 0.22);
       will-change: transform, opacity;
+    }
+
+    /* And the plate stays the size it was written to be read at. Riding the
+       recession would have taken it to a third of itself, and on a phone the
+       room opens zoomed past both edges (`--art-zoom`), which would have put
+       the plate off the screen at rest — the one moment it has to be visible.
+
+       So it holds its corner and goes out early instead, the same way the
+       scroll cue does: it is an invitation for the first screen, and by the
+       time the room is receding the visitor has answered it.
+       Except when it is the thing the keyboard is on. Tabbing backwards into
+       the hero from further down the page lands here, and a focus ring on an
+       element faded to nothing is not a focus ring — so focus takes the plate
+       back to full strength wherever the scroll has got to. */
+    .hero:not(.hero--still) .hero__door:not(:focus-visible) {
+      opacity: clamp(0, calc((0.2 - var(--p, 0)) / 0.2), 1);
+    }
+
+    /* And it climbs as it goes, by exactly the depth the content rises over
+       the runway (`--hero-overlap`). Nobody sees that — it is transparent by
+       then — but it is what keeps a focus ring from arriving underneath the
+       page: the plate's own box would otherwise still be sitting in the strip
+       the content has climbed over, and the pinned stage is a stacking context
+       that nothing inside it can escape. Above the overlap it is in clear air,
+       so tabbing backwards into the hero lands on a ring you can see. */
+    @media (min-width: 64rem) {
+      .hero--stacked:not(.hero--still) .hero__door {
+        bottom: calc(
+          clamp(var(--space-xl), 5vh, 48px) + var(--cp) * var(--hero-overlap, 0px)
+        );
+      }
     }
 
     /* And the title comes forward: it travels from the page's left edge to the

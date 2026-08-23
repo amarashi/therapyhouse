@@ -62,6 +62,7 @@ const contentModalBody = document.getElementById("contentModalBody");
 const contactModal = document.getElementById("contactModal");
 const contactModalClose = document.getElementById("contactModalClose");
 const cursorSparkleLayer = document.getElementById("cursorSparkleLayer");
+const houseExit = document.getElementById("houseExit");
 const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 
 const firelightController = createFirelightController({
@@ -558,6 +559,36 @@ function bindKeyboardShortcuts() {
   });
 }
 
+/*
+ * The reading pages each open on a picture of one of these rooms, and that
+ * picture is a door: `?room=services` walks a visitor straight into the
+ * consulting room rather than making them find it from the exterior. Only ids
+ * that exist are honoured — anything else, and the visit starts where it
+ * always did, on the turntable.
+ */
+function readRequestedRoom() {
+  const requested = new URLSearchParams(window.location.search).get("room");
+  if (!requested || requested === "exterior") return "";
+
+  return roomSceneDefaults.rooms[requested] ? requested : "";
+}
+
+/*
+ * And the way back out. A visitor who walked in from a page was reading
+ * something before they got curious, and the house is a full screen with no
+ * chrome — so the page they came from travels with them in `?from` and the
+ * exit points at it. Same-origin paths only: `/…` but never `//host`, which
+ * the browser would read as another site.
+ */
+function bindHouseExit() {
+  if (!houseExit) return;
+
+  const from = new URLSearchParams(window.location.search).get("from");
+  if (from && /^\/(?!\/)/.test(from)) {
+    houseExit.href = from;
+  }
+}
+
 function init() {
   turntable.init();
   firelightController.init();
@@ -586,8 +617,13 @@ function init() {
 
   updateAppViewportHeight();
   turntable.resizeCanvas();
+  bindHouseExit();
+
+  const requestedRoom = readRequestedRoom();
   if (debugMode) {
     entranceVideo.enterInsideView();
+  } else if (requestedRoom) {
+    entranceVideo.enterInsideView(requestedRoom);
   }
   turntable.stageFrameLoads();
 }

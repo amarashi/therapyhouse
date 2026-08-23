@@ -97,6 +97,99 @@
       outline-offset: 2px;
     }
 
+    /* The way back out of the house.
+     *
+     * Every reading page now opens on a picture of one of these rooms and that
+     * picture is a door, so a visitor arrives here mid-read rather than from
+     * the front page. The exit is the hotspot label's own material — cream
+     * pill, warm shadow, lit top edge — held at the top-left corner where
+     * nothing in any room is drawn, and it warms rather than darkens when you
+     * reach for it, like everything else in this house. */
+    .house-exit {
+      position: fixed;
+      left: max(14px, env(safe-area-inset-left));
+      top: max(14px, env(safe-area-inset-top));
+      z-index: 30;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 40px;
+      padding: 0 15px 0 13px;
+      border: 1px solid rgba(92, 61, 22, 0.22);
+      border-radius: 999px;
+      background: rgba(255, 250, 235, 0.9);
+      box-shadow:
+        0 10px 24px rgba(45, 25, 9, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(6px) saturate(1.08);
+      -webkit-backdrop-filter: blur(6px) saturate(1.08);
+      color: rgba(52, 34, 16, 0.96);
+      font: 800 12px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      text-decoration: none;
+      opacity: 0.78;
+      transition: opacity 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+    }
+
+    .house-exit__mark {
+      flex: none;
+      transition: transform 160ms ease;
+    }
+
+    .house-exit:hover,
+    .house-exit:focus-visible {
+      opacity: 1;
+      box-shadow:
+        0 12px 26px rgba(45, 25, 9, 0.18),
+        0 0 28px rgba(255, 234, 172, 0.26),
+        inset 0 1px 0 rgba(255, 255, 255, 0.78);
+    }
+
+    .house-exit:hover .house-exit__mark,
+    .house-exit:focus-visible .house-exit__mark {
+      transform: translateX(-2px);
+    }
+
+    .house-exit:focus-visible {
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .house-exit,
+      .house-exit__mark {
+        transition: none;
+      }
+
+      .house-exit:hover .house-exit__mark,
+      .house-exit:focus-visible .house-exit__mark {
+        transform: none;
+      }
+    }
+
+    /* On a phone the label alone would take a third of the width of the room
+       it is standing in front of. The mark carries it, and the words stay for
+       anyone reading the page rather than looking at it. */
+    @media (max-width: 34rem) {
+      .house-exit {
+        min-height: 36px;
+        padding: 0;
+        width: 36px;
+        justify-content: center;
+      }
+
+      .house-exit span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+      }
+    }
+
     body.debug-mode {
       overflow-y: auto;
     }
@@ -384,7 +477,8 @@
     }
 
     .stage.is-playing canvas,
-    .stage.is-playing .door-hotspot {
+    .stage.is-playing .door-hotspot,
+    .stage.is-playing .exterior-hotspot-layer {
       opacity: 0;
       pointer-events: none;
     }
@@ -1696,8 +1790,14 @@
       transform: translate3d(-50%, -50%, 0) rotate(calc(var(--sparkle-rotate, 0deg) + 90deg));
     }
 
+    /* The exterior doors belong to the exterior. Left standing while a room is
+       open they keep their hit areas over the artwork — invisible rectangles that
+       swallow the pointer, light a label for a room you are already standing in,
+       and answer the Tab key from behind the scene. `display: none` is what takes
+       them out of the tab order too. */
     .stage.is-inside canvas,
     .stage.is-inside .door-hotspot,
+    .stage.is-inside .exterior-hotspot-layer,
     .stage.is-inside .transition-video {
       display: none;
     }

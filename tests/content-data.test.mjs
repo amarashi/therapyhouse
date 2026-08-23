@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 
 const { roomIds, roomNavigation, siteContent } = await import("../public/assets/scripts/content-data.js");
 
-const expectedRoomIds = ["exterior", "welcome", "team", "services", "assessments", "groups", "library", "contact", "work-with-us"];
+const expectedRoomIds = ["exterior", "welcome", "team", "services", "assessments", "groups", "library", "philosophy", "contact", "work-with-us"];
 
 assert.equal(siteContent.source.name, "Therapy House current WordPress site");
 assert.equal(siteContent.source.scrape.urlCount, 55);
