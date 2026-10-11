@@ -180,7 +180,10 @@ const sizes = imageSmall
   <div class="hero__stage">
     <div class="hero__copy">
       <h1>
-        {title}{titleSub && <span class="hero__sub">{titleSub}</span>}{titleAccent && <><br /><br /><span class="hero__accent">{titleAccent}</span></>}
+        {/* The space is for everything that reads the text rather than the
+            layout: without it a screen reader, a search snippet and the
+            heading's own text content all got "Therapy HousePsychologists". */}
+        {title}{titleSub && <>{' '}<span class="hero__sub">{titleSub}</span></>}{titleAccent && <><br /><br /><span class="hero__accent">{titleAccent}</span></>}
       </h1>
       {lede && <p class="lede">{lede}</p>}
     </div>
@@ -741,15 +744,17 @@ const sizes = imageSmall
     border: 1px solid var(--line);
     border-radius: var(--radius-pill);
     background: var(--paper-white);
+    /* Full strength at rest. It used to sit at 55% opacity, which put the
+       icon well under the 3:1 a control needs to be seen — on the one control
+       that stops the moving picture for someone who needs it stopped. Small
+       and white is quiet enough. */
     color: var(--ink-soft);
-    opacity: 0.55;
     cursor: pointer;
-    transition: opacity 200ms ease, color 200ms ease;
+    transition: color 200ms ease;
   }
 
   .hero__loop-toggle:hover,
   .hero__loop-toggle:focus-visible {
-    opacity: 1;
     color: var(--heading);
   }
 
@@ -866,6 +871,14 @@ const sizes = imageSmall
 
     .hero[data-hero]:not(.hero--settled) .hero__cue {
       display: flex;
+    }
+
+    /* Not on a phone: the action bar holds the bottom of the screen there, and
+       the cue sat underneath it, unseen. A thumb scrolls by habit. */
+    @media (max-width: 44rem) {
+      .hero[data-hero]:not(.hero--settled) .hero__cue {
+        display: none;
+      }
     }
 
     @media (max-width: 63.999rem) {

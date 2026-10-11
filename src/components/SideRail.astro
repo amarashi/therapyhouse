@@ -200,7 +200,8 @@ const floor = here === -1 ? 0 : here;
      downward, so every destination is still present, still in the tab order,
      and still reachable with no script. The last item is cut by the viewport
      rather than by a rule, which is the affordance — there is visibly more
-     along that way.
+     along that way. A soft fade over the last few pixels makes the cut read as
+     "more this way" rather than as a word chopped in half.
 
      A disclosure would have cost less height again and it is the obvious
      pattern, but it is the wrong one here: this rail is the only navigation on
@@ -221,6 +222,8 @@ const floor = here === -1 ? 0 : here;
          permanent one would draw a grey rule under the menu, which is the one
          cool line on a warm page. The cut-off floor is the affordance. */
       scrollbar-width: none;
+      -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+      mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
     }
 
     .rail ul::-webkit-scrollbar {
@@ -243,8 +246,8 @@ const floor = here === -1 ? 0 : here;
   /* Below the action bar's breakpoint the number is a 48px pill in the thumb
      zone on every page (ActionBar.astro), so carrying it here as well spends a
      floor of a scrolling row to repeat what is already on screen. Between 44
-     and 52rem there is no bar, and this stays the only place it is reachable —
-     the masthead drops it at 44rem. */
+     and 52rem it stays: the bar there is the floating pair, which only appears
+     once the masthead has scrolled away. */
   @media (max-width: 44rem) {
     .rail__phone {
       display: none;
