@@ -1,6 +1,6 @@
 ---
 import { withBase } from '../lib/base.js';
-import { existsSync } from 'node:fs';
+import { teamPortrait } from '../lib/team-portraits.js';
 
 /**
  * A team portrait that opens as the illustrated version and dissolves to the
@@ -40,33 +40,38 @@ interface Props {
 const { image, alt = '', size, sizes, loading = 'lazy', fetchpriority } = Astro.props;
 
 /**
- * Two steps, written by `tools/portraits.mjs`: `-280` for the thumbnails and
- * the bare filename at 560 for the profile page and 2x screens. Nothing on the
- * site paints a portrait wider than 288 CSS px, so the ladder stops there.
+ * Two steps: `-280` for the thumbnails and the bare filename at 560 for the
+ * profile page and 2x screens. Nothing on the site paints a portrait wider
+ * than 288 CSS px, so the ladder stops there.
  *
  * Without this the team page shipped 1.1 MB of portraits — twelve 560px
  * photographs and twelve 560px illustrations — into a grid of 130px squares.
+ *
+ * Each file is hand-made (`tools/portraits.mjs`) or, for a photo uploaded
+ * through the CMS, made by the build — see src/lib/team-portraits.js.
  */
-const step = (file: string) =>
-  `${withBase(file.replace(/\.webp$/, '-280.webp'))} 280w, ${withBase(file)} 560w`;
+const portrait = teamPortrait(image);
+const photo = portrait.photo ?? image;
+const step = (small: string | null, large: string) =>
+  `${withBase(small ?? large)} 280w, ${withBase(large)} 560w`;
 const box = sizes ?? `${size}px`;
 
 /**
- * The illustrated twin sits beside the photograph under the same name.
- * `tools/portraits.mjs` writes these from the masters in `art-src/team-pix/`.
+ * The illustrated twin sits beside the photograph under the same name, drawn
+ * from the masters in `art-src/team-pix/`. For a CMS upload with no drawing
+ * yet, the build stands the photograph in for it.
  *
- * Absent — a new starter photographed before they were drawn — and the
- * photograph simply renders alone. Nothing else on the card changes.
+ * Absent altogether and the photograph simply renders alone. Nothing else on
+ * the card changes.
  */
-const pix = image.replace(/\.(webp|png|jpe?g)$/, '-pix.webp');
-const hasPix = existsSync(`public${pix}`);
+const pix = portrait.pix;
 ---
 
 <span class="portrait">
   <img
     class="portrait__photo"
-    src={withBase(image)}
-    srcset={step(image)}
+    src={withBase(photo)}
+    srcset={step(portrait.photo280, photo)}
     sizes={box}
     alt={alt}
     width={size}
@@ -75,14 +80,14 @@ const hasPix = existsSync(`public${pix}`);
     fetchpriority={fetchpriority}
     decoding="async"
   />
-  {hasPix && (
+  {pix && (
     /* Decorative: it is the same person as the photograph underneath, and the
        link already carries their name. Not lazier than the photograph either —
        this is the layer that is actually on screen. */
     <img
       class="portrait__pix"
       src={withBase(pix)}
-      srcset={step(pix)}
+      srcset={step(portrait.pix280, pix)}
       sizes={box}
       alt=""
       aria-hidden="true"
