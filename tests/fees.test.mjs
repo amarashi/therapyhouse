@@ -126,8 +126,13 @@ test("a link is offered only to a page that is built", () => {
 
   const built = builtPaths(
     ["/src/pages/fees.astro", "/src/pages/therapy/[slug].astro"],
-    [{ id: "couples", data: { kind: "therapy" } }, { id: "adult-adhd", data: { kind: "assessment" } }]
+    [
+      { id: "couples", data: { kind: "therapy" } },
+      { id: "adult-adhd", data: { kind: "assessment" } },
+      { id: "adults", data: { kind: "hub" } },
+    ]
   );
+  assert.ok(built.has("/adults/"));
   assert.ok(built.has("/fees/"));
   assert.ok(built.has("/therapy/couples/"));
   assert.ok(built.has("/assessments/adult-adhd/"));

@@ -39,7 +39,7 @@ export function builtPaths(pageFiles, serviceEntries = []) {
     if (path) paths.add(path);
   }
   for (const entry of serviceEntries) {
-    if (entry.data.kind === 'hub') continue;
+    // Therapy, assessment and audience hub (/adults/, /children/) pages.
     paths.add(servicePath(entry.data.kind, entry.id));
   }
   return paths;
