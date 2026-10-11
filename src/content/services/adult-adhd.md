@@ -30,7 +30,7 @@ feeStatus: quote
 medicare:
   - Medicare does not usually pay towards an ADHD assessment for adults. Ask reception what applies to you before anything is booked.
   - Medicare rebates for psychology sessions with a GP's Mental Health Treatment Plan are a separate matter. Our fees page explains them.
-related: [child-adhd]
+related: [adult-autism, child-adhd]
 sourceUrl: https://www.therapyhouse.com.au/assessments/
 draft: true
 ---
@@ -102,6 +102,14 @@ funding, a psychiatrist will usually need to confirm it.
 
 If a psychiatrist has already referred you, tell us when you call. We can ask
 them whether they need the assessment done in a particular way.
+
+## ADHD and autism
+
+ADHD and autism can occur together, and some signs overlap, such as finding it
+hard to cope with change or to stay organised. If you are also wondering about
+autism, see our [adult autism assessment](/assessments/adult-autism/). The
+clinician will talk with you at intake about which assessment fits your
+question.
 
 ## By video or in the room
 
