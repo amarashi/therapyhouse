@@ -28,7 +28,8 @@ const isPreview = (Astro.site?.hostname ?? '').endsWith('github.io');
   <meta property="og:description" content="Warm, inclusive psychology and counselling support for children, adults, couples and families in Brisbane.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="https://www.therapyhouse.com.au/assets/media/logo3d.png">
-  <link rel="icon" type="image/png" href={withBase("/assets/media/logo3d.png")}>
+  <link rel="icon" type="image/png" href={withBase("/assets/media/favicon-64.png")} sizes="64x64">
+  <link rel="icon" href={withBase("/favicon.ico")} sizes="16x16 32x32 48x48">
   <script is:inline define:vars={{ assetBase }}>window.__ASSET_BASE__ = assetBase;</script>
   <title>Therapy House | Psychology and Counselling in The Gap, Brisbane</title>
   <link rel="stylesheet" href={withBase("/assets/styles/main.css?v=20260823-room-doors")}>

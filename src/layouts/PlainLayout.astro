@@ -104,6 +104,10 @@ const businessSchema = {
         about 200px. That is a brand question rather than a build one, and it is
         left for the clinic to answer.) */}
     <link rel="icon" type="image/png" href={withBase("/assets/media/favicon-64.png")} sizes="64x64" />
+    {/* Browsers and some crawlers ask for `/favicon.ico` whatever the page
+        links, and a missing one is a 404 in every log. The file carries 16, 32
+        and 48px cuts of the same mark (generated from `logo3d.png`). */}
+    <link rel="icon" href={withBase("/favicon.ico")} sizes="16x16 32x32 48x48" />
     <script type="application/ld+json" set:html={JSON.stringify(businessSchema)} />
     <script is:inline>
       /*
