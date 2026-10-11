@@ -386,7 +386,22 @@ const assessmentPages = [
       "Adult autism assessment in The Gap, Brisbane: the steps, who assesses you, what to bring, report timing, cost and what Medicare covers.",
     phrase: "autism assessment",
   },
+  {
+    file: "learning",
+    title: "Dyslexia & Learning Assessment Brisbane | The Gap",
+    h1: "Learning assessments: dyslexia, dysgraphia and dyscalculia",
+    description:
+      "Psycho-educational assessment in The Gap, Brisbane for dyslexia, dysgraphia and dyscalculia: what it shows, the process and cost from $2,400.",
+    phrase: "dyslexia",
+  },
 ];
+
+test("the learning page has an anchored section for each learning disorder", async () => {
+  const text = await readService("learning");
+  for (const heading of ["Dyslexia", "Dysgraphia", "Dyscalculia"]) {
+    assert.match(text, new RegExp(`^#+ ${heading}$`, "m"), `missing the ${heading} section`);
+  }
+});
 
 test("adult assessment pages publish no fee until the clinic gives one", async () => {
   for (const file of ["adult-adhd", "adult-autism"]) {
