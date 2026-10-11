@@ -249,6 +249,13 @@ const services = defineCollection({
      * on the preview with a marker, and a production build refuses to run.
      */
     feeStatus: z.enum(['published', 'quote', 'needs-confirmation']).default('quote'),
+    /**
+     * Charged at the clinic's ordinary session fees, which /fees/ publishes.
+     * The page then points there instead of repeating the table (a second
+     * copy of a price is a second place for it to go stale) or telling a
+     * visitor to call for a quote on a price that is already public.
+     */
+    sessionFees: z.boolean().default(false),
     medicare: z.array(z.string()).optional(),
     /** Only questions the clinic has actually answered. */
     faqs: z.array(z.object({ question: z.string(), answer: z.string() })).optional(),
@@ -257,6 +264,9 @@ const services = defineCollection({
     lastReviewed: z.coerce.date().optional(),
     /** Current Site paths that should forward here (feeds the redirect map). */
     redirectFrom: z.array(z.string()).default([]),
+    /** Shows the Lifeline and 000 note under the opening: pages about
+        depression, trauma or self-harm. */
+    crisisNote: z.boolean().default(false),
     /** Visible on the preview for review, never built for production. */
     draft: z.boolean().default(false),
   }),
