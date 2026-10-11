@@ -2,7 +2,8 @@
 import { withBase, stripBase } from '../lib/base.js';
 import '../styles/global.css';
 import { site, contact, callsToAction, footerNav, staffLink } from '../data/site.js';
-import { businessId } from '../lib/services.js';
+import { getCollection } from 'astro:content';
+import { businessId, includeInBuild, isProductionSite, serviceLinks } from '../lib/services.js';
 import CallToAction from '../components/CallToAction.astro';
 import ActionBar from '../components/ActionBar.astro';
 import Masthead from '../components/Masthead.astro';
@@ -25,6 +26,15 @@ interface Props {
 }
 
 const { title, description, showClosing = true, documentTitle } = Astro.props;
+
+/* Every service page, for the footer map. Read from the collection rather
+   than listed in site.js, so a new page in src/content/services/ is linked
+   from every page of the site without anyone remembering to add it. */
+const footerServices = serviceLinks(
+  await getCollection('services', (entry) =>
+    entry.data.kind !== 'hub' && includeInBuild(entry.data, isProductionSite(Astro.site))
+  )
+);
 
 /* A page that opens on a hero lets the masthead sit over it; a page without one
    gives the masthead its own band at the top. */
@@ -196,6 +206,21 @@ const businessSchema = {
               </li>
             ))}
           </ul>
+          {footerServices.length > 0 && (
+            <>
+              <p class="site-footer__navhead">Therapy and assessments</p>
+              <ul class="site-footer__services">
+                {footerServices.map((item) => (
+                  <li>
+                    <a
+                      href={withBase(item.href)}
+                      aria-current={stripBase(Astro.url.pathname) === item.href ? 'page' : undefined}
+                    >{item.label}</a>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
           {/* Not a page of the site — a separate, logged-in handbook for the
               therapists and admin. It sits under the map rather than in it,
               labelled with who it is for, so staff can reach it from any page
@@ -337,6 +362,13 @@ const businessSchema = {
         text-transform: uppercase;
         color: var(--ink-faint);
         margin-bottom: var(--space-xs);
+      }
+
+      /* The second list — every therapy and assessment page — opens on its own
+         heading with a small step above it, so it reads as a second map
+         rather than as more pages in the first. */
+      .site-footer__nav ul + .site-footer__navhead {
+        margin-top: var(--space-md);
       }
 
       /* The page you are on is named, not linked away from — and it keeps the

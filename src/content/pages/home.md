@@ -7,15 +7,15 @@ headlineAccent: and anyone who has once been a child.
 # Each route carries the room it leads to: the illustration here is the same
 # room that heads the page you land on, so clicking a room walks you into it.
 # `note` restates a figure already published on the destination page — never a
-# new number. Therapy: fees table on /services/. Assessments: package prices on
+# new number. Therapy: fees table on /therapy/. Assessments: package prices on
 # /assessments/. Groups have no published price, so the note carries the ages
 # the programs are actually built for instead.
 routes:
   - title: Therapy
     description: For children, teenagers, adults, couples and families — anxiety, low mood, school avoidance, trauma, relationships.
     note: Sessions $260–$320
-    href: /services/
-    linkText: Services and fees
+    href: /therapy/
+    linkText: Therapy and fees
     image: /assets/rooms/consulting-room-out-360.webp
   - title: Assessments
     description: ADHD, Autism, cognitive and psycho-educational assessment, with a clear process and itemised pricing.

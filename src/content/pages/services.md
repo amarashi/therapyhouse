@@ -1,6 +1,7 @@
 ---
-title: Services & Fees
-description: Therapy, assessment and family support at Therapy House in The Gap, Brisbane — what we offer, the models we work with, and what it costs.
+title: Therapy for children, teenagers, adults and couples
+documentTitle: Therapy for Children, Teens & Adults | The Gap, Brisbane
+description: Therapy in The Gap, Brisbane and by video for children, teenagers, adults, couples and families. Session fees, Medicare rebates and how we work.
 lede: We have established Therapy House with the aim of providing high quality evidence based services to our clients.
 sourceUrl: https://www.therapyhouse.com.au/services/
 offerings:

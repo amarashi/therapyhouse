@@ -40,7 +40,7 @@ export const callsToAction = {
  * lands.
  */
 export const nav = [
-  { label: 'Services', href: '/services/', ready: true },
+  { label: 'Therapy', href: '/therapy/', ready: true },
   { label: 'Assessments', href: '/assessments/', ready: true },
   { label: 'Group Therapy', href: '/group-therapy/', ready: true },
   { label: 'Team', href: '/team/', ready: true },

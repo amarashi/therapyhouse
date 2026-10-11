@@ -1,8 +1,20 @@
 ---
 import { withBase } from '../lib/base.js';
-import { getEntry, render } from 'astro:content';
+import { getCollection, getEntry, render } from 'astro:content';
 import PlainLayout from '../layouts/PlainLayout.astro';
 import HeroReveal from '../components/HeroReveal.astro';
+import ServiceList from '../components/ServiceList.astro';
+import { includeInBuild, isProductionSite, serviceLinks } from '../lib/services.js';
+
+/* The assessment pages under /assessments/<page>/, listed here because this
+   page is their hub and the lift has no drop-downs (issue #4). */
+const production = isProductionSite(Astro.site);
+const assessmentLinks = serviceLinks(
+  await getCollection(
+    'services',
+    (entry) => entry.data.kind === 'assessment' && includeInBuild(entry.data, production)
+  )
+);
 
 const page = await getEntry('pages', 'assessments');
 if (!page) throw new Error('Missing content: src/content/pages/assessments.md');
@@ -62,6 +74,13 @@ const groups = [
     <div class="prose--flush prose stack">
       <Content />
     </div>
+
+    {assessmentLinks.length > 0 && (
+      <section aria-labelledby="assessment-types">
+        <h2 id="assessment-types">Assessments we offer</h2>
+        <ServiceList links={assessmentLinks} />
+      </section>
+    )}
 
     {/*
       One question — what your part of this looks like — so the sequence and the

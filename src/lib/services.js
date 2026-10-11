@@ -120,3 +120,51 @@ export function serviceSchema(data, { url, origin }) {
 
   return { '@context': 'https://schema.org', '@graph': graph };
 }
+
+/**
+ * The headings of the /therapy/ hub, in the order a visitor meets them.
+ *
+ * Who the help is for comes first, because that is the question a visitor
+ * arrives with; "How we work" comes last, because it is what a visitor reads
+ * once they have found their own situation. The last entry has no key: it
+ * catches any therapy page that has not been given a `hubGroup`, so a new page
+ * is always linked from the hub even before anyone files it.
+ */
+export const HUB_GROUPS = [
+  { key: 'adults', label: 'For adults' },
+  { key: 'children-families', label: 'For children and families' },
+  { key: 'couples', label: 'For couples' },
+  { key: 'how-we-work', label: 'How we work' },
+  { key: undefined, label: 'More therapy' },
+];
+
+/**
+ * A service entry as the hubs and the footer list it: the heading a visitor
+ * reads on the page itself, one sentence, and its address. Sorted by heading
+ * so the order does not depend on how the file system happens to list files.
+ */
+export function serviceLinks(entries) {
+  return entries
+    .map((entry) => ({
+      id: entry.id,
+      label: entry.data.h1,
+      description: entry.data.description,
+      href: servicePath(entry.data.kind, entry.id),
+      hubGroup: entry.data.hubGroup,
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label, 'en-AU'));
+}
+
+/**
+ * The /therapy/ hub's lists: therapy entries under the heading their
+ * `hubGroup` names, in `HUB_GROUPS` order. A heading with nothing under it is
+ * left out rather than printed over an empty list.
+ */
+export function hubGroups(entries) {
+  const links = serviceLinks(entries.filter((entry) => entry.data.kind === 'therapy'));
+  return HUB_GROUPS.map((group) => ({
+    key: group.key ?? 'more',
+    label: group.label,
+    links: links.filter((link) => link.hubGroup === group.key),
+  })).filter((group) => group.links.length > 0);
+}

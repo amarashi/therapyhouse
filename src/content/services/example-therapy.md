@@ -8,6 +8,7 @@ h1: Example therapy page
 description: A placeholder that proves the service page layout renders. It is not a real service and never ships to the clinic's website.
 lede: This page is a fixture for reviewing the layout. Nothing on it describes a real service.
 kind: therapy
+hubGroup: adults
 audiences: [adult]
 clinicians: [rani-banks]
 formats: [in-room, video]
