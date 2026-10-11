@@ -1,15 +1,44 @@
 ---
-import { withBase } from '../lib/base.js';
-import { getEntry, render } from 'astro:content';
-import PlainLayout from '../layouts/PlainLayout.astro';
-import HeroReveal from '../components/HeroReveal.astro';
+/**
+ * The Therapy floor: the hub every therapy page hangs off.
+ *
+ * It was /services/, and /services/ now forwards here (astro.config.mjs). The
+ * lift has six floors and no drop-downs, so this page is how a visitor — and a
+ * search engine — reaches each therapy page: one plain link per page, under
+ * the heading of who it is for, generated from `src/content/services/` so a
+ * new page is listed the moment its Markdown file exists.
+ *
+ * The fee table stays here until /fees/ is built (its own issue); moving it
+ * first would leave the prices with no page at all.
+ */
+import { withBase } from '../../lib/base.js';
+import { getCollection, getEntry, render } from 'astro:content';
+import PlainLayout from '../../layouts/PlainLayout.astro';
+import HeroReveal from '../../components/HeroReveal.astro';
+import ServiceList from '../../components/ServiceList.astro';
+import { hubGroups, includeInBuild, isProductionSite } from '../../lib/services.js';
+
+const production = isProductionSite(Astro.site);
+const groups = hubGroups(
+  await getCollection('services', (entry) => includeInBuild(entry.data, production))
+);
 
 const page = await getEntry('pages', 'services');
 if (!page) throw new Error('Missing content: src/content/pages/services.md');
 
 const { Content } = await render(page);
-const { title, description, lede, offerings, therapyModels, fees, rebates, reports, lastReviewed } =
-  page.data;
+const {
+  title,
+  documentTitle,
+  description,
+  lede,
+  offerings,
+  therapyModels,
+  fees,
+  rebates,
+  reports,
+  lastReviewed,
+} = page.data;
 
 const reviewedLabel = lastReviewed
   ? new Intl.DateTimeFormat('en-AU', { month: 'long', year: 'numeric' }).format(lastReviewed)
@@ -26,7 +55,7 @@ const feeGroups = [
 ];
 ---
 
-<PlainLayout title={title} description={description}>
+<PlainLayout title={title} documentTitle={documentTitle} description={description}>
   <HeroReveal
     room="services"
     roomName="the consulting room"
@@ -47,6 +76,18 @@ const feeGroups = [
       <Content />
     </div>
 
+    {groups.length > 0 && (
+      <section class="hub" aria-labelledby="therapy-pages">
+        <h2 id="therapy-pages">Find the right kind of help</h2>
+        {groups.map((group) => (
+          <section class="hub__group" aria-labelledby={`hub-${group.key}`}>
+            <h3 id={`hub-${group.key}`}>{group.label}</h3>
+            <ServiceList links={group.links} />
+          </section>
+        ))}
+      </section>
+    )}
+
     {/*
       What the clinic does, in one band: the list a visitor scans for their own
       situation, and the methods behind it beside rather than under. Stacked,
@@ -66,7 +107,7 @@ const feeGroups = [
       </section>
 
       <section class="band__side" aria-labelledby="models">
-        <h2 id="models">How we work</h2>
+        <h2 id="models">Therapy models</h2>
         <ul class="tick-list band__side-list">
           {therapyModels?.map((item) => <li>{item}</li>)}
         </ul>
@@ -79,7 +120,7 @@ const feeGroups = [
       qualify rather than as sub-headings tucked underneath them.
     */}
     <section class="fees" aria-labelledby="fees">
-      <h2 id="fees">Fees</h2>
+      <h2 id="fees">Fees and Medicare</h2>
 
       <div class="band fees__band">
         <div class="table-scroll">
@@ -144,6 +185,17 @@ const feeGroups = [
 
   .page h2 {
     margin-top: 0;
+  }
+
+  /* ---- The hub ----
+     Each heading sits a section-sized step below the last, but a heading and
+     its own list stay together: the list is the answer to the heading. */
+  .hub__group + .hub__group {
+    margin-top: var(--space-2xl);
+  }
+
+  .hub__group h3 {
+    margin-top: var(--space-xl);
   }
 
   /* ---- The two-column band ----
