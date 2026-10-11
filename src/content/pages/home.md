@@ -8,7 +8,7 @@ headlineAccent: and anyone who has once been a child.
 # Each route carries the room it leads to: the illustration here is the same
 # room that heads the page you land on, so clicking a room walks you into it.
 # `note` restates a figure already published on the destination page — never a
-# new number. Therapy: fees table on /therapy/. Assessments: package prices on
+# new number. Therapy: the fee table on /fees/, linked from /therapy/. Assessments: package prices on
 # /assessments/. Groups have no published price, so the note carries the ages
 # the programs are actually built for instead.
 routes:

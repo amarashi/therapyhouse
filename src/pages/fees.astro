@@ -1,0 +1,401 @@
+---
+/**
+ * Fees and Medicare rebates (issue #30, R-60).
+ *
+ * The fee table that used to sit on /therapy/ lives here now, with
+ * everything that changes what a session ends up costing: the Medicare
+ * rebate, private health, NDIS, assessments, reports and cancellations.
+ *
+ * Two sources, kept apart on purpose:
+ * - the clinic's own figures and wording, in src/content/pages/fees.md;
+ * - Medicare rebate amounts, in src/data/medicare.js, read off MBS Online
+ *   with item numbers and an 'as at' date. The build stops when that date
+ *   is more than a year old (assertRebatesCurrent).
+ */
+import { getCollection, getEntry, render } from 'astro:content';
+import PlainLayout from '../layouts/PlainLayout.astro';
+import { withBase } from '../lib/base.js';
+import { builtPaths } from '../lib/links.js';
+import { businessId, includeInBuild, isProductionSite, serviceLinks } from '../lib/services.js';
+import { contact, site } from '../data/site.js';
+import {
+  assertRebatesCurrent,
+  formatAsAt,
+  formatRebate,
+  itemUrl,
+  medicare,
+} from '../data/medicare.js';
+import { feeOffers, priceRange } from '../lib/fees.js';
+
+assertRebatesCurrent(medicare);
+
+const production = isProductionSite(Astro.site);
+const services = await getCollection('services', (entry) => includeInBuild(entry.data, production));
+const built = builtPaths(Object.keys(import.meta.glob('/src/pages/**/*.astro')), services);
+const linkIfBuilt = (path: string) => (built.has(path) ? withBase(path) : null);
+
+const page = await getEntry('pages', 'fees');
+if (!page) throw new Error('Missing content: src/content/pages/fees.md');
+const assessmentsPage = await getEntry('pages', 'assessments');
+
+const { Content } = await render(page);
+const {
+  title,
+  documentTitle,
+  description,
+  lede,
+  sessionLength,
+  fees = [],
+  privateHealth,
+  ndis,
+  reports,
+  cancellation,
+  lastReviewed,
+} = page.data;
+
+const reviewedLabel = lastReviewed
+  ? new Intl.DateTimeFormat('en-AU', { month: 'long', year: 'numeric' }).format(lastReviewed)
+  : null;
+
+/* Session prices first, then the two other kinds of session, then the
+   evening surcharge on its own: it is added to a fee, it is not a fee. */
+const feeGroups = [
+  { label: null, rows: fees.filter((r) => !r.adjustment && !r.group) },
+  { label: 'Provisional psychologists', rows: fees.filter((r) => r.group === 'provisional') },
+  { label: 'Couples and families', rows: fees.filter((r) => r.group === 'couples-family') },
+  { label: 'Adjustments', rows: fees.filter((r) => r.adjustment) },
+].filter((g) => g.rows.length > 0);
+
+const asAt = formatAsAt(medicare.asAt);
+const checked = formatAsAt(medicare.checked);
+
+const packages = (assessmentsPage?.data.packages ?? []).filter((p) => !p.addOn);
+const assessmentLinks = serviceLinks(services.filter((e) => e.data.kind === 'assessment'));
+
+const telehealthHref = linkIfBuilt('/telehealth/');
+const ndisHref = linkIfBuilt('/ndis/');
+
+const url = new URL(Astro.url.pathname, Astro.site ?? site.origin).href;
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'MedicalBusiness',
+  '@id': businessId(site.origin),
+  name: site.name,
+  url: site.origin,
+  priceRange: priceRange(fees),
+  hasOfferCatalog: {
+    '@type': 'OfferCatalog',
+    name: 'Session fees',
+    url,
+    itemListElement: feeOffers(fees, { confirmed: Boolean(lastReviewed) }),
+  },
+};
+---
+
+<PlainLayout title={title} documentTitle={documentTitle} description={description}>
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} slot="head" />
+
+  <div class="wrap page fees-page">
+    <header class="fees-page__head">
+      <h1>{title}</h1>
+      <p class="lede">{lede}</p>
+    </header>
+
+    <div class="prose--flush prose stack">
+      <Content />
+    </div>
+
+    <section aria-labelledby="session-fees">
+      <h2 id="session-fees">Session fees</h2>
+      <div class="table-scroll">
+        <table class="fee-table">
+          <caption>
+            {sessionLength}
+            {reviewedLabel
+              ? ` Fees current as of ${reviewedLabel}.`
+              : ' These are the fees the clinic publishes. Reception confirms the fee when you book.'}
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Session</th>
+              <th scope="col" class="amount">Cost</th>
+            </tr>
+          </thead>
+          {feeGroups.map((group) => (
+            <tbody class:list={[group.label && 'fee-table__group']}>
+              {group.label && (
+                <tr>
+                  <th scope="rowgroup" colspan="2">{group.label}</th>
+                </tr>
+              )}
+              {group.rows.map((row) => (
+                <tr>
+                  <th scope="row">
+                    {row.label}
+                    {row.note && <span class="fee-table__note">{row.note}</span>}
+                  </th>
+                  <td class="amount">{row.amount}</td>
+                </tr>
+              ))}
+            </tbody>
+          ))}
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="medicare">
+      <h2 id="medicare">Medicare rebates</h2>
+      <div class="prose--flush prose stack">
+        <p>
+          A Medicare rebate is the amount Medicare pays back to you for a session. It comes
+          through Better Access, the Australian Government program that subsidises psychology
+          sessions for people with a diagnosed mental health condition. The rebate depends on
+          how the psychologist is registered with Medicare, and it is the same for a session in
+          the room and a session by video.
+        </p>
+      </div>
+
+      <div class="table-scroll">
+        <table class="fee-table rebate-table">
+          <caption>
+            Rebate per individual session of at least 50 minutes, as at {asAt}. Source:{' '}
+            <a href={medicare.source}>{medicare.sourceName}</a>, checked {checked}.
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Psychologist's registration</th>
+              <th scope="col" class="amount">Rebate</th>
+              <th scope="col" class="items">MBS items (room, video)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {medicare.rebates.map((row) => (
+              <tr>
+                <th scope="row">
+                  {row.label}
+                  <span class="fee-table__note">{row.detail}</span>
+                </th>
+                <td class="amount">{formatRebate(row.rebate)}</td>
+                <td class="items">
+                  <a href={itemUrl(row.items.inRoom)}>{row.items.inRoom}</a>,{' '}
+                  <a href={itemUrl(row.items.video)}>{row.items.video}</a>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="prose--flush prose stack">
+        <ul class="tick-list">
+          <li>
+            Medicare pays a rebate on up to {medicare.sessionsPerYear} individual sessions each
+            calendar year (January to December), however many psychologists you see.
+          </li>
+          <li>Medicare does not cover couple and family sessions.</li>
+          <li>No Medicare rebate applies to sessions with a provisional psychologist.</li>
+          <li>
+            Whether the psychologist rate or the clinical psychologist rate applies depends on
+            the clinician you see. Reception can tell you before you book.
+          </li>
+        </ul>
+        <p>
+          The amounts are set by the government and change each July. The item numbers in the
+          table link to each item on <a href={medicare.source}>MBS Online</a>, the government's
+          official list of Medicare items, if you want to check them yourself.
+        </p>
+      </div>
+    </section>
+
+    <section aria-labelledby="referral">
+      <h2 id="referral">How to get a GP referral and a Mental Health Treatment Plan</h2>
+      <ol class="step-list">
+        <li>
+          Book a longer appointment with your usual GP, or a GP at the practice you are
+          registered with through MyMedicare, and say you want to talk about your mental health.
+        </li>
+        <li>
+          If the GP agrees psychology sessions would help, they write a Mental Health Treatment
+          Plan (sometimes still called a Mental Health Care Plan) and a referral to a
+          psychologist. A psychiatrist or a paediatrician can also refer you directly.
+        </li>
+        <li>Send the referral to the clinic before your first session, or bring it with you.</li>
+        <li>
+          You pay the session fee, and Medicare pays the rebate back into your bank account.
+          Reception can tell you how the claim is lodged.
+        </li>
+        <li>
+          At the end of each course of sessions, your GP reviews how things are going and
+          refers you again if you need more.
+        </li>
+      </ol>
+      <p class="fees-page__source">
+        Referral rules from the <a href={medicare.rulesSource}>Better Access explanatory note</a>{' '}
+        on MBS Online.
+      </p>
+    </section>
+
+    <section aria-labelledby="video">
+      <h2 id="video">Video sessions</h2>
+      <div class="prose--flush prose stack">
+        <p>
+          Medicare pays the same rebate for a video session as for a session in the room, so
+          the amounts above apply wherever you live in Australia. Whether a video session costs
+          the same as an in-room session is something reception will confirm when you book.
+        </p>
+        {telehealthHref && (
+          <p>
+            <a class="standalone-link" href={telehealthHref}>How video sessions work</a>
+          </p>
+        )}
+      </div>
+    </section>
+
+    <section aria-labelledby="private-health">
+      <h2 id="private-health">Private health insurance</h2>
+      <ul class="tick-list">
+        {privateHealth?.map((item) => <li>{item}</li>)}
+      </ul>
+    </section>
+
+    <section aria-labelledby="ndis">
+      <h2 id="ndis">NDIS</h2>
+      <ul class="tick-list">
+        {ndis?.map((item) => <li>{item}</li>)}
+      </ul>
+      {ndisHref && (
+        <p><a class="standalone-link" href={ndisHref}>NDIS at Therapy House</a></p>
+      )}
+    </section>
+
+    <section aria-labelledby="assessments">
+      <h2 id="assessments">Assessments</h2>
+      <div class="prose--flush prose stack">
+        <p>
+          Assessments are priced as packages, separately from therapy sessions. The
+          assessments page lists what each package includes.
+        </p>
+        <ul class="tick-list">
+          {packages.map((pkg) => (
+            <li>
+              {pkg.title}: {pkg.price}
+              {pkg.provisionalPrice && `, or ${pkg.provisionalPrice} with a provisional psychologist`}
+            </li>
+          ))}
+        </ul>
+        <p>
+          Medicare has separate items for assessing a suspected complex neurodevelopmental
+          condition, such as autism, in a person under {medicare.neurodevelopmental.maxAge} who
+          has been referred by a paediatrician or psychiatrist (MBS item{' '}
+          <a href={itemUrl(medicare.neurodevelopmental.item)}>{medicare.neurodevelopmental.item}</a>).
+          Ask reception before you book whether any part of your assessment can be claimed.
+        </p>
+        {assessmentLinks.length > 0 && (
+          <ul class="fees-page__links">
+            {assessmentLinks.map((link) => (
+              <li><a class="standalone-link" href={withBase(link.href)}>{link.label}</a></li>
+            ))}
+          </ul>
+        )}
+        <p>
+          <a class="standalone-link" href={withBase('/assessments/')}>How assessment works, and every package in full</a>
+        </p>
+      </div>
+    </section>
+
+    <section aria-labelledby="reports">
+      <h2 id="reports">Reports and letters</h2>
+      <div class="prose--flush prose stack">
+        {reports?.map((item) => <p>{item}</p>)}
+      </div>
+    </section>
+
+    {cancellation && (
+      <section aria-labelledby="cancellation">
+        <h2 id="cancellation">Cancellations</h2>
+        <p>
+          This is the cancellation policy the clinic published in {cancellation.published}. The
+          fee for cancelling depends on how much notice you give:
+        </p>
+        <ul class="tick-list">
+          {cancellation.rules.map((rule) => <li>{rule}</li>)}
+        </ul>
+        <div class="prose--flush prose stack">
+          {cancellation.notes.map((note) => <p>{note}</p>)}
+          <p>
+            Business days are Monday to Friday, not counting public holidays. To cancel or change
+            an appointment, email <a href={`mailto:${contact.email}`}>{contact.email}</a>.
+          </p>
+        </div>
+      </section>
+    )}
+
+    <section aria-labelledby="questions">
+      <h2 id="questions">Questions about fees</h2>
+      <p>
+        Call reception or <a href={withBase('/contact/')}>contact the clinic</a> and ask. They
+        will tell you what a session will cost before anything is booked.
+      </p>
+    </section>
+  </div>
+</PlainLayout>
+
+<style>
+  .page > * + * {
+    margin-top: var(--space-section);
+  }
+
+  .page h2 {
+    margin-top: 0;
+  }
+
+  .fees-page__head {
+    padding-top: var(--space-2xl);
+    max-width: var(--content-max);
+  }
+
+  .fee-table {
+    max-width: 46rem;
+  }
+
+  .fees-page caption {
+    max-width: 42rem;
+  }
+
+  .table-scroll + .prose,
+  .prose + .table-scroll,
+  .step-list + .fees-page__source,
+  .tick-list + .prose,
+  .tick-list + p {
+    margin-top: var(--space-xl);
+  }
+
+  .rebate-table .items {
+    text-align: right;
+    white-space: nowrap;
+    font-size: var(--text-secondary);
+  }
+
+  .fees-page__source {
+    font-size: var(--text-secondary);
+  }
+
+  .fees-page__links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm) var(--space-xl);
+  }
+
+  @media (max-width: 52rem) {
+    .fee-table .amount {
+      font-size: var(--text-cardtitle);
+    }
+
+    .fee-table th[scope='row'] {
+      padding-right: var(--space-md);
+    }
+  }
+</style>

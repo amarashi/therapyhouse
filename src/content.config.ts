@@ -22,6 +22,11 @@ const feeRow = z.object({
    * "+$10" never sits in the same column a visitor is comparing $260 against.
    */
   adjustment: z.boolean().default(false),
+  /**
+   * Which table group a row sits under on /fees/. Rows with no group are the
+   * psychologists' session fees, which head the table.
+   */
+  group: z.enum(['provisional', 'couples-family']).optional(),
 });
 
 const groupProgram = z.object({
@@ -99,6 +104,17 @@ const pages = defineCollection({
     fees: z.array(feeRow).optional(),
     rebates: z.array(z.string()).optional(),
     reports: z.array(z.string()).optional(),
+
+    /* ---- Fees blocks ----
+       Medicare amounts are not here: they live in src/data/medicare.js, with
+       their MBS item numbers and an 'as at' date the build checks. */
+    sessionLength: z.string().optional(),
+    privateHealth: z.array(z.string()).optional(),
+    ndis: z.array(z.string()).optional(),
+    /** Copied from the clinic's own published policy, never written for it. */
+    cancellation: z
+      .object({ published: z.string(), sourceUrl: z.string().url(), rules: z.array(z.string()), notes: z.array(z.string()) })
+      .optional(),
 
     /* ---- Assessments blocks ---- */
     process: z.array(z.string()).optional(),

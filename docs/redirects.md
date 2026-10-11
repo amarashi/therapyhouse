@@ -8,4 +8,5 @@ that forwards the visitor. On Cloudflare each line below must become a real
 
 | From | To | Status | Why | Added |
 |---|---|---|---|---|
-| `/services/` | `/therapy/` | 301 | The Services floor became the Therapy hub (issue #4). The fee table stays on `/therapy/` until `/fees/` exists. | 11 Oct 2026 |
+| `/services/` | `/therapy/` | 301 | The Services floor became the Therapy hub (issue #4). The fee table has since moved to `/fees/`, linked from `/therapy/` (issue #30). | 11 Oct 2026 |
+| `/policy/` | `/fees/#cancellation` | 301 | The Current Site's cancellation policy address. The policy is now a section of `/fees/` (issue #30). | 11 Oct 2026 |
