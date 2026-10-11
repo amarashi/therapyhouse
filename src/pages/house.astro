@@ -12,12 +12,16 @@ import { withBase, basePrefix } from '../lib/base.js';
  * base has to be a directory.
  */
 const assetBase = `${basePrefix}/`;
+// Same preview guard as PlainLayout.astro: the GitHub Pages build must not
+// be indexed as a second copy of the clinic's site.
+const isPreview = (Astro.site?.hostname ?? '').endsWith('github.io');
 ---
 <!doctype html>
 <html lang="en-AU">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  {isPreview && <meta name="robots" content="noindex, nofollow">}
   <meta name="description" content="Therapy House is a warm psychology and counselling clinic in The Gap, Brisbane. Meet our inclusive team, learn about our approach, and book an appointment online.">
   <meta name="theme-color" content="#ffffff">
   <meta property="og:title" content="Therapy House | Psychology and Counselling in The Gap, Brisbane">

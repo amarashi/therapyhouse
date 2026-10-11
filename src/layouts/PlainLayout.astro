@@ -32,6 +32,14 @@ const pageTitle = title === site.name ? title : `${title} | ${site.name}`;
    a domain the build may not actually be served from. */
 const canonical = new URL(Astro.url.pathname, Astro.site ?? site.origin).href;
 
+/* The GitHub Pages build is a preview for the clinic to review, not the
+   clinic's site. Left indexable it becomes a second copy of every page that
+   competes with therapyhouse.com.au in search results, so it carries a
+   `noindex`. The gate is the configured origin: the day `astro.config.mjs`
+   points at the real domain this evaluates to false and the tag disappears,
+   with nothing else to remember. */
+const isPreview = (Astro.site?.hostname ?? '').endsWith('github.io');
+
 const businessSchema = {
   '@context': 'https://schema.org',
   '@type': 'MedicalBusiness',
@@ -60,6 +68,7 @@ const businessSchema = {
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
+    {isPreview && <meta name="robots" content="noindex, nofollow" />}
     <meta name="theme-color" content="#fffdf8" />
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={description} />
