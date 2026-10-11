@@ -6,6 +6,7 @@ import sitemap from '@astrojs/sitemap';
 
 import { draftServicePaths, sitemapFilter } from './src/lib/sitemap.js';
 import { securityHeaders } from './src/integrations/security-headers.js';
+import { redirectsFileIntegration } from './src/integrations/redirects-file.js';
 
 // Therapy House — static site.
 //
@@ -83,6 +84,9 @@ export default defineConfig({
     guardBase,
     /* dist/_headers for Cloudflare: security and cache headers (issue #44). */
     securityHeaders(),
+    /* dist/_redirects for Cloudflare: every Current Site address, generated
+       from docs/redirects.md (issue #41). */
+    redirectsFileIntegration(),
     /* sitemap-index.xml at the site root, named in robots.txt. Drafts, the
        404 page and redirect stubs are left out (src/lib/sitemap.js). */
     sitemap({
