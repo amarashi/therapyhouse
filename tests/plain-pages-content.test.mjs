@@ -514,6 +514,16 @@ const SERVICE_PAGES = [
     phrase: "anxiety psychologist",
     h1Word: "anxiety",
   },
+  {
+    id: "depression",
+    title: "Depression Counselling Brisbane | Psychologists, The Gap",
+    h1: "Depression counselling and therapy",
+    description:
+      "Psychologists for depression and low mood in The Gap, Brisbane and by video across Queensland. Medicare rebates with a Mental Health Treatment Plan.",
+    phrase: "depression counselling",
+    // The issue's description leads with the topic and the profession.
+    descWords: ["depression", "psychologist"],
+  },
 ];
 
 for (const page of SERVICE_PAGES) {
@@ -526,6 +536,8 @@ for (const page of SERVICE_PAGES) {
     // Title and description: every word of the phrase (a plural still counts).
     for (const word of phrase.split(" ")) {
       assert.ok(page.title.toLowerCase().includes(word), `title lacks "${word}" of "${page.phrase}"`);
+    }
+    for (const word of page.descWords ?? phrase.split(" ")) {
       assert.ok(page.description.toLowerCase().includes(word), `description lacks "${word}" of "${page.phrase}"`);
     }
     assert.ok(page.h1.toLowerCase().includes(page.h1Word ?? phrase.split(" ").at(-1)), `H1 lacks the topic of "${page.phrase}"`);
