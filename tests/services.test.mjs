@@ -223,7 +223,6 @@ async function knownPaths() {
  * clinic's domain. Delete a line when its page is built.
  */
 const PLANNED = {
-  "/therapy/trauma/": 7,
   "/therapy/anxiety/": 8,
   "/therapy/depression/": 9,
   "/therapy/grief/": 10,
@@ -237,7 +236,6 @@ const PLANNED = {
   "/assessments/learning/": 21,
   "/assessments/cognitive/": 22,
   "/telehealth/": 25,
-  "/fees/": 30,
 };
 
 test("every link in a service page's body leads to a page the site builds", async () => {
@@ -257,3 +255,22 @@ test("every link in a service page's body leads to a page the site builds", asyn
   }
 });
 
+
+test("pages about trauma and depression point to urgent help", async () => {
+  const layout = await readFile(new URL("../src/layouts/ServicePage.astro", import.meta.url), "utf8");
+  assert.match(layout, /data\.crisisNote &&/);
+  assert.match(layout, /tel:131114/);
+  assert.match(layout, /tel:000/);
+  const files = (await readdir(servicesDir)).filter((f) => ["trauma.md", "depression.md"].includes(f));
+  assert.ok(files.length > 0);
+  for (const file of files) {
+    const text = await readFile(new URL(file, servicesDir), "utf8");
+    assert.match(text, /^crisisNote: true\s*$/m, `${file} must show the Lifeline and 000 note`);
+  }
+});
+
+test("a page on the usual session fees points to /fees/ instead of copying the prices", async () => {
+  const layout = await readFile(new URL("../src/layouts/ServicePage.astro", import.meta.url), "utf8");
+  assert.match(layout, /data\.sessionFees && !data\.fees\?\.length/);
+  assert.match(layout, /withBase\('\/fees\/'\)/);
+});

@@ -90,6 +90,15 @@ const reviewedLabel = data.lastReviewed
       <p class="lede">{data.lede}</p>
     </header>
 
+    {data.crisisNote && (
+      <aside class="service__crisis" aria-label="If you need help now">
+        <p>
+          If you need to talk to someone now, call Lifeline on <a href="tel:131114">13 11 14</a>
+          (any time, day or night). In an emergency, call <a href="tel:000">000</a>.
+        </p>
+      </aside>
+    )}
+
     <div class="prose--flush prose stack">
       <Content />
     </div>
@@ -131,7 +140,12 @@ const reviewedLabel = data.lastReviewed
     {!(isHub && !data.fees?.length) && (
     <section aria-labelledby="fees">
       <h2 id="fees">What it costs</h2>
-      {data.feeStatus === 'quote' || !data.fees?.length ? (
+      {data.sessionFees && !data.fees?.length ? (
+        <p>
+          Sessions are charged at the clinic's usual session fees, which are listed with what
+          Medicare pays back on the fees page.
+        </p>
+      ) : data.feeStatus === 'quote' || !data.fees?.length ? (
         <p>
           Call reception for a quote. Fees depend on what is involved, and reception will tell
           you before anything is booked.
@@ -239,6 +253,19 @@ const reviewedLabel = data.lastReviewed
     font-size: var(--text-secondary);
     font-weight: 700;
     color: var(--heading);
+  }
+
+  /* The same box the library articles use for the same note. */
+  .service__crisis {
+    padding: var(--space-md) var(--space-lg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface-sunk);
+    max-width: var(--content-max);
+  }
+
+  .service__crisis p {
+    margin: 0;
   }
 
   /* Same grid as the team page, so a card looks the same wherever it appears. */

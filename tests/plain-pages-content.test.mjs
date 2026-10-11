@@ -488,6 +488,15 @@ const SERVICE_PAGES = [
     phrase: "child psychologist",
     h1Word: "children",
   },
+  {
+    id: "trauma",
+    title: "Trauma & PTSD Therapy Brisbane, EMDR | Therapy House",
+    h1: "Trauma and PTSD therapy, including EMDR",
+    description:
+      "Trauma therapy in The Gap, Brisbane and by video: EMDR, trauma-focused CBT and complex trauma work with experienced psychologists. Medicare rebates apply.",
+    phrase: "trauma therapy",
+    h1Word: "trauma",
+  },
 ];
 
 for (const page of SERVICE_PAGES) {
