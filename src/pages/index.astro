@@ -107,56 +107,10 @@ const faces = [
       />
     </div>
 
-    {/*
-      The rooms are the wayfinding. Each route shows the room that heads the
-      page it leads to, so clicking a room walks you into it — the house's own
-      way of finding things, on the reading side of the site. Deliberately not
-      three cards in a row: alternating sides, no borders, no shadows, one link
-      per row.
-    */}
-    <section class="rooms-section" aria-labelledby="what-we-do">
-      <div class="section-head"><h2 id="what-we-do">What we do</h2></div>
-      <ul class="rooms">
-        {routes?.map((route) => (
-          <li class="room">
-            <a class="room__link" href={withBase(route.href)}>
-              {/* The heading and description name the destination; a described
-                  room would only lengthen the link's accessible name. */}
-              <img
-                class="room__art"
-                src={withBase(route.image)}
-                srcset={`${withBase(route.image)} 360w, ${withBase(route.image?.replace('-360.webp', '-720.webp'))} 720w`}
-                sizes="(max-width: 44rem) 260px, 280px"
-                alt=""
-                width="360"
-                height="270"
-                loading="lazy"
-                decoding="async"
-              />
-              <span class="room__body">
-                <h3 class="room__title">{route.title}</h3>
-                <span class="room__desc">{route.description}</span>
-                {route.note && <span class="room__note">{route.note}</span>}
-                <span class="room__go">{route.linkText} →</span>
-              </span>
-            </a>
-          </li>
-        ))}
-      </ul>
-
-      {audienceHubs.length > 0 && (
-        <p class="rooms__by-age">
-          Or start from who the help is for:{' '}
-          {audienceHubs.map((hub, index) => (
-            <>
-              {index > 0 && ' · '}
-              <a class="standalone-link" href={withBase(hub.href)}>{hub.label}</a>
-            </>
-          ))}
-        </p>
-      )}
-    </section>
-
+    {/* The people come before the rooms. PRODUCT.md: credibility is the rung
+        that carries the most weight and it is carried by people — and with
+        the rooms first, the first named practitioner was ~2,700px down a
+        phone, behind four tall rooms. */}
     {practitioners.length > 0 && (
     <section aria-labelledby="people">
       <div class="section-head people-head">
@@ -227,7 +181,9 @@ const faces = [
                 <span
                   class:list={[
                     'faces__status',
-                    isAcceptingNewClients(person.data.availability) && 'is-accepting',
+                    isAcceptingNewClients(person.data.availability)
+                      ? 'is-accepting'
+                      : /waitlist/i.test(person.data.availability) && 'is-waitlist',
                   ]}
                 >{person.data.availability}</span>
               )}
@@ -250,6 +206,57 @@ const faces = [
       <p class="section-head"><a class="standalone-link" href={withBase("/team/")}>Meet the whole team →</a></p>
     </section>
     )}
+
+    {/*
+      The rooms are the wayfinding. Each route shows the room that heads the
+      page it leads to, so clicking a room walks you into it — the house's own
+      way of finding things, on the reading side of the site. Deliberately not
+      three cards in a row: alternating sides, no borders, no shadows, one link
+      per row.
+    */}
+    <section class="rooms-section" aria-labelledby="what-we-do">
+      <div class="section-head"><h2 id="what-we-do">What we do</h2></div>
+      <ul class="rooms">
+        {routes?.map((route) => (
+          <li class="room">
+            <a class="room__link" href={withBase(route.href)}>
+              {/* The heading and description name the destination; a described
+                  room would only lengthen the link's accessible name. */}
+              <img
+                class="room__art"
+                src={withBase(route.image)}
+                srcset={`${withBase(route.image)} 360w, ${withBase(route.image?.replace('-360.webp', '-720.webp'))} 720w`}
+                sizes="(max-width: 44rem) 260px, 280px"
+                alt=""
+                width="360"
+                height="270"
+                loading="lazy"
+                decoding="async"
+              />
+              <span class="room__body">
+                <h3 class="room__title">{route.title}</h3>
+                <span class="room__desc">{route.description}</span>
+                {route.note && <span class="room__note">{route.note}</span>}
+                <span class="room__go">{route.linkText} →</span>
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+
+      {audienceHubs.length > 0 && (
+        <p class="rooms__by-age">
+          Or start from who the help is for:{' '}
+          {audienceHubs.map((hub, index) => (
+            <>
+              {index > 0 && ' · '}
+              <a class="standalone-link" href={withBase(hub.href)}>{hub.label}</a>
+            </>
+          ))}
+        </p>
+      )}
+    </section>
+
 
     {/*
       The "How we work" grid of five abstract values — Holistic Care, Inclusive
@@ -443,15 +450,55 @@ const faces = [
      its own row. Plain text carries it at any width and any wording. */
   .faces__status {
     display: block;
+    position: relative;
     margin-block: 2px var(--space-xs);
+    padding-left: 14px;
     font-size: var(--text-meta);
     line-height: var(--lh-tight);
-    color: var(--ink-faint);
+    /* Soft ink, not faint: at 14px the faint tone sat at 4.9:1, a hair over
+       the floor, on the line a parent reads first. */
+    color: var(--ink-soft);
+  }
+
+  /* One grammar for the clinic's four wordings, which stay as written because
+     they are four different facts. The words carry the meaning; the marker
+     only lets a scanning eye group them — a filled dot for accepting, a ring
+     for a waitlist, a short dash for anyone not taking new clients now. */
+  .faces__status::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.4em;
+    width: 8px;
+    height: 2px;
+    margin-top: 2px;
+    border-radius: 1px;
+    background: currentColor;
+    opacity: 0.6;
   }
 
   .faces__status.is-accepting {
     color: var(--hedge-green-deep);
     font-weight: 700;
+  }
+
+  .faces__status.is-accepting::before,
+  .faces__status.is-waitlist::before {
+    width: 8px;
+    height: 8px;
+    margin-top: 0;
+    border-radius: 50%;
+    opacity: 1;
+  }
+
+  .faces__status.is-waitlist {
+    color: var(--chestnut);
+    font-weight: 600;
+  }
+
+  .faces__status.is-waitlist::before {
+    background: transparent;
+    box-shadow: inset 0 0 0 2px currentColor;
   }
 
   .intro__more {
