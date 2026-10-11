@@ -323,7 +323,9 @@ function appendObjectSummary(parent, source, contentKey) {
     if (link) appendLink(parent, link.href, link.label);
   }
 
-  if (typeof source.url === "string") {
+  if (source.link && typeof source.link.href === "string") {
+    appendLink(parent, source.link.href, source.link.label || source.link.href);
+  } else if (typeof source.url === "string") {
     appendLink(parent, source.url, "Read article");
   } else if (typeof source.sourceUrl === "string") {
     appendLink(parent, source.sourceUrl, "Open source page");
@@ -378,7 +380,7 @@ function appendObjectContent(parent, source, contentKey) {
   appendObjectSummary(parent, source, contentKey);
 
   Object.entries(source).forEach(([key, value]) => {
-    if (["id", "title", "name", "label", "description", "summary", "excerpt", "intro", "closing", "price", "audience", "status", "role", "credentials", "date", "email", "url", "sourceUrl", "slug"].includes(key)) {
+    if (["id", "title", "name", "label", "description", "summary", "excerpt", "intro", "closing", "price", "audience", "status", "role", "credentials", "date", "email", "url", "sourceUrl", "link", "slug"].includes(key)) {
       return;
     }
 

@@ -1,9 +1,11 @@
 ---
 import { withBase, basePrefix } from '../lib/base.js';
-import { getCollection } from 'astro:content';
+import { getCollection, getEntry } from 'astro:content';
 import { site, contact, businessFacts } from '../data/site.js';
 import { includeInBuild, isProductionSite } from '../lib/services.js';
 import { businessSchema as buildBusinessSchema } from '../lib/structured-data.js';
+import { assertRebatesCurrent, medicare } from '../data/medicare.js';
+import { HOUSE_FACTS_ID, houseFacts, houseFactsJson } from '../lib/house-facts.js';
 import Analytics from '../components/Analytics.astro';
 import DebugPanel from '../house-debug/DebugPanel.astro';
 
@@ -39,6 +41,26 @@ const businessSchema = buildBusinessSchema({
    but those are the same page: the canonical is always the bare `/house/`,
    built from the pathname so a query string can never leak into it. */
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
+
+/* Fees, Medicare rebates and assessment prices for the rooms (issue #80),
+   built from the same files /fees/ and /assessments/ read, so the house
+   cannot quote a figure the plain pages do not. `content-data.js` reads the
+   JSON written into the head below; see src/lib/house-facts.js. */
+assertRebatesCurrent(medicare);
+const feesPage = await getEntry('pages', 'fees');
+const assessmentsPage = await getEntry('pages', 'assessments');
+if (!feesPage || !assessmentsPage) {
+  throw new Error('Missing content: src/content/pages/fees.md or src/content/pages/assessments.md');
+}
+const facts = houseFactsJson(
+  houseFacts({
+    fees: feesPage.data.fees ?? [],
+    sessionLength: feesPage.data.sessionLength,
+    privateHealth: feesPage.data.privateHealth,
+    packages: assessmentsPage.data.packages ?? [],
+    medicare,
+  })
+);
 ---
 <!doctype html>
 <html lang="en-AU">
@@ -57,6 +79,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
   <link rel="icon" type="image/png" href={withBase("/assets/media/favicon-64.png")} sizes="64x64">
   <link rel="icon" href={withBase("/favicon.ico")} sizes="16x16 32x32 48x48">
   <script is:inline define:vars={{ assetBase }}>window.__ASSET_BASE__ = assetBase;</script>
+  <script is:inline type="application/json" id={HOUSE_FACTS_ID} set:html={facts}></script>
   <title>Explore the House | Therapy House, The Gap, Brisbane</title>
   <link rel="stylesheet" href={withBase("/assets/styles/main.css?v=20260823-room-doors")}>
   <script type="application/ld+json" set:html={JSON.stringify(businessSchema)} />
@@ -232,7 +255,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 
   {/* Development only: the tuning panel and its scripts never reach the build. */}
   {import.meta.env.DEV && <DebugPanel />}
-  <script type="module" src={withBase("/assets/scripts/app.js?v=20260823-room-doors")}></script>
+  <script type="module" src={withBase("/assets/scripts/app.js?v=20261011-house-facts")}></script>
 </body>
 </html>
 

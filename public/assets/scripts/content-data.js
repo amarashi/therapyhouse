@@ -498,6 +498,39 @@ export const roomSceneDefaults = {
   }
 };
 
+/*
+ * Fees, Medicare rebates and assessment prices are not written in this file
+ * (issue #80). `src/pages/house.astro` builds them from the same sources the
+ * plain pages use (src/content/pages/fees.md, src/content/pages/assessments.md
+ * and src/data/medicare.js, through src/lib/house-facts.js) and writes them
+ * into the page as JSON. Read here, they reach the rooms unchanged, so the
+ * house can never quote a figure /fees/ or /assessments/ does not.
+ *
+ * Outside that page (a test, the Astro build importing this file for the
+ * contact details) there is no JSON, and the fee hotspots fall back to the
+ * pointer to /fees/ alone.
+ */
+function readHouseFacts() {
+  if (typeof document === "undefined") return {};
+  const element = document.getElementById("house-facts");
+  if (!element) return {};
+  try {
+    return JSON.parse(element.textContent) || {};
+  } catch {
+    return {};
+  }
+}
+
+export const houseFacts = readHouseFacts();
+
+const packagePrice = (title) => houseFacts.packagePrices?.[title];
+
+const feesPointer = {
+  title: "Fees and Medicare rebates in full",
+  description: "Every session fee, the Medicare rebate for each kind of psychologist, private health, NDIS and assessment costs, on one page.",
+  link: { href: asset("fees/"), label: "Open the fees page" }
+};
+
 export const siteContent = {
   source: {
     name: "Therapy House current WordPress site",
@@ -729,20 +762,8 @@ export const siteContent = {
       "Eye Movement Desensitisation Reprocessing with people who have experienced trauma (EMDR)",
       "Short term psychodynamic therapy for deeper problems that can be manifested as anxiety, depression, personality disorders and relationship problems"
     ],
-    fees: [
-      { label: "Initial psychologist session", value: "$320" },
-      { label: "Ongoing individual session with Dr Kaya Beinke", value: "$290" },
-      { label: "Ongoing individual session with Dr Amelia Shay", value: "$270" },
-      { label: "Ongoing session with other registered psychologists", value: "$260" },
-      { label: "Appointments at 4pm and onwards", value: "$10 evening fee" },
-      { label: "Couples/family sessions", value: "$280 to $350" },
-      { label: "Assessment packages", value: "$1200 to $3000" }
-    ],
-    rebates: [
-      "Medicare rebates are available via GP referral and Mental Health Care Plan for eligible individual sessions.",
-      "Medicare does not cover couple and family sessions.",
-      "Private health insurance may include psychology, but Medicare and private health insurance cannot be used at the same time."
-    ],
+    fees: [...(houseFacts.fees ?? []), feesPointer],
+    rebates: [...(houseFacts.rebates ?? []), feesPointer],
     reports: [
       "Assessments, letters, reports and other services such as stakeholder meetings are charged in addition to session charges.",
       "Letters and reports are charged at hourly rates and typical letters take 30 minutes to one hour to prepare."
@@ -777,7 +798,7 @@ export const siteContent = {
     packages: {
       psychoeducational: {
         title: "Comprehensive Psycho-educational Assessment",
-        price: "From $2,400; provisional from $1,900",
+        price: packagePrice("Comprehensive Psycho-educational Assessment"),
         inclusions: [
           "Parent intake session",
           "4-5 hours of child testing",
@@ -788,23 +809,23 @@ export const siteContent = {
       },
       cognitive: {
         title: "Cognitive Assessment",
-        price: "From $1,621; provisional from $1,366",
+        price: packagePrice("Cognitive Assessment"),
         description: "Aims to understand a child's cognitive strengths and weaknesses."
       },
       adhd: {
         title: "ADHD Assessment",
-        price: "From $1,000; provisional from $846",
+        price: packagePrice("ADHD Assessment"),
         description: "Includes intake, diagnostic interview, questionnaires, scoring and a feedback session."
       },
       autism: {
         title: "Autism Assessment",
-        price: "From $1,000; provisional from $846",
+        price: packagePrice("Autism Assessment"),
         description: "Explores social communication differences, routine reliance and related presentation."
       }
     },
     schoolObservations: {
       title: "School Observations",
-      price: "$250 plus travel",
+      price: packagePrice("School Observations"),
       description: "Optional add-on where school context is clinically useful."
     },
     faq: [
