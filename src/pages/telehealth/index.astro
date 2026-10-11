@@ -1,0 +1,251 @@
+---
+/**
+ * The Telehealth Room (issue #25, R-56): video sessions anywhere in Australia.
+ *
+ * Prose lives in src/content/pages/telehealth.md. Medicare amounts come from
+ * src/data/medicare.js, the same data /fees/ reads, so the two pages can never
+ * disagree. Regional towns come from src/content/towns/: a town with three
+ * sourced facts has its own page and is linked here; the rest are short
+ * sections on this page (R-59).
+ */
+import { getCollection, getEntry, render } from 'astro:content';
+import PlainLayout from '../../layouts/PlainLayout.astro';
+import PersonCard from '../../components/PersonCard.astro';
+import { withBase } from '../../lib/base.js';
+import { builtPaths } from '../../lib/links.js';
+import { businessId, includeInBuild, isProductionSite } from '../../lib/services.js';
+import { splitTowns, townPath } from '../../lib/towns.js';
+import { callsToAction, site } from '../../data/site.js';
+import { assertRebatesCurrent, formatAsAt, formatRebate, itemUrl, medicare } from '../../data/medicare.js';
+
+assertRebatesCurrent(medicare);
+
+const production = isProductionSite(Astro.site);
+const services = await getCollection('services', (entry) => includeInBuild(entry.data, production));
+const built = builtPaths(Object.keys(import.meta.glob('/src/pages/**/*.astro')), services);
+const linkIfBuilt = (path: string) => (built.has(path) ? withBase(path) : null);
+
+const page = await getEntry('pages', 'telehealth');
+if (!page) throw new Error('Missing content: src/content/pages/telehealth.md');
+const { Content } = await render(page);
+const { title, documentTitle, description, lede, process } = page.data;
+
+const towns = splitTowns(
+  await getCollection('towns', (entry) => includeInBuild(entry.data, production))
+);
+const townSections = await Promise.all(
+  towns.sections.map(async (entry) => ({ entry, Body: (await render(entry)).Content }))
+);
+
+const practitioners = (await getCollection('team'))
+  .filter((p) => p.data.kind === 'practitioner')
+  .sort((a, b) => a.data.order - b.data.order);
+
+const forWhom = [
+  { label: 'Adults', href: linkIfBuilt('/adults/') },
+  { label: 'Children and teenagers', href: linkIfBuilt('/children/') },
+  { label: 'Couples', href: linkIfBuilt('/therapy/couples/') },
+].filter((link) => link.href);
+
+const asAt = formatAsAt(medicare.asAt);
+
+const url = new URL(Astro.url.pathname, Astro.site ?? site.origin).href;
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  '@id': `${url}#service`,
+  name: 'Telehealth psychology',
+  description,
+  url,
+  serviceType: 'Telehealth psychology',
+  provider: { '@id': businessId(site.origin) },
+  areaServed: { '@type': 'Country', name: 'Australia' },
+  availableChannel: {
+    '@type': 'ServiceChannel',
+    name: 'Video session',
+    serviceUrl: callsToAction.book.href,
+  },
+};
+---
+
+<PlainLayout title={title} documentTitle={documentTitle} description={description}>
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} slot="head" />
+
+  <div class="wrap page telehealth">
+    <header class="telehealth__head">
+      <h1>{title}</h1>
+      <p class="lede">{lede}</p>
+    </header>
+
+    <div class="prose--flush prose stack">
+      <Content />
+      {forWhom.length > 0 && (
+        <p>
+          More about what we help with:{' '}
+          {forWhom.map((link, i) => (
+            <>{i > 0 && ', '}<a href={link.href}>{link.label.toLowerCase()}</a></>
+          ))}.
+        </p>
+      )}
+    </div>
+
+    <section aria-labelledby="medicare">
+      <h2 id="medicare">Medicare rebates for video sessions</h2>
+      <div class="prose--flush prose stack">
+        <p>
+          Medicare pays the same rebate for a video session as for a session in the room. With a
+          referral and a Mental Health Treatment Plan from your GP, Medicare pays back part of the
+          fee for up to {medicare.sessionsPerYear} individual sessions a calendar year.
+        </p>
+        <ul class="tick-list">
+          {medicare.rebates.map((row) => (
+            <li>
+              {row.label}: {formatRebate(row.rebate)} a session (MBS item{' '}
+              <a href={itemUrl(row.items.video)}>{row.items.video}</a>)
+            </li>
+          ))}
+        </ul>
+        <p class="telehealth__source">
+          Rebates for a video session of at least 50 minutes, as at {asAt}, from{' '}
+          <a href={medicare.source}>{medicare.sourceName}</a>.
+        </p>
+        <p>
+          <a class="standalone-link" href={withBase('/fees/#referral')}>How to get a GP referral</a>
+        </p>
+      </div>
+    </section>
+
+    <section aria-labelledby="fees">
+      <h2 id="fees">Fees</h2>
+      <p>
+        Session fees are on the fees page. Whether a video session costs the same as a session in
+        the room is something reception will confirm when you book.
+      </p>
+      <p>
+        <a class="standalone-link" href={withBase('/fees/')}>Fees and Medicare rebates</a>
+      </p>
+    </section>
+
+    {process && process.length > 0 && (
+      <section aria-labelledby="first-session">
+        <h2 id="first-session">Your first video session, step by step</h2>
+        <ol class="step-list">
+          {process.map((step) => <li>{step}</li>)}
+        </ol>
+      </section>
+    )}
+
+    {townSections.length > 0 && (
+      <section aria-labelledby="regional">
+        <h2 id="regional">Regional Queensland</h2>
+        <p>
+          Outside the south-east, the nearest psychologist can be a long drive away. A video
+          session takes the drive out of it.
+        </p>
+        {townSections.map(({ entry, Body }) => (
+          <section class="town" aria-labelledby={`town-${entry.id}`}>
+            <h3 id={`town-${entry.id}`}>{entry.data.name}</h3>
+            <div class="prose--flush prose stack">
+              <Body />
+            </div>
+            <p class="telehealth__source">
+              Source{entry.data.facts.length > 1 ? 's' : ''}:{' '}
+              {entry.data.facts.map((fact, i) => (
+                <>{i > 0 && '; '}<a href={fact.sourceUrl}>{fact.sourceName}</a></>
+              ))}
+            </p>
+          </section>
+        ))}
+      </section>
+    )}
+
+    {towns.pages.length > 0 && (
+      <nav aria-labelledby="town-pages">
+        <h2 id="town-pages">Pages for regional towns</h2>
+        <ul class="telehealth__towns">
+          {towns.pages.map((entry) => (
+            <li>
+              <a class="standalone-link" href={withBase(townPath(entry.id))}>{entry.data.h1}</a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    )}
+
+    <section aria-labelledby="who">
+      <h2 id="who">The clinicians</h2>
+      <p>
+        These are the Therapy House clinicians. Each card shows who they work with and whether
+        they are taking new clients. Reception can tell you who has video times.
+      </p>
+      <ul class="people">
+        {practitioners.map((person) => (
+          <li><PersonCard person={person} /></li>
+        ))}
+      </ul>
+    </section>
+
+    <section aria-labelledby="booking">
+      <h2 id="booking">Booking a video session</h2>
+      <p>
+        Book online or call reception, and say you would like a video session. Calling suits you
+        better if you would rather talk it through first. You can also <a href={withBase('/contact/')}>contact the clinic</a> by email.
+      </p>
+    </section>
+  </div>
+</PlainLayout>
+
+<style>
+  .page > * + * {
+    margin-top: var(--space-section);
+  }
+
+  .page h2 {
+    margin-top: 0;
+  }
+
+  .telehealth__head {
+    padding-top: var(--space-2xl);
+    max-width: var(--content-max);
+  }
+
+  .telehealth__source {
+    font-size: var(--text-secondary);
+  }
+
+  .town {
+    max-width: var(--content-max);
+  }
+
+  .town + .town,
+  .town {
+    margin-top: var(--space-2xl);
+  }
+
+  .town h3 {
+    margin-top: 0;
+  }
+
+  .telehealth__towns {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm) var(--space-xl);
+  }
+
+  .people {
+    list-style: none;
+    padding: 0;
+    margin: var(--space-xl) 0 0;
+    display: grid;
+    gap: var(--space-lg);
+    grid-template-columns: repeat(auto-fill, minmax(min(26rem, 100%), 1fr));
+  }
+
+  .people > li {
+    container-type: inline-size;
+    display: grid;
+  }
+</style>

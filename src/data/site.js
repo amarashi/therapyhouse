@@ -126,6 +126,7 @@ export const readyNav = nav.filter((item) => item.ready);
  */
 export const secondaryNav = [
   { label: 'Fees and Medicare', href: '/fees/' },
+  { label: 'Sessions by video', href: '/telehealth/' },
   { label: 'Our philosophy', href: '/philosophy/' },
   { label: 'Work with us', href: '/work-with-us/' },
   { label: 'Privacy policy', href: '/privacy-policy/' },

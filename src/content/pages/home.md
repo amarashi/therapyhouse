@@ -30,6 +30,11 @@ routes:
     href: /group-therapy/
     linkText: Groups and workshops
     image: /assets/rooms/group-room-out-360.webp
+  - title: By video
+    description: Sessions by video for children, teenagers and adults anywhere in Australia, with Medicare rebates on a GP referral.
+    href: /telehealth/
+    linkText: How video sessions work
+    image: /assets/rooms/reception-room-out-360.webp
 practicalNotes:
   - On a main road, yet tucked away — you won't hear any road traffic.
   - Plenty of street parking, so finding a park isn't something to worry about.

@@ -303,4 +303,40 @@ const articles = defineCollection({
   }),
 });
 
-export const collections = { pages, team, services, articles };
+/**
+ * Queensland towns the Telehealth Room speaks to (issues #25 to #29).
+ *
+ * `page`: a Town Page at /telehealth/<file>/. `section`: a short paragraph on
+ * /telehealth/ instead. The doorway rule (spec: telehealth and fees) is that a
+ * town earns a page only with at least three sourced facts about that town;
+ * `assertTownPage` in src/lib/towns.js enforces it at build time, and
+ * tests/towns.test.mjs checks that no two Town Pages share more than a third
+ * of their text.
+ *
+ * Every fact carries the URL it came from. The page lists them as its sources.
+ */
+const townFact = z.object({
+  /** One plain sentence, as the page prints it. */
+  text: z.string(),
+  sourceName: z.string(),
+  sourceUrl: z.string().url(),
+});
+
+const towns = defineCollection({
+  loader: glob({ base: './src/content/towns', pattern: '**/*.md' }),
+  schema: z.object({
+    name: z.string(),
+    kind: z.enum(['page', 'section']),
+    /** Order on /telehealth/: launch pages first, then sections. */
+    order: z.number(),
+    facts: z.array(townFact).min(1),
+    /* Page fields. Required for `page` (checked by assertTownPage). */
+    title: z.string().max(60).optional(),
+    h1: z.string().optional(),
+    description: z.string().max(160).optional(),
+    lede: z.string().optional(),
+    draft: z.boolean().default(false),
+  }),
+});
+
+export const collections = { pages, team, services, articles, towns };
