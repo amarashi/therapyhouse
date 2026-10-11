@@ -1,10 +1,11 @@
 ---
 import { withBase } from '../lib/base.js';
-import { getEntry, render } from 'astro:content';
+import { getCollection, getEntry, render } from 'astro:content';
 import PlainLayout from '../layouts/PlainLayout.astro';
 import HeroReveal from '../components/HeroReveal.astro';
 import LibraryShelf from '../components/LibraryShelf.astro';
-import { siteContent } from '../../public/assets/scripts/content-data.js';
+import { includeInBuild, isProductionSite } from '../lib/services.js';
+import { articlePath, groupByYear } from '../lib/articles.js';
 
 const page = await getEntry('pages', 'library');
 if (!page) throw new Error('Missing content: src/content/pages/library.md');
@@ -13,35 +14,20 @@ const { Content } = await render(page);
 const { title, description, lede, publicationsNote, mediaItems } = page.data;
 
 /**
- * Articles are still read from the content model rather than a collection: only
- * their titles, dates and excerpts live in the repo. The full bodies are in the
- * gitignored `archive/live-site-scrape/html/`, so each entry still points at
- * the article on the current site.
+ * Every article in the collection (issue #39), each at its own
+ * `/library/<slug>/` page. Drafts are listed on the preview, where the clinic
+ * reviews them, and left out of production like every other draft.
  *
- * Before cutover these must become `/library/<slug>/` pages — see
- * SITE_CONTENT.md. Until then an external link is honest; a dead internal one
- * would not be.
+ * The list is cut into years: the year becomes the group marker, and the
+ * entries below it only need the day and month.
  */
-const articles = [...siteContent.library.blogArticles].sort((a, b) =>
-  b.date.localeCompare(a.date)
+const production = isProductionSite(Astro.site);
+const years = groupByYear(
+  await getCollection('articles', (entry) => includeInBuild(entry.data, production))
 );
 
-/**
- * Twenty-three articles in one undifferentiated column is a wall, not an index.
- * The one structure this content genuinely has is its chronology, so the list
- * is cut into years: the year becomes the group marker, and the entries below
- * it only need the day and month.
- */
-const years = articles.reduce<{ year: string; items: typeof articles }[]>((groups, article) => {
-  const year = article.date.slice(0, 4);
-  const current = groups.at(-1);
-  if (current?.year === year) current.items.push(article);
-  else groups.push({ year, items: [article] });
-  return groups;
-}, []);
-
-const formatDayMonth = (iso: string) =>
-  new Intl.DateTimeFormat('en-AU', { day: 'numeric', month: 'long' }).format(new Date(iso));
+const formatDayMonth = (date: Date) =>
+  new Intl.DateTimeFormat('en-AU', { day: 'numeric', month: 'long', timeZone: 'UTC' }).format(date);
 ---
 
 <PlainLayout title={title} documentTitle={page.data.documentTitle} description={description}>
@@ -104,12 +90,15 @@ const formatDayMonth = (iso: string) =>
             {group.items.map((article) => (
               <li class="article">
                 <p class="article__date">
-                  <time datetime={article.date}>{formatDayMonth(article.date)}</time>
+                  <time datetime={article.data.date.toISOString().slice(0, 10)}>
+                    {formatDayMonth(article.data.date)}
+                  </time>
+                  {article.data.draft && <> · Draft</>}
                 </p>
                 <h4 class="article__title">
-                  <a href={article.url} rel="noopener">{article.title}</a>
+                  <a href={withBase(articlePath(article.id))}>{article.data.title}</a>
                 </h4>
-                <p class="article__excerpt">{article.excerpt}</p>
+                <p class="article__excerpt">{article.data.description}</p>
               </li>
             ))}
           </ul>
@@ -178,7 +167,7 @@ const formatDayMonth = (iso: string) =>
   }
 
   /* Each year is a shelf too — same rule, same meaning. It is the only
-     separator in twenty-three entries, which is what lets the entries
+     separator in twenty-five entries, which is what lets the entries
      themselves be grouped by spacing alone. */
   .year {
     display: grid;
@@ -216,7 +205,7 @@ const formatDayMonth = (iso: string) =>
     }
   }
 
-  /* Two columns once there is room for two full measures. Twenty-three entries
+  /* Two columns once there is room for two full measures. Twenty-five entries
      down a single 42rem column ran to five thousand pixels; the wrap is 92rem
      wide and was carrying four hundred of them empty. */
   .year__list {
@@ -250,7 +239,7 @@ const formatDayMonth = (iso: string) =>
     text-wrap: balance;
   }
 
-  /* These titles are the links. Undecorated, they read as twenty-three
+  /* These titles are the links. Undecorated, they read as twenty-five
      headings and the fact that any of them open anything is invisible. */
   .article__title a {
     color: var(--link);

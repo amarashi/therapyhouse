@@ -44,7 +44,7 @@ const businessSchema = buildBusinessSchema({
   <meta property="og:title" content="Explore the House | Therapy House, The Gap, Brisbane">
   <meta property="og:description" content="Walk through Therapy House in The Gap, Brisbane: an illustrated tour of the clinic's rooms, its team, its services and how to book.">
   <meta property="og:type" content="website">
-  <meta property="og:image" content="https://www.therapyhouse.com.au/assets/media/logo3d.png">
+  <meta property="og:image" content={new URL(withBase("/assets/media/logo3d.png"), Astro.site ?? "https://www.therapyhouse.com.au").href}>
   <link rel="icon" type="image/png" href={withBase("/assets/media/favicon-64.png")} sizes="64x64">
   <link rel="icon" href={withBase("/favicon.ico")} sizes="16x16 32x32 48x48">
   <script is:inline define:vars={{ assetBase }}>window.__ASSET_BASE__ = assetBase;</script>

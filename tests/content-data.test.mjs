@@ -28,7 +28,7 @@ assert.deepEqual(
 );
 
 assert.equal(siteContent.team.members.length, 12);
-assert.equal(siteContent.library.blogArticles.length, 23);
+assert.equal(siteContent.library.blogArticles.length, 25);
 assert.equal(siteContent.contact.phone, "07 3300 2170");
 assert.equal(siteContent.contact.email, "admin@therapyhouse.com.au");
 assert.match(siteContent.contact.address, /1290 Waterworks Rd/);

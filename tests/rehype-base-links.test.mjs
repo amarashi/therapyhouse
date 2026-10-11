@@ -32,3 +32,9 @@ test("other links are left alone, and applying it twice is harmless", () => {
 test("a root deployment changes nothing", () => {
   assert.deepEqual(run("/", "/children/"), ["/children/"]);
 });
+
+test("article images get the base prefix too", () => {
+  const img = { type: "element", tagName: "img", properties: { src: "/assets/library/conflict.webp", alt: "Conflict" }, children: [] };
+  rehypeBaseLinks({ base: "/therapyhouse" })({ type: "root", children: [img] });
+  assert.equal(img.properties.src, "/therapyhouse/assets/library/conflict.webp");
+});

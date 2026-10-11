@@ -8,7 +8,8 @@
  * `.astro` files use `withBase` for this; this plugin is the same rule for
  * Markdown, applied once at build time.
  *
- * Only `href`s on `<a>` that start with a single `/` are touched. External
+ * Only `href`s on `<a>` and `src`s on `<img>` (library article images) that
+ * start with a single `/` are touched. External
  * URLs, `mailto:`, `#anchors`, protocol-relative `//` URLs and links already
  * carrying the prefix are left alone. No dependencies: the tree is walked by
  * hand rather than pulling in unist-util-visit for one loop.
@@ -26,6 +27,9 @@ export function rehypeBaseLinks({ base = '/' } = {}) {
   const walk = (node) => {
     if (node.type === 'element' && node.tagName === 'a' && node.properties) {
       node.properties.href = rebase(node.properties.href);
+    }
+    if (node.type === 'element' && node.tagName === 'img' && node.properties) {
+      node.properties.src = rebase(node.properties.src);
     }
     for (const child of node.children ?? []) walk(child);
   };
