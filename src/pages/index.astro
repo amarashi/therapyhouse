@@ -17,12 +17,10 @@ if (!page) throw new Error('Missing content: src/content/pages/home.md');
 const { Content } = await render(page);
 /* `home.md` also carries `lede`, `headline` and `headlineAccent`. None of the
    three is read here — the hero sets its own welcome — and destructuring them
-   only made it look as though they were. Left in the content file and in the
-   schema rather than deleted, because the sentence in `lede` ("Therapy House is
-   a boutique psychology clinic for people of all ages, in a leafy suburb of
-   Brisbane") is the only place on the home page that says what the clinic
-   actually is, and where that sentence should go is a decision for the clinic
-   and not for this file. */
+   only made it look as though they were. The sentence in `lede`, the only one
+   that says what the clinic actually is, now opens the body of `home.md`, in
+   place of a line that claimed the rooms were "purposefully and elegantly
+   designed" — PRODUCT.md's "show the place, don't claim it". */
 const { title, description, routes, practicalNotes } = page.data;
 
 const philosophy = await getEntry('pages', 'philosophy');
@@ -60,14 +58,17 @@ const faces = [
       it and every heading below it, and the house runs off the opposite edge.
       The line that used to be the headline is still here, at the size of an
       aside — it says who the clinic is for, which is a second thought, not the
-      greeting. */}
+      greeting. It names all three of the site's audiences — a parent, an adult
+      seeking help for themselves, and someone seeing a psychologist by video
+      from anywhere in the country — because the first screen is where the last
+      two decide whether this is a children's clinic and leave. */}
   <HeroReveal
     room="exterior"
     enterLabel="Explore the house"
     slot="hero"
     layout="anchored"
     title="Welcome to Therapy House"
-    titleSub="Psychologists in The Gap, Brisbane"
+    titleSub="Psychologists for children, teenagers and adults — in The Gap, Brisbane, and by video anywhere in Australia"
     lede="A place for all children, and anyone who has once been a child."
     image={withBase("/assets/media/house-hero-loop-poster.webp")}
     imageSmall={withBase("/assets/media/house-hero-loop-poster-597.webp")}

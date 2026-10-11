@@ -35,12 +35,14 @@ routes:
     href: /telehealth/
     linkText: How video sessions work
     image: /assets/rooms/reception-room-out-360.webp
+# Facts a visitor can check, not adjectives about the place: the map and the
+# pictures beside these notes do the describing. Where clients come from is
+# answered by the suburbs line under the notes.
 practicalNotes:
-  - On a main road, yet tucked away — you won't hear any road traffic.
+  - On a main road, yet tucked away.
   - Plenty of street parking, so finding a park isn't something to worry about.
-  - Clients come from right across the greater Brisbane area.
 ---
 
-The space is purposefully and elegantly designed to make people feel at home.
-Whatever is going on, you do not need the right words for it before you get in
-touch.
+Therapy House is a psychology clinic for people of all ages, in The Gap, a
+leafy suburb of Brisbane. Whatever is going on, you do not need the right words
+for it before you get in touch.
