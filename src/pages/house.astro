@@ -1,5 +1,9 @@
 ---
 import { withBase, basePrefix } from '../lib/base.js';
+import { getCollection } from 'astro:content';
+import { site, contact, businessFacts } from '../data/site.js';
+import { includeInBuild, isProductionSite } from '../lib/services.js';
+import { businessSchema as buildBusinessSchema } from '../lib/structured-data.js';
 
 /*
  * The legacy single-page experience, preserved intact through the migration.
@@ -15,6 +19,19 @@ const assetBase = `${basePrefix}/`;
 // Same preview guard as PlainLayout.astro: the GitHub Pages build must not
 // be indexed as a second copy of the clinic's site.
 const isPreview = (Astro.site?.hostname ?? '').endsWith('github.io');
+
+/* The same clinic record as every reading page (src/lib/structured-data.js),
+   rather than a hand-written copy that drifts from it. */
+const businessSchema = buildBusinessSchema({
+  site,
+  contact,
+  facts: businessFacts,
+  services: await getCollection('services', (entry) =>
+    entry.data.kind !== 'hub' && includeInBuild(entry.data, isProductionSite(Astro.site))
+  ),
+  siteUrl: Astro.site ?? site.origin,
+  pageBase: withBase,
+});
 ---
 <!doctype html>
 <html lang="en-AU">
@@ -33,30 +50,7 @@ const isPreview = (Astro.site?.hostname ?? '').endsWith('github.io');
   <script is:inline define:vars={{ assetBase }}>window.__ASSET_BASE__ = assetBase;</script>
   <title>Explore the House | Therapy House, The Gap, Brisbane</title>
   <link rel="stylesheet" href={withBase("/assets/styles/main.css?v=20260823-room-doors")}>
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "MedicalBusiness",
-    "name": "Therapy House",
-    "description": "Therapy House provides warm, inclusive psychology and counselling support in The Gap, Brisbane.",
-    "url": "https://www.therapyhouse.com.au/",
-    "telephone": "+61-7-3300-2170",
-    "email": "admin@therapyhouse.com.au",
-    "address": {
-      "@type": "PostalAddress",
-      "streetAddress": "1290 Waterworks Rd",
-      "addressLocality": "The Gap",
-      "addressRegion": "QLD",
-      "postalCode": "4061",
-      "addressCountry": "AU"
-    },
-    "areaServed": "Greater Brisbane",
-    "medicalSpecialty": [
-      "Psychology",
-      "Counselling"
-    ]
-  }
-  </script>
+  <script type="application/ld+json" set:html={JSON.stringify(businessSchema)} />
 </head>
 <body>
   <a class="skip-link" href="#siteOverview">Skip to Therapy House information</a>

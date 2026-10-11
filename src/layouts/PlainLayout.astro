@@ -1,9 +1,10 @@
 ---
 import { withBase, stripBase } from '../lib/base.js';
 import '../styles/global.css';
-import { site, contact, callsToAction, footerNav, staffLink } from '../data/site.js';
+import { site, contact, businessFacts, callsToAction, footerNav, staffLink } from '../data/site.js';
 import { getCollection } from 'astro:content';
-import { businessId, includeInBuild, isProductionSite, serviceLinks } from '../lib/services.js';
+import { includeInBuild, isProductionSite, serviceLinks } from '../lib/services.js';
+import { businessSchema as buildBusinessSchema } from '../lib/structured-data.js';
 import CallToAction from '../components/CallToAction.astro';
 import ActionBar from '../components/ActionBar.astro';
 import Masthead from '../components/Masthead.astro';
@@ -23,18 +24,23 @@ interface Props {
    * where it reads best within 60 characters rather than having it appended.
    */
   documentTitle?: string;
+  /**
+   * The not-found page. It is not a page of the site, so it names no canonical
+   * address and carries no business structured data: either would tell a
+   * search engine that a missing address is a real page about the clinic.
+   */
+  notFound?: boolean;
 }
 
-const { title, description, showClosing = true, documentTitle } = Astro.props;
+const { title, description, showClosing = true, documentTitle, notFound = false } = Astro.props;
 
 /* Every service page, for the footer map. Read from the collection rather
    than listed in site.js, so a new page in src/content/services/ is linked
    from every page of the site without anyone remembering to add it. */
-const footerServices = serviceLinks(
-  await getCollection('services', (entry) =>
-    entry.data.kind !== 'hub' && includeInBuild(entry.data, isProductionSite(Astro.site))
-  )
+const builtServices = await getCollection('services', (entry) =>
+  entry.data.kind !== 'hub' && includeInBuild(entry.data, isProductionSite(Astro.site))
 );
+const footerServices = serviceLinks(builtServices);
 
 /* A page that opens on a hero lets the masthead sit over it; a page without one
    gives the masthead its own band at the top. */
@@ -56,27 +62,19 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? site.origin).href;
    with nothing else to remember. */
 const isPreview = (Astro.site?.hostname ?? '').endsWith('github.io');
 
-const businessSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'MedicalBusiness',
-  /* A stable id, so every service page can name this clinic as its provider
-     by reference instead of repeating the address on each page. */
-  '@id': businessId(site.origin),
-  name: site.name,
-  url: site.origin,
-  telephone: '+61-7-3300-2170',
-  email: contact.email,
-  address: {
-    '@type': 'PostalAddress',
-    streetAddress: '1290 Waterworks Rd',
-    addressLocality: 'The Gap',
-    addressRegion: 'QLD',
-    postalCode: '4061',
-    addressCountry: 'AU',
-  },
-  areaServed: 'Greater Brisbane',
-  medicalSpecialty: ['Psychology', 'Counselling'],
-};
+/* The clinic's structured data, one record for every page (src/lib/structured-data.js).
+   Services come from the same filtered list as the footer, so a draft never
+   appears in production's structured data either. */
+const businessSchema = notFound
+  ? null
+  : buildBusinessSchema({
+      site,
+      contact,
+      facts: businessFacts,
+      services: builtServices,
+      siteUrl: Astro.site ?? site.origin,
+      pageBase: withBase,
+    });
 ---
 
 <!doctype html>
@@ -86,13 +84,13 @@ const businessSchema = {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
-    <link rel="canonical" href={canonical} />
+    {!notFound && <link rel="canonical" href={canonical} />}
     {isPreview && <meta name="robots" content="noindex, nofollow" />}
     <meta name="theme-color" content="#fffdf8" />
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content={canonical} />
+    {!notFound && <meta property="og:url" content={canonical} />}
     <meta property="og:image" content={new URL(withBase("/assets/media/logo3d.png"), Astro.site ?? site.origin).href} />
     {/* 8KB, not 269. `logo3d.png` is a 500px 3D render and it was being
         fetched on every page load to be painted into a 16px square — a quarter
@@ -108,7 +106,7 @@ const businessSchema = {
         links, and a missing one is a 404 in every log. The file carries 16, 32
         and 48px cuts of the same mark (generated from `logo3d.png`). */}
     <link rel="icon" href={withBase("/favicon.ico")} sizes="16x16 32x32 48x48" />
-    <script type="application/ld+json" set:html={JSON.stringify(businessSchema)} />
+    {businessSchema && <script type="application/ld+json" set:html={JSON.stringify(businessSchema)} />}
     <script is:inline>
       /*
        * The other half of the lift in SideRail.astro. A page reached by the

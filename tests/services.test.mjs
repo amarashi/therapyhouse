@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readdir, readFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
 
 import {
   assertFeesPublishable,
@@ -92,11 +91,13 @@ test("an assessment adds a MedicalTest naming what it diagnoses", () => {
 });
 
 test("the business id the pages point at is the one the layout publishes", async () => {
-  const layout = await readFile(
-    fileURLToPath(new URL("../src/layouts/PlainLayout.astro", import.meta.url)),
-    "utf8"
-  );
-  assert.ok(layout.includes("'@id': businessId(site.origin)"), "PlainLayout lost the business @id");
+  /* The layout and the house page publish the record businessSchema builds
+     (src/lib/structured-data.js); tests/built-site.test.mjs checks the built
+     page carries the same id. */
+  const { businessSchema } = await import("../src/lib/structured-data.js");
+  const { site: realSite, contact, businessFacts } = await import("../src/data/site.js");
+  const record = businessSchema({ site: realSite, contact, facts: businessFacts, siteUrl: realSite.origin });
+  assert.equal(record["@id"], businessId(realSite.origin), "the business record lost its @id");
   assert.equal(businessId("https://www.therapyhouse.com.au/"), "https://www.therapyhouse.com.au/#business");
 });
 

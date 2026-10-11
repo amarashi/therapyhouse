@@ -25,6 +25,54 @@ export const site = {
 export const nearbySuburbs = ['Ashgrove', 'Bardon', 'Keperra', 'Ferny Grove', 'Mitchelton'];
 
 /**
+ * @typedef {object} OpeningHours One row of `openingHoursSpecification`.
+ * @property {Array<'Monday'|'Tuesday'|'Wednesday'|'Thursday'|'Friday'|'Saturday'|'Sunday'>} dayOfWeek
+ * @property {string} opens  24-hour time, for example "08:00".
+ * @property {string} closes 24-hour time, for example "18:00".
+ */
+
+/**
+ * Facts about the clinic for its structured data (src/lib/structured-data.js).
+ *
+ * Every value here is published by the clinic or is a public fact about its
+ * address. Opening hours are an empty list on purpose: the clinic has not
+ * published them, and a search result showing wrong hours sends a parent to a
+ * locked door. Fill the list once the clinic confirms its hours, and the
+ * structured data picks them up.
+ */
+export const businessFacts = {
+  telephone: '+61-7-3300-2170',
+  address: {
+    streetAddress: '1290 Waterworks Rd',
+    addressLocality: 'The Gap',
+    addressRegion: 'QLD',
+    postalCode: '4061',
+    addressCountry: 'AU',
+  },
+  /* The address point for 1290 Waterworks Road in OpenStreetMap (node
+     6255279194), from the Nominatim geocoder, rounded to five decimal places
+     (about one metre). */
+  geo: { latitude: -27.44504, longitude: 152.93585 },
+  /* The clinic's Google Maps place (its Business Profile). */
+  hasMap: 'https://maps.google.com/?cid=9321164461524476520',
+  /* Profiles the Current Site links from every page. There is no Instagram
+     link on the Current Site. The YouTube channel the library links to is
+     Dr Amelia Shay's own, not the clinic's, so it is not listed here. */
+  sameAs: [
+    'https://maps.google.com/?cid=9321164461524476520',
+    'https://www.facebook.com/Therapyhousethegap/',
+    'https://www.linkedin.com/company/therapy-house',
+  ],
+  image: '/assets/media/house-hero-loop-poster.webp',
+  logo: '/assets/media/logo3d.png',
+  /* A relative band, not a figure. The session fees themselves are published
+     on /therapy/ and stay there, where they carry their review date. */
+  priceRange: '$$',
+  /** @type {OpeningHours[]} */
+  openingHours: [],
+};
+
+/**
  * Primary and secondary CTA carry equal weight (PRODUCT.md): some parents
  * self-serve, others need to talk first, and neither path is the fallback for
  * the other.
