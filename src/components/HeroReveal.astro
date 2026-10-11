@@ -664,19 +664,22 @@ const sizes = imageSmall
     display: inline-flex;
     align-items: center;
     gap: 9px;
-    min-height: 40px;
-    padding: 0 16px 0 13px;
-    border: 1px solid var(--line);
+    min-height: 44px;
+    padding: 0 18px 0 14px;
+    /* No hairline: DESIGN.md's object shadow and the lit edge are what make it
+       stand on the picture, and a 1px rule under a wide shadow only drew a
+       second, fainter outline round it. */
+    border: 0;
     border-radius: var(--radius-pill);
     background: var(--paper-white);
-    box-shadow: 0 10px 24px rgba(45, 25, 9, 0.15), var(--edge-lit);
+    box-shadow: 0 16px 36px rgba(48, 25, 8, 0.18), var(--edge-lit);
     color: var(--ink-soft);
     font-family: var(--font-body);
-    font-size: var(--text-label);
-    font-weight: 800;
+    /* Sentence case: it is an invitation, not a field label, and the first
+       screen already carried four tracked-uppercase labels. */
+    font-size: var(--text-secondary);
+    font-weight: 700;
     line-height: 1;
-    letter-spacing: var(--track-label);
-    text-transform: uppercase;
     text-decoration: none;
     white-space: nowrap;
     transition: color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
@@ -684,8 +687,7 @@ const sizes = imageSmall
 
   .hero__door-mark {
     flex: none;
-    /* The doorway sits a shade low against uppercase letterforms. */
-    margin-bottom: -1px;
+    margin-bottom: 1px;
     color: var(--heading);
     transition: color 200ms ease;
   }
@@ -700,7 +702,7 @@ const sizes = imageSmall
   .hero__door:hover,
   .hero__door:focus-visible {
     color: var(--heading);
-    box-shadow: 0 12px 26px rgba(45, 25, 9, 0.18), 0 0 28px rgba(255, 234, 172, 0.4),
+    box-shadow: 0 18px 42px rgba(48, 25, 8, 0.23), 0 0 28px rgba(255, 234, 172, 0.4),
       var(--edge-lit);
     transform: translateY(-2px);
   }
@@ -714,6 +716,16 @@ const sizes = imageSmall
   .hero__door:focus-visible {
     outline: 3px solid var(--focus-blue);
     outline-offset: 2px;
+  }
+
+  /* On a phone the plate goes under the picture rather than on it: at that
+     size it covered the lower third of the house. */
+  @media (max-width: 44rem) {
+    .hero__door {
+      grid-area: 2 / 1;
+      justify-self: center;
+      margin: var(--space-sm) 0 0;
+    }
   }
 
   /* ---- The loop and its control ---- */
@@ -874,10 +886,21 @@ const sizes = imageSmall
     }
 
     /* Not on a phone: the action bar holds the bottom of the screen there, and
-       the cue sat underneath it, unseen. A thumb scrolls by habit. */
+       the cue sat underneath it, unseen. A thumb scrolls by habit. The house
+       comes up under the words instead of floating in the middle of what is
+       left — that left a ~90px gap under the lede — and the stage keeps clear
+       of the bar so the plate under the house is never behind it. */
     @media (max-width: 44rem) {
       .hero[data-hero]:not(.hero--settled) .hero__cue {
         display: none;
+      }
+
+      .hero[data-hero]:not(.hero--settled) .hero__stage {
+        padding-bottom: calc(var(--action-bar-h) + var(--space-sm));
+      }
+
+      .hero[data-hero]:not(.hero--settled) .hero__art {
+        align-self: start;
       }
     }
 

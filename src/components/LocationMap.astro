@@ -130,12 +130,10 @@ const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComp
   }
 
   .map__go {
-    /* The label step from DESIGN.md, sentence case rather than the tracked
-       uppercase — this is an action, not a field name. */
-    font-size: var(--text-label);
-    font-weight: 800;
-    letter-spacing: var(--track-label);
-    text-transform: uppercase;
+    /* Sentence case rather than the tracked uppercase — this is an action, not
+       a field name — so it takes the meta step instead of the label step. */
+    font-size: var(--text-meta);
+    font-weight: 700;
     line-height: 1.2;
     color: var(--link);
   }

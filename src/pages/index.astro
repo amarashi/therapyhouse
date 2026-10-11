@@ -369,7 +369,10 @@ const faces = [
     margin-top: var(--space-xl);
   }
 
+  /* A reading measure. Without one the note ran the full wrap — about 131
+     characters a line at 1440px. */
   .section-head__note {
+    max-width: var(--content-max);
     color: var(--ink-soft);
     margin-bottom: var(--space-lg);
   }
@@ -562,23 +565,21 @@ const faces = [
      always sit in the middle column, so every title and every line of copy
      starts on the same vertical line down the page. The image alternates
      between the outer two — left, right, left — which gives the block its
-     movement without ever shifting the text. The whole thing is centred on the
-     page rather than hugging the left edge. */
+     movement without ever shifting the text. */
 
   .rooms__by-age {
     margin: var(--space-xl) 0 0;
     max-width: var(--content-max);
   }
 
-  .rooms-section .section-head {
-    text-align: center;
-  }
-
   .rooms {
     --room-art: clamp(116px, 18vw, 280px);
     list-style: none;
     padding: 0;
-    margin: 0 auto var(--space-2xl);
+    /* On the page's one left edge, under its heading, like every other
+       section. It used to be centred under a centred heading, and the two
+       never lined up with the column of words between the pictures. */
+    margin: 0 0 var(--space-2xl);
     max-width: 70rem;
   }
 
