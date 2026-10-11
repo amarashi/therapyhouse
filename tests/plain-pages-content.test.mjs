@@ -464,6 +464,15 @@ const SERVICE_PAGES = [
       "Psychologists for adults in The Gap, Brisbane and by video across Queensland: anxiety, depression, trauma, grief, couples, and ADHD and autism assessment.",
     phrase: "psychologist for adults",
   },
+  {
+    id: "children",
+    title: "Child Psychologist The Gap, Brisbane | Children & Teens",
+    h1: "Psychology for children and teenagers",
+    description:
+      "Child and adolescent psychologists in The Gap, Brisbane: anxiety, school worries, emotions, ADHD and autism support, play therapy and parent involvement.",
+    phrase: "child psychologist",
+    h1Word: "children",
+  },
 ];
 
 for (const page of SERVICE_PAGES) {
