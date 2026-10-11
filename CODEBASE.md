@@ -27,7 +27,7 @@ http://127.0.0.1:8765/index.html?debug=1
 | `.gitignore` | Ignores archived source material and Playwright MCP test artefacts. This keeps generated or historical files out of normal git status. |
 | `CODEBASE.md` | This guide. It explains the current source layout and the role of each active file. |
 | `index.html` | The main page shell. It contains semantic markup for the orientation prompt, exterior turntable canvas, entrance hotspot, transition video, inside scene, interactive signs, team carousel, philosophy modal, contact modal, and debug panel. Styling and behaviour are now loaded externally. |
-| `therapyhouse-button-positions.json` | Exported position snapshot for the inside-scene sign buttons. It records the x/y location, perspective, rotation, skew, scale, and label for About Us, Back, Contact Us, and Our Philosophy. The debug panel can export this shape. |
+| `src/house-debug/` | Development-only tuning panel for the house (sign positions, firelight, dog eyes). Rendered only under `astro dev`; open `/house/?debug=1`. Tuned values ship in `site-data.js`, `content-data.js` and `house.astro`; the three JSON snapshots that used to sit in `public/` were removed in #43. |
 
 ## Styles
 
@@ -43,10 +43,10 @@ http://127.0.0.1:8765/index.html?debug=1
 | `assets/scripts/entrance-video.js` | Controls the entrance transition. It listens to the door hotspot, centres the turntable, plays `door-transition.mp4`, skips on double-click, and enters the inside scene when the video ends or debug mode requests it. |
 | `assets/scripts/inside-scene.js` | Manages the inside room experience. It calculates image framing, positions interactive signs against the inside image coordinate system, applies parallax movement, samples edge colours from the base layer, handles reduced motion, and manages entering/leaving the inside scene. |
 | `assets/scripts/modal-dialog.js` | Small reusable modal helper. It handles open/close state, `inert`, `aria-hidden`, backdrop clicks, close button clicks, and focus restoration. It is used by the philosophy and contact dialogs. |
-| `assets/scripts/sign-position-debugger.js` | Reusable sign-position debugging tool. It reads and writes sign datasets, builds slider/number controls, updates signs live, serialises the current position document, saves it to `localStorage`, and downloads JSON snapshots. |
+| `src/house-debug/sign-position-debugger.js` (dev only) | Reusable sign-position debugging tool. It reads and writes sign datasets, builds slider/number controls, updates signs live, serialises the current position document, saves it to `localStorage`, and downloads JSON snapshots. |
 | `assets/scripts/site-data.js` | Static configuration and content. It defines the 48 turntable frame paths, inside image dimensions, fallback edge colours, parallax depth settings, debug storage keys, editable sign fields, and team member data. |
 | `assets/scripts/team-carousel.js` | Team carousel feature module. It preloads team images, builds team cards from `site-data.js`, handles next/previous navigation, click-to-advance cards, swipe gestures, open/close state, focus restoration, and the visible profile count. |
-| `assets/scripts/turntable-viewer.js` | Exterior rotating house renderer. It renders WebP frames into the canvas, loads nearby frames first, lazily loads the remaining sequence, handles hover, drag, wheel, keyboard navigation, canvas resizing, hotspot positioning, and centring before the entrance video plays. |
+| `assets/scripts/turntable-viewer.js` | Exterior rotating house renderer. With `still` (reduced motion or Save-Data) it loads only the centre frame and does not rotate. It renders WebP frames into the canvas, loads nearby frames first, lazily loads the remaining sequence, handles hover, drag, wheel, keyboard navigation, canvas resizing, hotspot positioning, and centring before the entrance video plays. |
 | `assets/scripts/utils.js` | Shared low-level helpers: clamping numbers, formatting values, idle-task scheduling, reading image dimensions, and preloading images. |
 
 ## Active Media Assets
@@ -145,7 +145,7 @@ The loader prioritises the centre frame first, then nearby frames, then the rest
 
 | File | Purpose |
 |---|---|
-| `assets/asset-report.md` | Documents asset optimisation work: source paths, optimised paths, old and new sizes, dimensions, and processing notes. This is useful when replacing or regenerating media. |
+| `docs/asset-report.md` | Documents asset optimisation work: source paths, optimised paths, old and new sizes, dimensions, and processing notes. This is useful when replacing or regenerating media. |
 
 ## Ignored Local or Archived Folders
 
@@ -164,7 +164,7 @@ These folders exist in the workspace but are ignored by `.gitignore`, so they ar
 4. Clicking the door hotspot triggers `entrance-video.js`, which centres the turntable and plays the transition video.
 5. When the video ends, `inside-scene.js` reveals the layered inside room and positions the interactive signs.
 6. The About Us sign opens `team-carousel.js`; the Our Philosophy and Contact Us signs open modals through `modal-dialog.js`.
-7. Opening `?debug=1` activates `sign-position-debugger.js`, allowing live editing and export of sign positions.
+7. On the dev server, opening `?debug=1` activates `src/house-debug/sign-position-debugger.js`, allowing live editing and export of sign positions.
 
 ## Reuse Notes
 
@@ -177,3 +177,7 @@ The most portable modules are:
 - `inside-scene.js` for image-coordinate overlays and parallax scene layers.
 
 If reusing these modules in another project, prefer copying the module plus its direct data contract from `site-data.js`, rather than copying `app.js` wholesale.
+
+### `dev/room-orbits/` (not published)
+
+The room-orbit prototype: `rooms-preview.html`, `assets/scripts/room-frames-viewer.js`, `assets/rooms/rooms.json`, and the 33-frame desktop and mobile sequences, depth maps and posters for each room (about 64 MB). Nothing on the site uses them yet, so they live outside `public/` and do not ship. Serve this folder with any static server to open the preview. `tools/roomfix/pack_*.py` write here.

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { defaultFirelightSettings as settings } from "../public/assets/scripts/site-data.js";
 
 const root = new URL("../", import.meta.url);
 
@@ -7,7 +8,9 @@ async function readProjectFile(path) {
   return readFile(new URL(path, root), "utf8");
 }
 
-const settings = JSON.parse(await readProjectFile("public/therapyhouse-firelight-settings.json"));
+// The tuned values ship in site-data.js; the panel that tunes them is dev-only (#43).
+const debugPanel = await readProjectFile("src/house-debug/DebugPanel.astro");
+const debugMount = await readProjectFile("src/house-debug/mount.js");
 const indexHtml = await readProjectFile("src/pages/house.astro");
 const siteData = await readProjectFile("public/assets/scripts/site-data.js");
 const appScript = await readProjectFile("public/assets/scripts/app.js");
@@ -26,13 +29,14 @@ for (const light of settings.lights) {
 }
 
 assert.match(indexHtml, /id="insideFirelightLayer"/);
-assert.match(indexHtml, /<details class="debug-panel__section debug-panel__section--button-debugger"/);
-assert.match(indexHtml, /<summary class="debug-panel__summary"[\s\S]*Button Position Debugger/);
-assert.match(indexHtml, /id="debugFirelightSelect"/);
-assert.match(indexHtml, /<details class="debug-panel__section debug-panel__section--firelight-debugger"/);
-assert.match(indexHtml, /<summary class="debug-panel__summary"[\s\S]*Firelight Debugger/);
-assert.match(indexHtml, /id="debugFirelightConfirm"/);
+assert.ok(indexHtml.includes("import.meta.env.DEV && <DebugPanel />"), "the tuning panel renders only on the dev server");
+assert.match(debugPanel, /<details class="debug-panel__section debug-panel__section--button-debugger"/);
+assert.match(debugPanel, /<summary class="debug-panel__summary"[\s\S]*Button Position Debugger/);
+assert.match(debugPanel, /id="debugFirelightSelect"/);
+assert.match(debugPanel, /<details class="debug-panel__section debug-panel__section--firelight-debugger"/);
+assert.match(debugPanel, /<summary class="debug-panel__summary"[\s\S]*Firelight Debugger/);
+assert.match(debugPanel, /id="debugFirelightConfirm"/);
 assert.match(siteData, /firelightFields/);
 assert.match(siteData, /defaultFirelightSettings/);
 assert.match(appScript, /createFirelightController/);
-assert.match(appScript, /createFirelightDebugger/);
+assert.match(debugMount, /createFirelightDebugger/);

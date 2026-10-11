@@ -58,6 +58,14 @@ export function createInsideScene({
   let currentEdgeFallbackColors = edgeFallbackColors;
   let currentParallaxDepths = parallaxDepths;
   let insideParallaxLayers = [...initialInsideParallaxLayers];
+  /*
+   * The interior is hidden until the visitor walks in, so its layers (three
+   * full-width images for the entry hall) must not compete with the exterior
+   * for the first paint. Until `loadLayers()` is called they carry their
+   * address in `data-src` and fetch nothing; after it, every room's layers
+   * load as soon as they are rendered.
+   */
+  let layersAllowed = false;
 
   function getActiveRoomScene() {
     return roomSceneMap[activeRoomId] || roomSceneMap[fallbackRoomId] || null;
@@ -124,7 +132,8 @@ export function createInsideScene({
   async function updateEdgeColors() {
     const baseLayer = insideParallaxLayers[0];
     applyEdgeColors(currentEdgeFallbackColors);
-    if (!baseLayer) return;
+    // Not loaded yet (see `loadLayers`): the room's fallback colours stand in.
+    if (!baseLayer || !baseLayer.getAttribute("src")) return;
 
     try {
       if (!baseLayer.complete && typeof baseLayer.decode === "function") {
@@ -225,7 +234,11 @@ export function createInsideScene({
     const nextLayers = roomScene.background.layers.map((layerConfig, index) => {
       const image = document.createElement("img");
       image.className = ["inside-parallax__layer", layerConfig.className].filter(Boolean).join(" ");
-      image.src = layerConfig.src;
+      if (layersAllowed) {
+        image.src = layerConfig.src;
+      } else {
+        image.dataset.src = layerConfig.src;
+      }
       image.alt = layerConfig.alt || "";
       image.draggable = false;
       image.decoding = "async";
@@ -285,6 +298,19 @@ export function createInsideScene({
     insideEyeLayers.forEach((layer) => {
       layer.hidden = effects.dogEyes === false;
     });
+  }
+
+  function loadLayers() {
+    let started = false;
+    layersAllowed = true;
+    insideParallaxLayers.forEach((layer) => {
+      if (!layer.getAttribute("src") && layer.dataset.src) {
+        layer.src = layer.dataset.src;
+        delete layer.dataset.src;
+        started = true;
+      }
+    });
+    if (started) updateEdgeColors();
   }
 
   function setActiveRoom(roomId) {
@@ -416,6 +442,7 @@ export function createInsideScene({
 
   function enter({ roomId = activeRoomId, onReady } = {}) {
     setActiveRoom(roomId);
+    loadLayers();
     if (active) {
       onReady?.();
       return;
@@ -483,6 +510,7 @@ export function createInsideScene({
     },
     init,
     leave,
+    loadLayers,
     resetParallax,
     setActiveRoom,
     setSceneActionHandler,

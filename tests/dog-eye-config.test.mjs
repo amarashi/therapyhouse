@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { defaultDogEyeSettings as settings } from "../public/assets/scripts/site-data.js";
 
 const root = new URL("../", import.meta.url);
 
@@ -7,7 +8,9 @@ async function readProjectFile(path) {
   return readFile(new URL(path, root), "utf8");
 }
 
-const settings = JSON.parse(await readProjectFile("public/therapyhouse-dog-eye-settings.json"));
+// The tuned values ship in site-data.js; the panel that tunes them is dev-only (#43).
+const debugPanel = await readProjectFile("src/house-debug/DebugPanel.astro");
+const debugMount = await readProjectFile("src/house-debug/mount.js");
 const indexHtml = await readProjectFile("src/pages/house.astro");
 const siteData = await readProjectFile("public/assets/scripts/site-data.js");
 const appScript = await readProjectFile("public/assets/scripts/app.js");
@@ -28,12 +31,12 @@ for (const eye of settings.eyes) {
 
 assert.match(indexHtml, /id="dogEyeLayer"/);
 assert.doesNotMatch(indexHtml, /Archived dog-eye cursor-follow experiment/);
-assert.match(indexHtml, /id="debugDogEyeSelect"/);
-assert.match(indexHtml, /id="debugDogEyeConfirm"/);
+assert.match(debugPanel, /id="debugDogEyeSelect"/);
+assert.match(debugPanel, /id="debugDogEyeConfirm"/);
 assert.match(siteData, /dogEyeFields/);
 assert.match(siteData, /defaultDogEyeSettings/);
 assert.match(appScript, /createDogEyeController/);
-assert.match(appScript, /createDogEyeDebugger/);
+assert.match(debugMount, /createDogEyeDebugger/);
 assert.match(controllerScript, /eye\.size \/ insideImageSize\.width \* 100/);
 assert.match(controllerScript, /eye\.pupilSize \/ eyeSize \* 100/);
 assert.doesNotMatch(controllerScript, /eye\.pupilSize \/ insideImageSize\.width \* 100/);

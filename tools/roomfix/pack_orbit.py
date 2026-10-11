@@ -24,7 +24,7 @@ from pathlib import Path
 
 from PIL import Image
 
-ROOMS_DIR = Path(r"C:\dev\web\therapyhouse\public\assets\rooms")
+ROOMS_DIR = Path(r"C:\dev\web\therapyhouse\dev\room-orbits\assets\rooms")
 WAN_DIR = Path(__file__).resolve().parent / "wan"
 BACKUP_DIR = Path(r"C:\dev\web\therapyhouse\tools\roomfix\_original_frames")
 
