@@ -236,8 +236,6 @@ async function knownPaths() {
  * clinic's domain. Delete a line when its page is built.
  */
 const PLANNED = {
-  "/therapy/family/": 16,
-  "/telehealth/": 25,
 };
 
 test("every link in a service page's body leads to a page the site builds", async () => {
