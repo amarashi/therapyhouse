@@ -3,13 +3,41 @@ import { withBase } from '../lib/base.js';
 import { getEntry, render } from 'astro:content';
 import PlainLayout from '../layouts/PlainLayout.astro';
 import HeroReveal from '../components/HeroReveal.astro';
-import { contact } from '../data/site.js';
+import { contact, site } from '../data/site.js';
+import { includeInBuild, isProductionSite, serviceSchema, servicePath } from '../lib/services.js';
 
 const page = await getEntry('pages', 'group-therapy');
 if (!page) throw new Error('Missing content: src/content/pages/group-therapy.md');
 
 const { Content } = await render(page);
 const { title, description, lede, programs, circleOfSecurity, workshopTopics } = page.data;
+
+/* The service pages this one leads to: the Circle of Security page (issue
+   #14) and the children's hub (issue #6). Each is linked only where it is
+   built, so a draft is never linked from production. */
+const production = isProductionSite(Astro.site);
+const builtService = async (id: string) => {
+  const entry = await getEntry('services', id);
+  return entry && includeInBuild(entry.data, production)
+    ? { name: entry.data.h1, href: servicePath(entry.data.kind, entry.id, entry.data.path) }
+    : null;
+};
+const cosPage = await builtService('circle-of-security');
+const childrenHub = await builtService('children');
+
+/* A hub in the structured data: a Service from the clinic, and an ItemList of
+   the service pages it links to (the same shape the audience hubs use). */
+const pageUrl = new URL(Astro.url.pathname, Astro.site ?? site.origin).href;
+const schema = serviceSchema(
+  { kind: 'hub', h1: title, description, formats: ['in-room'] },
+  {
+    url: pageUrl,
+    origin: site.origin,
+    items: [cosPage, childrenHub]
+      .filter((item) => item !== null)
+      .map((item) => ({ name: item.name, url: new URL(withBase(item.href), Astro.site ?? site.origin).href })),
+  }
+);
 
 /**
  * The Circle of Security details are authored as `Label: value` strings, which
@@ -77,6 +105,7 @@ const at = (age) => `${(((age - ageMin) / ageSpan) * 100).toFixed(3)}%`;
 ---
 
 <PlainLayout title={title} documentTitle={page.data.documentTitle} description={description}>
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} slot="head" />
   <HeroReveal
     room="groups"
     roomName="the group room"
@@ -95,6 +124,12 @@ const at = (age) => `${(((age - ageMin) / ageSpan) * 100).toFixed(3)}%`;
   <div class="wrap">
     <div class="prose--flush prose stack">
       <Content />
+      {childrenHub && (
+        <p>
+          For help for one child on their own, see{' '}
+          <a href={withBase(childrenHub.href)}>{childrenHub.name.toLowerCase()}</a>.
+        </p>
+      )}
     </div>
 
     {/*
@@ -155,6 +190,13 @@ const at = (age) => `${(((age - ageMin) / ageSpan) * 100).toFixed(3)}%`;
             <h2 id="circle">{circleOfSecurity.title}</h2>
             {circleOfSecurity.audience && <p class="audience">{circleOfSecurity.audience}</p>}
             <p class="cos__description">{circleOfSecurity.description}</p>
+            {cosPage && (
+              <p class="cos__more">
+                <a class="standalone-link" href={withBase(cosPage.href)}>
+                  More about the Circle of Security program
+                </a>
+              </p>
+            )}
           </div>
 
           <div class="cos__facts">
