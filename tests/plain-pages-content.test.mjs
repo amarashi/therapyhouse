@@ -4,6 +4,9 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 import { siteContent } from "../public/assets/scripts/content-data.js";
+import { teamPortrait, UPLOAD_DIR } from "../src/lib/team-portraits.js";
+
+const root = fileURLToPath(new URL("..", import.meta.url));
 
 /**
  * The house and the plain pages are two presentations of one content model.
@@ -151,41 +154,40 @@ test("availability status is read correctly, including the negative case", async
 });
 
 test("every team member has a profile file with a photo that exists", async () => {
-  const { readdir, access } = await import("node:fs/promises");
-  const teamDir = fileURLToPath(new URL("../src/content/team", import.meta.url));
-  const files = (await readdir(teamDir)).filter((f) => f.endsWith(".md"));
+  const entries = await teamImages();
+  assert.equal(entries.length, 12, "expected 12 team profiles");
 
-  assert.equal(files.length, 12, "expected 12 team profiles");
-
-  for (const file of files) {
-    const md = await readFile(`${teamDir}/${file}`, "utf8");
-    const image = md.match(/^image: "(.+)"$/m)?.[1];
+  for (const { file, image } of entries) {
     assert.ok(image, `${file} has no image path`);
-    const onDisk = fileURLToPath(new URL(`../public${image}`, import.meta.url));
-    await access(onDisk).catch(() => {
-      throw new Error(`${file} points at a missing photo: public${image}`);
-    });
+    assert.ok(
+      teamPortrait(image, root).photo,
+      `${file} points at a missing photo: ${image} is neither in public/assets/team/ nor uploaded to ${UPLOAD_DIR}/`
+    );
   }
 });
+
+/** Each team entry's `image` field. A CMS may write it quoted or bare. */
+async function teamImages() {
+  const { readdir } = await import("node:fs/promises");
+  const teamDir = fileURLToPath(new URL("../src/content/team", import.meta.url));
+  const files = (await readdir(teamDir)).filter((f) => f.endsWith(".md"));
+  return Promise.all(
+    files.map(async (file) => {
+      const md = await readFile(`${teamDir}/${file}`, "utf8");
+      return { file, image: md.match(/^image:\s*"?([^"\n]+?)"?\s*$/m)?.[1] };
+    })
+  );
+}
 
 test("every team photo has its illustrated twin beside it", async () => {
   // The card opens as the illustration and dissolves to the photograph on
   // hover. A missing `-pix.webp` fails silently — the card just renders the
   // photo — so the way this goes wrong is one person quietly not taking part.
   // Usually it means a new master landed in art-src/team-pix/ and nobody ran
-  // `node tools/portraits.mjs`.
-  const { readdir, access } = await import("node:fs/promises");
-  const teamDir = fileURLToPath(new URL("../src/content/team", import.meta.url));
-  const files = (await readdir(teamDir)).filter((f) => f.endsWith(".md"));
-
-  for (const file of files) {
-    const md = await readFile(`${teamDir}/${file}`, "utf8");
-    const image = md.match(/^image: "(.+)"$/m)?.[1];
-    const pix = image.replace(/\.(webp|png|jpe?g)$/, "-pix.webp");
-    const onDisk = fileURLToPath(new URL(`../public${pix}`, import.meta.url));
-    await access(onDisk).catch(() => {
-      throw new Error(`${file} has no illustrated portrait: public${pix}`);
-    });
+  // `node tools/portraits.mjs`. A CMS upload always has one: the build stands
+  // the photograph in for the drawing (src/lib/team-portraits.js).
+  for (const { file, image } of await teamImages()) {
+    assert.ok(teamPortrait(image, root).pix, `${file} has no illustrated portrait for ${image}`);
   }
 });
 
@@ -194,24 +196,11 @@ test("every portrait ships both steps of the responsive ladder", async () => {
   // ….webp 560w"`. A missing `-280` is the worst kind of broken: 2x screens
   // never ask for it, so it looks fine to whoever built it, and every 1x
   // visitor gets a blank square. Run `node tools/portraits.mjs` after adding
-  // anyone.
-  const { readdir, access } = await import("node:fs/promises");
-  const teamDir = fileURLToPath(new URL("../src/content/team", import.meta.url));
-  const files = (await readdir(teamDir)).filter((f) => f.endsWith(".md"));
-
-  for (const file of files) {
-    const md = await readFile(`${teamDir}/${file}`, "utf8");
-    const image = md.match(/^image: "(.+)"$/m)?.[1];
-    const steps = [image, image.replace(/\.(webp|png|jpe?g)$/, "-pix.webp")].map((f) =>
-      f.replace(/\.webp$/, "-280.webp")
-    );
-
-    for (const step of steps) {
-      const onDisk = fileURLToPath(new URL(`../public${step}`, import.meta.url));
-      await access(onDisk).catch(() => {
-        throw new Error(`${file} has no 280w step: public${step}`);
-      });
-    }
+  // anyone by hand; a CMS upload gets its steps from the build.
+  for (const { file, image } of await teamImages()) {
+    const portrait = teamPortrait(image, root);
+    assert.ok(portrait.photo280, `${file} has no 280w step of its photo`);
+    assert.ok(portrait.pix280, `${file} has no 280w step of its illustration`);
   }
 });
 

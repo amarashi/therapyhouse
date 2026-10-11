@@ -25,3 +25,6 @@ shaft.png
 team-room.png
 prompt_test.txt
 ChatGPT Image *.png
+
+# Team portrait sizes the build makes from a CMS upload (src/lib/team-portraits.js)
+public/assets/team/generated/
