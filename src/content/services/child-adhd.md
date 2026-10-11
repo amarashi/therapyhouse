@@ -37,7 +37,7 @@ fees:
 medicare:
   - Medicare does not usually pay towards a private ADHD assessment, so plan on the package fee. Reception can tell you what applies before anything is booked.
   - Medicare has items for children and young people under 25 with a suspected complex neurodevelopmental disorder (MBS item 82000). They need a referral from a consultant paediatrician or psychiatrist, not a GP, and they are written for conditions such as autism that affect two or more areas of development. ADHD on its own is not named in them. Ask reception whether they could apply to your child.
-related: []
+related: [child-autism]
 sourceUrl: https://www.therapyhouse.com.au/assessments/
 draft: true
 ---
@@ -108,6 +108,13 @@ them to ask whether they need the assessment done in a particular way.
 If something new comes up during the assessment, a member of the team will
 talk with you about adding to the package. Nothing changes without your
 consent.
+
+## ADHD and autism
+
+ADHD and autism can occur together, and some signs overlap. If you are also
+wondering about autism, see our
+[autism assessment for children](/assessments/child-autism/). The clinician will
+talk with you at intake about which assessment fits your question.
 
 ## After the assessment
 

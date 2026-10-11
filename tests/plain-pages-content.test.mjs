@@ -328,6 +328,14 @@ const assessmentPages = [
       "ADHD assessment for children and teens in The Gap, Brisbane: the process, what to bring, report timing and cost from $1,000.",
     phrase: "ADHD assessment",
   },
+  {
+    file: "child-autism",
+    title: "Child Autism Assessment Brisbane | Therapy House, The Gap",
+    h1: "Autism assessment for children and teenagers",
+    description:
+      "Autism assessment for children and teens in The Gap, Brisbane: the process, what to bring, report timing and cost from $1,000.",
+    phrase: "Autism assessment",
+  },
 ];
 
 for (const page of assessmentPages) {
