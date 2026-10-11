@@ -67,6 +67,7 @@ export const readyNav = nav.filter((item) => item.ready);
 export const secondaryNav = [
   { label: 'Our philosophy', href: '/philosophy/' },
   { label: 'Work with us', href: '/work-with-us/' },
+  { label: 'Privacy policy', href: '/privacy-policy/' },
 ];
 
 /**

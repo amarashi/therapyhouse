@@ -1,0 +1,59 @@
+---
+import { getEntry, render } from 'astro:content';
+import PlainLayout from '../layouts/PlainLayout.astro';
+
+const page = await getEntry('pages', 'privacy-policy');
+if (!page) throw new Error('Missing content: src/content/pages/privacy-policy.md');
+
+const { Content } = await render(page);
+const { title, description, lede, lastReviewed } = page.data;
+
+/* A policy is only as good as its date. Shown so a reader can see how old the
+   text is, and so the clinic can see when it was last checked. */
+const reviewedLabel = lastReviewed
+  ? new Intl.DateTimeFormat('en-AU', { day: 'numeric', month: 'long', year: 'numeric' }).format(lastReviewed)
+  : null;
+---
+
+{/* No hero and no closing call to action: a visitor on the privacy policy came
+    to read it, and a "Talk to us" block under a legal text reads as a pitch. */}
+<PlainLayout title={title} description={description} showClosing={false}>
+  <div class="wrap policy">
+    <header class="policy__head">
+      <h1>{title}</h1>
+      <p class="lede">{lede}</p>
+      {reviewedLabel && (
+        <p class="policy__reviewed">
+          Last updated <time datetime={lastReviewed?.toISOString().slice(0, 10)}>{reviewedLabel}</time>
+        </p>
+      )}
+    </header>
+
+    <div class="prose--flush prose stack">
+      <Content />
+    </div>
+  </div>
+</PlainLayout>
+
+<style>
+  /* No hero, so the heading band needs room of its own below the masthead. */
+  .policy__head {
+    padding-top: var(--space-2xl);
+    max-width: var(--content-max);
+  }
+
+  .policy__reviewed {
+    color: var(--ink-faint);
+    font-size: var(--text-secondary);
+  }
+
+  .policy {
+    padding-bottom: var(--space-3xl);
+  }
+
+  /* The web address in the complaints paragraph is long and unbroken; let it
+     wrap on a phone instead of pushing the page sideways. */
+  .policy :global(a) {
+    overflow-wrap: anywhere;
+  }
+</style>
