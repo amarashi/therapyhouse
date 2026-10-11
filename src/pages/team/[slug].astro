@@ -5,6 +5,7 @@ import PlainLayout from '../../layouts/PlainLayout.astro';
 import CallToAction from '../../components/CallToAction.astro';
 import { site, isAcceptingNewClients } from '../../data/site.js';
 import { practitionerTitle, personDescription } from '../../lib/seo.js';
+import { personSchema as buildPersonSchema } from '../../lib/structured-data.js';
 
 export async function getStaticPaths() {
   const everyone = await getCollection('team');
@@ -34,25 +35,16 @@ const accepting = isAcceptingNewClients(availability);
 /**
  * Person-level structured data. This is the page a parent lands on from a
  * search for a named practitioner, so the machine-readable identity belongs
- * here rather than only on the team index.
- *
- * `worksFor` ties them to the clinic. An AHPRA registration number would go in
- * `identifier` — the clinic has not supplied those yet.
+ * here rather than only on the team index. `worksFor` points at the clinic's
+ * record by its id; the AHPRA number goes in only once the clinic supplies it.
+ * See src/lib/structured-data.js.
  */
-const personSchema =
-  kind === 'dog'
-    ? null
-    : {
-        '@context': 'https://schema.org',
-        '@type': 'Person',
-        name,
-        jobTitle: role,
-        ...(credentials ? { hasCredential: credentials } : {}),
-        ...(languages ? { knowsLanguage: languages } : {}),
-        image: new URL(withBase(image), Astro.site ?? site.origin).href,
-        url: new URL(withBase(`/team/${person.id}/`), Astro.site ?? site.origin).href,
-        worksFor: { '@type': 'MedicalBusiness', name: site.name, url: site.origin },
-      };
+const personSchema = buildPersonSchema(person.data, {
+  id: person.id,
+  origin: site.origin,
+  siteUrl: Astro.site ?? site.origin,
+  pageBase: withBase,
+});
 ---
 
 <PlainLayout
