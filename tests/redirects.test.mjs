@@ -108,7 +108,8 @@ test("every service page's redirectFrom is in the table, pointing at that page",
     const block = source.match(/^redirectFrom:\s*\r?\n((?:\s+-\s+.*\r?\n)+)/m)?.[1] ?? "";
     const froms = [...block.matchAll(/-\s+['"]?([^'"\s]+)/g)].map((m) => m[1]);
     const id = file.replace(/\.md$/, "");
-    const page = kind === "assessment" ? `/assessments/${id}/` : kind === "hub" ? `/${id}/` : `/therapy/${id}/`;
+    const ownPath = source.match(/^path:\s*['"]?([^'"\s]+)/m)?.[1];
+    const page = ownPath ? ownPath : kind === "assessment" ? `/assessments/${id}/` : kind === "hub" ? `/${id}/` : `/therapy/${id}/`;
     for (const from of froms) {
       assert.equal(resolve(rules, from), page, `${file}: ${from} is not redirected to ${page} in docs/redirects.md`);
     }

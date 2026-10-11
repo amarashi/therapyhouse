@@ -40,7 +40,7 @@ export function builtPaths(pageFiles, serviceEntries = []) {
   }
   for (const entry of serviceEntries) {
     // Therapy, assessment and audience hub (/adults/, /children/) pages.
-    paths.add(servicePath(entry.data.kind, entry.id));
+    paths.add(servicePath(entry.data.kind, entry.id, entry.data.path));
   }
   return paths;
 }

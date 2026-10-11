@@ -6,7 +6,7 @@
  */
 import { getCollection } from 'astro:content';
 import ServicePage from '../../layouts/ServicePage.astro';
-import { includeInBuild, isProductionSite } from '../../lib/services.js';
+import { builtAtOwnPath, includeInBuild, isProductionSite } from '../../lib/services.js';
 
 export async function getStaticPaths() {
   /* `Astro.site` is not in scope here, so the configured site is read the way
@@ -14,7 +14,8 @@ export async function getStaticPaths() {
   const production = isProductionSite(import.meta.env.SITE);
   const entries = await getCollection(
     'services',
-    (entry) => entry.data.kind === 'assessment' && includeInBuild(entry.data, production)
+    (entry) =>
+      entry.data.kind === 'assessment' && !builtAtOwnPath(entry.data) && includeInBuild(entry.data, production)
   );
   return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
 }

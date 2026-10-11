@@ -23,8 +23,14 @@ export function isProductionSite(site) {
   return !hostname.endsWith('github.io');
 }
 
-/** Where a service page lives. One function, so a link and a route never disagree. */
-export function servicePath(kind, id) {
+/**
+ * Where a service page lives. One function, so a link and a route never disagree.
+ *
+ * `path` is the entry's own `path` field: an address that is not the kind's
+ * usual one, such as /ndis/ or a Current Site address that must not move.
+ */
+export function servicePath(kind, id, path) {
+  if (path) return path;
   if (kind === 'therapy') return `/therapy/${id}/`;
   if (kind === 'assessment') return `/assessments/${id}/`;
   // Audience hubs sit at the site root: /adults/, /children/ (issues #5, #6).
@@ -37,6 +43,15 @@ export function servicePath(kind, id) {
  * from production. A draft that leaked into production would be a page about a
  * clinician's scope of practice that nobody signed off.
  */
+/**
+ * Whether an entry is built by the root route (src/pages/[...page].astro)
+ * rather than under /therapy/ or /assessments/: audience hubs, and any page
+ * whose `path` sets its own address.
+ */
+export function builtAtOwnPath(data) {
+  return data.kind === 'hub' || Boolean(data.path);
+}
+
 export function includeInBuild(data, production) {
   return !(data.draft && production);
 }
@@ -166,7 +181,7 @@ export function serviceLinks(entries) {
       id: entry.id,
       label: entry.data.h1,
       description: entry.data.description,
-      href: servicePath(entry.data.kind, entry.id),
+      href: servicePath(entry.data.kind, entry.id, entry.data.path),
       hubGroup: entry.data.hubGroup,
     }))
     .sort((a, b) => a.label.localeCompare(b.label, 'en-AU'));
