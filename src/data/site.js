@@ -171,3 +171,11 @@ export const staffLink = {
   href: 'https://therapyhouse.pages.dev/',
   note: 'Staff login',
 };
+
+/**
+ * The clinic's Google Analytics 4 property (property 378953578). Loaded only
+ * by production builds; see src/components/Analytics.astro.
+ */
+export const analytics = {
+  measurementId: 'G-XZ6REXQCZ8',
+};

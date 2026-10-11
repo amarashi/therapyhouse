@@ -4,6 +4,7 @@ import { getCollection } from 'astro:content';
 import { site, contact, businessFacts } from '../data/site.js';
 import { includeInBuild, isProductionSite } from '../lib/services.js';
 import { businessSchema as buildBusinessSchema } from '../lib/structured-data.js';
+import Analytics from '../components/Analytics.astro';
 
 /*
  * The legacy single-page experience, preserved intact through the migration.
@@ -51,6 +52,7 @@ const businessSchema = buildBusinessSchema({
   <title>Explore the House | Therapy House, The Gap, Brisbane</title>
   <link rel="stylesheet" href={withBase("/assets/styles/main.css?v=20260823-room-doors")}>
   <script type="application/ld+json" set:html={JSON.stringify(businessSchema)} />
+  <Analytics />
 </head>
 <body>
   <a class="skip-link" href="#siteOverview">Skip to Therapy House information</a>

@@ -1,0 +1,80 @@
+---
+/**
+ * Google Analytics (GA4), for the clinic's own domain only.
+ *
+ * The tag is written into the page only when both are true:
+ *   - the build targets the production domain. This is the same hostname test
+ *     as the Preview's noindex (`isProductionSite`), so the GitHub Pages
+ *     review copy never reports visits into the clinic's property;
+ *   - it is a real build, not `astro dev`. The live property already holds
+ *     hits from developers' machines (audit 07 §g); a dev server pointed at
+ *     the production config must not add more.
+ *
+ * Four events are sent, by one listener each on the document (event
+ * delegation), so links added later, including the ones the house experience
+ * creates in its pop-ups, are counted without being wired up one by one:
+ *   phone_click    any `tel:` link
+ *   email_click    any `mailto:` link
+ *   booking_click  any link to the online booking portal
+ *   form_submit    any form being sent (no form exists yet; the listener is
+ *                  ready for the first one). Field values are never sent.
+ * Which of these are marked as key events is set in the GA4 admin, by a
+ * person, on launch day.
+ */
+import { analytics, contact } from '../data/site.js';
+import { isProductionSite } from '../lib/services.js';
+
+const enabled = import.meta.env.PROD && isProductionSite(Astro.site);
+const measurementId = analytics.measurementId;
+const bookingUrl = contact.bookingUrl;
+---
+
+{enabled && (
+  <>
+    <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${measurementId}`}></script>
+    <script is:inline define:vars={{ measurementId, bookingUrl }}>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        window.dataLayer.push(arguments);
+      }
+      gtag('js', new Date());
+      gtag('config', measurementId);
+
+      document.addEventListener(
+        'click',
+        function (event) {
+          var link = event.target && event.target.closest ? event.target.closest('a[href]') : null;
+          if (!link) return;
+          var href = link.getAttribute('href') || '';
+          var name = /^tel:/i.test(href)
+            ? 'phone_click'
+            : /^mailto:/i.test(href)
+              ? 'email_click'
+              : link.href.indexOf(bookingUrl) === 0
+                ? 'booking_click'
+                : null;
+          if (!name) return;
+          gtag('event', name, {
+            link_url: link.href,
+            link_text: (link.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 100),
+            transport_type: 'beacon',
+          });
+        },
+        true
+      );
+
+      document.addEventListener(
+        'submit',
+        function (event) {
+          var form = event.target;
+          gtag('event', 'form_submit', {
+            form_id: form.id || undefined,
+            form_name: form.getAttribute('name') || undefined,
+            transport_type: 'beacon',
+          });
+        },
+        true
+      );
+    </script>
+  </>
+)}
