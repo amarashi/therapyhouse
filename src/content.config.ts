@@ -47,8 +47,14 @@ const assessmentPackage = z.object({
 const pages = defineCollection({
   loader: glob({ base: './src/content/pages', pattern: '**/*.md' }),
   schema: z.object({
-    /** <h1> and <title>. */
+    /** <h1>, and the <title> unless `documentTitle` is set. */
     title: z.string(),
+    /**
+     * The document title, written in full, when the heading a reader sees is
+     * not the phrase a search result should show. Without it the title is the
+     * heading plus " | Therapy House".
+     */
+    documentTitle: z.string().max(60).optional(),
     /** Meta description and social preview text. */
     description: z.string(),
     /** Opening sentence, set larger than body copy. */
@@ -202,6 +208,14 @@ const services = defineCollection({
     description: z.string().max(160),
     lede: z.string(),
     kind: z.enum(['therapy', 'assessment', 'hub']),
+    /**
+     * Which heading a therapy page sits under on the /therapy/ hub. Optional
+     * so a page can be written before anyone decides where it belongs; an
+     * ungrouped page is still listed, under the hub's last heading, rather
+     * than silently left off. The order and wording of the headings live in
+     * `HUB_GROUPS` in src/lib/services.js.
+     */
+    hubGroup: z.enum(['adults', 'children-families', 'couples', 'how-we-work']).optional(),
     /** Who the page is written for. Not rendered; it is how the hubs (issue
         #4) and the gap register group pages. */
     audiences: z.array(z.enum(['local-family', 'telehealth', 'adult'])).min(1),

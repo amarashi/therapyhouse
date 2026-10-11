@@ -1,0 +1,48 @@
+---
+import { withBase } from '../lib/base.js';
+
+/**
+ * A plain list of service pages: the page's own heading as the link, and the
+ * one sentence that says who it is for. Used by the /therapy/ and
+ * /assessments/ hubs, which is where search engines and visitors find the
+ * service pages — the lift carries six floors and no drop-downs, so these
+ * lists are the only route in from the rest of the site besides the footer.
+ *
+ * Server-rendered links and nothing else: no JavaScript, nothing hidden
+ * behind a toggle, so every service page is one ordinary link from its hub.
+ */
+interface Props {
+  links: { id: string; label: string; description: string; href: string }[];
+}
+
+const { links } = Astro.props;
+---
+
+<ul class="service-list">
+  {links.map((link) => (
+    <li>
+      <a href={withBase(link.href)}>{link.label}</a>
+      <p>{link.description}</p>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .service-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-lg);
+    max-width: var(--content-max);
+  }
+
+  .service-list a {
+    font-size: var(--text-subhead);
+    line-height: var(--lh-subhead);
+  }
+
+  .service-list p {
+    margin: var(--space-xs) 0 0;
+  }
+</style>
