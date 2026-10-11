@@ -13,13 +13,24 @@
  * query string, so `/?utm_source=…` is served by `/` with its query intact;
  * redirects run before static files are served.
  */
+import { existsSync, readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 
-/** Rows of the table: `| \`/from/\` | \`/to/\` | 301 | why | added |`. */
+/**
+ * Rows of the table: | `/from/` | `/to/` | 301 | why | added |. The To cell
+ * may add a fallback, `/to/` (fallback `/other/`), used while the target
+ * page is not built (see `settleRules`).
+ */
 export function parseRedirectsDoc(markdown) {
   const rules = [];
   for (const line of markdown.split(/\r?\n/)) {
-    const match = line.match(/^\|\s*`([^`]+)`\s*\|\s*`([^`]+)`\s*\|\s*(\d{3})\s*\|/);
-    if (match) rules.push({ from: match[1], to: match[2], status: Number(match[3]) });
+    const match = line.match(
+      /^\|\s*`([^`]+)`\s*\|\s*`([^`]+)`(?:\s*\(fallback\s+`([^`]+)`\))?\s*\|\s*(\d{3})\s*\|/
+    );
+    if (!match) continue;
+    const rule = { from: match[1], to: match[2], status: Number(match[4]) };
+    if (match[3]) rule.fallback = match[3];
+    rules.push(rule);
   }
   return rules;
 }
@@ -28,6 +39,14 @@ export const isSplat = (rule) => rule.from.includes('*');
 
 /** The path a destination lands on, without its #fragment or ?query. */
 export const landingPath = (to) => to.replace(/[#?].*$/, '');
+
+/**
+ * A holding rule names the page's own address as its target: the page lives
+ * there, and until it is built the visitor goes to the fallback instead.
+ * Once the page is built the rule is dropped, because Cloudflare runs
+ * redirects before serving files and would otherwise hide the page.
+ */
+export const isHolding = (rule) => landingPath(rule.to) === rule.from;
 
 /** Whether one rule's source matches a request path, the way Cloudflare does. */
 export function sourceMatches(from, path) {
@@ -75,6 +94,12 @@ export function mapProblems(rules) {
     if (!rule.from.startsWith('/') || !rule.to.startsWith('/')) {
       problems.push(`${rule.from} -> ${rule.to}: both sides must be site paths`);
     }
+    if (rule.fallback !== undefined && !rule.fallback.startsWith('/')) {
+      problems.push(`${rule.from}: fallback ${rule.fallback} must be a site path`);
+    }
+    if (isHolding(rule) && rule.fallback === undefined) {
+      problems.push(`${rule.from} redirects to itself without a fallback`);
+    }
     if (rule.status !== 301) problems.push(`${rule.from}: status ${rule.status}, expected 301`);
     if ((rule.from.match(/\*/g) ?? []).length > 1) problems.push(`${rule.from}: more than one *`);
     if (sources.has(rule.from) && sources.get(rule.from) !== rule.to) {
@@ -83,12 +108,85 @@ export function mapProblems(rules) {
     sources.set(rule.from, rule.to);
   }
   // A chain is a destination that is itself redirected; a loop is a chain
-  // that comes back. Either way the target must not match any source.
+  // that comes back. Either way the target (and any fallback) must not match
+  // any source. Holding rules are left out: one is only written while its
+  // page is not built, and then every rule pointing at that page falls back
+  // as well.
+  const moving = rules.filter((r) => !isHolding(r));
   for (const rule of fileOrder(rules)) {
-    const next = resolve(rules, landingPath(rule.to));
-    if (next !== null) problems.push(`chain: ${rule.from} -> ${rule.to} -> ${next}`);
+    const targets = isHolding(rule) ? [rule.fallback] : [rule.to, rule.fallback];
+    for (const to of targets.filter((t) => t !== undefined)) {
+      const next = resolve(moving, landingPath(to));
+      if (next !== null) problems.push(`chain: ${rule.from} -> ${to} -> ${next}`);
+    }
   }
   return problems;
+}
+
+/**
+ * A test of whether a build in `dir` serves a page or file at a site path
+ * (written without the base). Astro's redirect stubs, the small pages with a
+ * meta refresh, do not count: they are redirects, not pages.
+ */
+export function builtIn(dir) {
+  return (path) => {
+    const clean = decodeURIComponent(path);
+    const candidates = clean.endsWith('/')
+      ? [join(dir, clean, 'index.html')]
+      : [join(dir, clean), join(dir, clean, 'index.html')];
+    const file = candidates.find((f) => existsSync(f) && statSync(f).isFile());
+    if (!file) return false;
+    return !(file.endsWith('.html') && /http-equiv="refresh"/i.test(readFileSync(file, 'utf8')));
+  };
+}
+
+/** Folders above a path, nearest first, not counting the home page. */
+export function ancestors(path) {
+  const parts = landingPath(path).split('/').filter(Boolean);
+  const out = [];
+  for (let i = parts.length - 1; i > 0; i--) out.push(`/${parts.slice(0, i).join('/')}/`);
+  return out;
+}
+
+/**
+ * The rules one build actually publishes, given `isBuilt` (see `builtIn`).
+ *
+ * Drafts are built on the Preview but left out of production, so a table
+ * line can point at a page this build does not have. Such a line is written
+ * as a 302 (temporary) to its declared fallback, or, without one, to the
+ * nearest built folder above the target (never the home page). A 302 tells
+ * search engines the move is not final, so the permanent 301 to the real
+ * page is written by the first build that has it. A holding rule (see
+ * `isHolding`) is dropped when its page is built.
+ *
+ * `problems` names every line with no built page to land on; the build
+ * stops on any of them, so a redirect to a missing page can never ship.
+ */
+export function settleRules(rules, isBuilt) {
+  const settled = [];
+  const fallbacks = [];
+  const problems = [];
+  for (const rule of rules) {
+    const target = landingPath(rule.to);
+    if (isBuilt(target)) {
+      if (!isHolding(rule)) settled.push({ from: rule.from, to: rule.to, status: rule.status });
+      continue;
+    }
+    const candidates = rule.fallback !== undefined ? [rule.fallback] : ancestors(target);
+    const to = candidates.find((path) => isBuilt(landingPath(path)));
+    if (to === undefined) {
+      problems.push(
+        rule.fallback !== undefined
+          ? `${rule.from} -> ${rule.to}: target is not built, and neither is its fallback ${rule.fallback}`
+          : `${rule.from} -> ${rule.to}: target is not built and has no built folder above it; add "(fallback \`/path/\`)" after the target in docs/redirects.md`
+      );
+      continue;
+    }
+    const fallback = { from: rule.from, to, status: 302 };
+    settled.push(fallback);
+    fallbacks.push({ ...fallback, waitingFor: rule.to });
+  }
+  return { rules: settled, fallbacks, problems };
 }
 
 /** The `_redirects` file for a base path ('/' in production). */

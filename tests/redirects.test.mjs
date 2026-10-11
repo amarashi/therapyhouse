@@ -1,41 +1,35 @@
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
-import { existsSync, readFileSync, readdirSync, rmSync, statSync } from "node:fs";
+import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 
 import {
+  ancestors,
+  builtIn,
   fileOrder,
   landingPath,
   mapProblems,
   parseRedirectsDoc,
   redirectsFile,
   resolve,
+  settleRules,
 } from "../src/lib/redirects.js";
+import { redirectsFileIntegration } from "../src/integrations/redirects-file.js";
 import { buildSite } from "../tools/build-site.mjs";
 
 /**
  * The launch redirect map (issue #41): docs/redirects.md becomes Cloudflare's
  * `_redirects`, every Current Site address lands somewhere, and no redirect
- * leads to another redirect.
+ * leads to another redirect. A line whose target is a draft (not built in
+ * production) is written as a 302 to its fallback, and the build fails if a
+ * redirect would land on a page that is not built (issue #90).
  */
 
 const root = new URL("../", import.meta.url);
 const read = (path) => readFileSync(new URL(path, root), "utf8");
 const rules = parseRedirectsDoc(read("docs/redirects.md"));
-
-/**
- * Pages other issues are building at the address a redirect points to, or at
- * the Current Site's own address. Until they are merged a redirect to them
- * would be a 404, so the launch runbook (#45) checks this list is empty.
- * Remove a line when its page is built.
- */
-const PENDING_PAGES = new Map([
-  ["/children/", "#6 child and adolescent hub"],
-  ["/therapy/couples/", "#11 couples and relationship therapy"],
-  ["/assessments/learning/", "#21 learning assessment"],
-  ["/ndis/", "#13 public NDIS page, at the Current Site's own address"],
-  ["/group-therapy/circle-of-security-parenting-program/", "#14 Circle of Security, at its existing address"],
-]);
 
 const currentSite = read("tests/fixtures/current-site-urls.txt")
   .split(/\r?\n/)
@@ -116,41 +110,158 @@ test("every service page's redirectFrom is in the table, pointing at that page",
   }
 });
 
+
+/* ---- Targets that are not built (issue #90) ---- */
+
+test("a fallback is read from the To cell", () => {
+  const [rule] = parseRedirectsDoc("| `/relationship/` | `/therapy/couples/` (fallback `/therapy/`) | 301 | why | 11 Oct 2026 |");
+  assert.deepEqual(rule, { from: "/relationship/", to: "/therapy/couples/", status: 301, fallback: "/therapy/" });
+  assert.equal(resolve(rules, "/relationship/"), "/therapy/couples/");
+});
+
+test("folders above a path, nearest first, never the home page", () => {
+  assert.deepEqual(ancestors("/assessments/learning/"), ["/assessments/"]);
+  assert.deepEqual(ancestors("/a/b/c/#x"), ["/a/b/", "/a/"]);
+  assert.deepEqual(ancestors("/children/"), []);
+});
+
+test("a built target keeps its 301; a missing one gets a 302 to its fallback or nearest built folder", () => {
+  const built = new Set(["/therapy/", "/assessments/", "/team/", "/fees/"]);
+  const isBuilt = (path) => built.has(path);
+  const table = [
+    { from: "/about/", to: "/team/", status: 301 },
+    { from: "/relationship/", to: "/therapy/couples/", status: 301, fallback: "/therapy/" },
+    { from: "/old-learning/", to: "/assessments/learning/", status: 301 },
+    { from: "/ndis/", to: "/ndis/", status: 301, fallback: "/fees/#ndis" },
+  ];
+  const settled = settleRules(table, isBuilt);
+  assert.deepEqual(settled.problems, []);
+  assert.deepEqual(settled.rules, [
+    { from: "/about/", to: "/team/", status: 301 },
+    { from: "/relationship/", to: "/therapy/", status: 302 },
+    { from: "/old-learning/", to: "/assessments/", status: 302 },
+    { from: "/ndis/", to: "/fees/#ndis", status: 302 },
+  ]);
+  assert.deepEqual(settled.fallbacks.map((f) => f.waitingFor), ["/therapy/couples/", "/assessments/learning/", "/ndis/"]);
+
+  // Once the pages are signed off and built, the same table gives 301s and
+  // the holding line for /ndis/ is left out.
+  ["/therapy/couples/", "/assessments/learning/", "/ndis/"].forEach((p) => built.add(p));
+  assert.deepEqual(settleRules(table, isBuilt).rules, [
+    { from: "/about/", to: "/team/", status: 301 },
+    { from: "/relationship/", to: "/therapy/couples/", status: 301 },
+    { from: "/old-learning/", to: "/assessments/learning/", status: 301 },
+  ]);
+});
+
+test("a target with no built page to fall back to is a problem that names the line", () => {
+  const isBuilt = (path) => path === "/therapy/";
+  const { problems } = settleRules(
+    [
+      { from: "/child-psychologists/", to: "/children/", status: 301 },
+      { from: "/x/", to: "/children/", status: 301, fallback: "/also-missing/" },
+    ],
+    isBuilt
+  );
+  assert.equal(problems.length, 2);
+  assert.match(problems[0], /^\/child-psychologists\/ -> \/children\/: target is not built/);
+  assert.match(problems[1], /neither is its fallback \/also-missing\//);
+});
+
+test("a line to itself needs a fallback, and a fallback must not be redirected", () => {
+  assert.match(mapProblems([{ from: "/a/", to: "/a/", status: 301 }]).join("\n"), /itself without a fallback/);
+  const viaFallback = [
+    { from: "/a/", to: "/b/", status: 301, fallback: "/c/" },
+    { from: "/c/", to: "/d/", status: 301 },
+  ];
+  assert.match(mapProblems(viaFallback).join("\n"), /chain: \/a\/ -> \/c\/ -> \/d\//);
+  // A line pointing at a holding page is not a chain: the holding line is
+  // only written while that page is missing, and then this line falls back too.
+  const toHolding = [
+    { from: "/x/", to: "/ndis/", status: 301, fallback: "/fees/" },
+    { from: "/ndis/", to: "/ndis/", status: 301, fallback: "/fees/#ndis" },
+  ];
+  assert.deepEqual(mapProblems(toHolding), []);
+});
+
+test("the build stops when a redirect would land on a page it does not have", () => {
+  const empty = mkdtempSync(join(tmpdir(), "therapyhouse-empty-"));
+  try {
+    const integration = redirectsFileIntegration();
+    integration.hooks["astro:config:done"]({ config: { base: "/" } });
+    const logger = { info() {}, warn() {} };
+    assert.throws(
+      () => integration.hooks["astro:build:done"]({ dir: pathToFileURL(`${empty}/`), logger }),
+      /docs\/redirects\.md cannot be published:[\s\S]*\/about\/ -> \/team\/: target is not built/
+    );
+  } finally {
+    rmSync(empty, { recursive: true, force: true });
+  }
+});
+
 /* ---- Against a real production build ---- */
 
 let outDir;
+let served;
+let published;
 before(() => {
   outDir = buildSite("production");
+  served = builtIn(outDir);
+  published = readFileSync(join(outDir, "_redirects"), "utf8")
+    .split("\n")
+    .filter((line) => line && !line.startsWith("#"))
+    .map((line) => {
+      const [from, to, status] = line.split(" ");
+      return { from, to, status: Number(status) };
+    });
 });
 after(() => rmSync(outDir, { recursive: true, force: true }));
 
-/** Whether the build serves a page or file at this path (and it is not a redirect stub). */
-function served(path) {
-  const clean = decodeURIComponent(path);
-  const candidates = clean.endsWith("/") ? [join(outDir, clean, "index.html")] : [join(outDir, clean), join(outDir, clean, "index.html")];
-  const file = candidates.find((f) => existsSync(f) && statSync(f).isFile());
-  if (!file) return false;
-  return !(file.endsWith(".html") && /http-equiv="refresh"/i.test(readFileSync(file, "utf8")));
-}
+test("the build writes _redirects from the table, settled against what it built", () => {
+  const settled = settleRules(rules, served);
+  assert.deepEqual(settled.problems, []);
+  assert.equal(readFileSync(join(outDir, "_redirects"), "utf8"), redirectsFile(settled.rules, "/"));
+});
 
-test("the build writes _redirects from the table", () => {
-  assert.equal(readFileSync(join(outDir, "_redirects"), "utf8"), redirectsFile(rules, "/"));
+test("every _redirects target is a built page", () => {
+  const broken = published.filter((r) => !served(landingPath(r.to))).map((r) => `${r.from} -> ${r.to}`);
+  assert.deepEqual(broken, []);
+});
+
+test("a built target gets a 301, a draft target a 302 to its fallback", () => {
+  for (const rule of rules) {
+    const line = published.find((r) => r.from === rule.from);
+    if (served(landingPath(rule.to))) {
+      if (landingPath(rule.to) === rule.from) assert.equal(line, undefined, `${rule.from} is built, so its holding line must go`);
+      else assert.deepEqual(line, { from: rule.from, to: rule.to, status: 301 });
+    } else {
+      assert.equal(line?.status, 302, `${rule.from}: ${rule.to} is not built, expected a 302`);
+      assert.notEqual(line.to, rule.to);
+    }
+  }
+});
+
+test("the Current Site's draft addresses land on a built page in production", () => {
+  for (const [from, page] of [
+    ["/relationship/", "/therapy/couples/"],
+    ["/category/relationship/", "/therapy/couples/"],
+    ["/child-psychologists/", "/children/"],
+    ["/category/child-psychologists/", "/children/"],
+    ["/assessments/is-your-child-learning-to-the-best-of-their-capacity/", "/assessments/learning/"],
+  ]) {
+    const to = resolve(published, from);
+    assert.ok(to && served(landingPath(to)), `${from} -> ${to}`);
+    if (served(page)) assert.equal(to, page);
+  }
 });
 
 test("every Current Site address is a page of the new site or redirects to one", () => {
   const missing = [];
   for (const path of currentSite) {
-    const to = resolve(rules, path);
+    const to = resolve(published, path);
     const landing = to === null ? path : landingPath(to);
-    if (served(landing) || PENDING_PAGES.has(landing)) continue;
+    if (served(landing)) continue;
     missing.push(to === null ? `${path} (no redirect, no page)` : `${path} -> ${to} (target not built)`);
   }
   assert.deepEqual(missing, []);
-});
-
-test("every redirect target is built, or is a page another issue is building", () => {
-  const broken = rules
-    .map((r) => landingPath(r.to))
-    .filter((to) => !served(to) && !PENDING_PAGES.has(to));
-  assert.deepEqual([...new Set(broken)], []);
 });

@@ -4,6 +4,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 
 import { articleDocumentTitle, articlePath, articleSchema, groupByYear, sortArticles } from "../src/lib/articles.js";
 import { buildPages, cleanUp } from "./helpers/built-site.mjs";
+import { parseRedirectsDoc } from "../src/lib/redirects.js";
 
 /**
  * The library (issue #39): the 25 posts from the Current Site, each at
@@ -79,10 +80,10 @@ test("every image in an article exists, has alt text and is under 300 KB", () =>
 });
 
 test("every old article address has a redirect to its library page", () => {
-  const redirects = read("docs/redirects.md");
-  for (const { id, data } of articles.filter((a) => a.data.sourceUrl)) {
+  const rules = parseRedirectsDoc(read("docs/redirects.md"));
+  for (const { data } of articles.filter((a) => a.data.sourceUrl)) {
     const from = new URL(data.sourceUrl).pathname;
-    assert.match(redirects, new RegExp(`\\| \`${from}\` \\| \`[^\`]+\` \\| 301`), `no redirect line for ${from}`);
+    assert.ok(rules.some((r) => r.from === from && r.status === 301), `no redirect line for ${from}`);
   }
 });
 
