@@ -223,7 +223,6 @@ async function knownPaths() {
  * clinic's domain. Delete a line when its page is built.
  */
 const PLANNED = {
-  "/children/": 6,
   "/therapy/trauma/": 7,
   "/therapy/anxiety/": 8,
   "/therapy/depression/": 9,
