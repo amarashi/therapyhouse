@@ -3,6 +3,7 @@ import { withBase, stripBase } from '../lib/base.js';
 import '../styles/global.css';
 import { site, contact, businessFacts, callsToAction, footerNav, staffLink } from '../data/site.js';
 import { getCollection } from 'astro:content';
+import { townPath } from '../lib/towns.js';
 import { hubLinks, includeInBuild, isProductionSite, serviceLinks } from '../lib/services.js';
 import { businessSchema as buildBusinessSchema } from '../lib/structured-data.js';
 import CallToAction from '../components/CallToAction.astro';
@@ -47,6 +48,17 @@ const footerServices = [
   ...hubLinks(builtServices),
   ...serviceLinks(builtServices.filter((entry) => entry.data.kind !== 'hub')),
 ];
+
+/* Town Pages (issues #26 to #29), for the footer map: a town is linked from
+   every page once its Markdown file says `kind: page`. */
+const footerTowns = (
+  await getCollection(
+    'towns',
+    (entry) => entry.data.kind === 'page' && includeInBuild(entry.data, isProductionSite(Astro.site))
+  )
+)
+  .sort((a, b) => a.data.order - b.data.order)
+  .map((entry) => ({ label: `${entry.data.name} by video`, href: townPath(entry.id) }));
 
 /* A page that opens on a hero lets the masthead sit over it; a page without one
    gives the masthead its own band at the top. */
@@ -220,6 +232,21 @@ const businessSchema = notFound
               <p class="site-footer__navhead">Therapy and assessments</p>
               <ul class="site-footer__services">
                 {footerServices.map((item) => (
+                  <li>
+                    <a
+                      href={withBase(item.href)}
+                      aria-current={stripBase(Astro.url.pathname) === item.href ? 'page' : undefined}
+                    >{item.label}</a>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          {footerTowns.length > 0 && (
+            <>
+              <p class="site-footer__navhead">Regional Queensland</p>
+              <ul class="site-footer__services">
+                {footerTowns.map((item) => (
                   <li>
                     <a
                       href={withBase(item.href)}
