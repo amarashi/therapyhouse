@@ -27,8 +27,11 @@ See `docs/agents/domain.md`.
 Read [PRODUCT.md](PRODUCT.md) (strategy: who/what/why) and [DESIGN.md](DESIGN.md)
 (visual system: colours, type, components) before changing anything a visitor sees.
 
-Register is **brand**, platform **web**. The audience is a parent looking for help
-for their child; the thing that blocks them is credibility, not price. The five
+Register is **brand**, platform **web**. Three audiences (in full in PRODUCT.md):
+local parents looking for help for their child, adults anywhere in Australia
+seeing a psychologist by video (telehealth), and adults seeking help for
+themselves. What blocks them is credibility, not price. Service, assessment,
+telehealth, town and fee pages are plain pages, never rooms. The five
 principles, in full in PRODUCT.md:
 
 - House to arrive, plain to read — atmosphere never taxes the answer
