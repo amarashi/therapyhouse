@@ -262,4 +262,45 @@ const services = defineCollection({
   }),
 });
 
-export const collections = { pages, team, services };
+/**
+ * One file per library article, at `/library/<file>/`. The file name is the
+ * Current Site's final path segment, so an old address and its new one are
+ * easy to match up in docs/redirects.md.
+ *
+ * The 25 articles migrated from the Current Site (issue #39) keep their
+ * published wording; the body is the article as it was, converted to
+ * Markdown. New articles are written as drafts until a named clinician has
+ * reviewed them, because health information under the clinic's name needs a
+ * clinician who stands behind it.
+ */
+const articles = defineCollection({
+  loader: glob({ base: './src/content/articles', pattern: '**/*.md' }),
+  schema: z.object({
+    /** The heading, and the document title with " | Therapy House" added. */
+    title: z.string(),
+    /** The document title in full, for an article whose heading is too long
+        to fit a search result (60 characters) with the clinic's name. */
+    documentTitle: z.string().max(60).optional(),
+    description: z.string().max(159),
+    /** First published. For a migrated article, the Current Site's date. */
+    date: z.coerce.date(),
+    updated: z.coerce.date().optional(),
+    /** Team slug of the writer, when the byline names one current team
+        member. Checked against the team collection at build time. */
+    author: reference('team').optional(),
+    category: z.string(),
+    /** Where the article was published on the Current Site. */
+    sourceUrl: z.string().url().optional(),
+    /** Root-absolute path under public/, used for the article header and
+        the BlogPosting image. */
+    image: z.string().optional(),
+    imageAlt: z.string().optional(),
+    /** Shows the Lifeline and 000 note: articles about depression, trauma or
+        self-harm. */
+    crisisNote: z.boolean().default(false),
+    /** Visible on the preview for review, never built for production. */
+    draft: z.boolean().default(false),
+  }),
+});
+
+export const collections = { pages, team, services, articles };

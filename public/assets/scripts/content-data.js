@@ -520,7 +520,7 @@ export const siteContent = {
     email: "admin@therapyhouse.com.au",
     address: "1290 Waterworks Rd, The Gap, Brisbane, QLD, 4061",
     bookingUrl: "https://my.powerdiary.com/clientportal/3cjz0",
-    sourceUrl: "https://www.therapyhouse.com.au/contact/",
+    sourceUrl: asset("contact/"),
     intro: [
       "Our clinic is located in a Brisbane Western Suburb, on a main road, yet tucked away so you won't hear any road traffic.",
       "Plenty of street parking, so you don't need to be concerned about finding a park.",
@@ -545,7 +545,7 @@ export const siteContent = {
       id: "welcome",
       title: "Welcome Room",
       exteriorEntry: "Main door",
-      sourceUrls: ["https://www.therapyhouse.com.au/"],
+      sourceUrls: [asset("")],
       summary: "A warm entry point for the main Therapy House story, philosophy, team and contact paths.",
       intro: [
         "Therapy House is a place for all children, and anyone who has once been a child.",
@@ -565,8 +565,7 @@ export const siteContent = {
       title: "Team Parlour",
       exteriorEntry: "Team garden sign",
       sourceUrls: [
-        "https://www.therapyhouse.com.au/about/",
-        "https://www.therapyhouse.com.au/staff-sitemap.xml"
+        asset("team/")
       ],
       summary: "Staff profiles, availability notes and team biographies in a carousel-friendly structure.",
       hotspots: [
@@ -580,7 +579,7 @@ export const siteContent = {
       id: "services",
       title: "Consulting Room",
       exteriorEntry: "Right services window",
-      sourceUrls: ["https://www.therapyhouse.com.au/services/"],
+      sourceUrls: [asset("therapy/")],
       summary: "Core therapy services, therapy models, fees, rebates, assessment fees and practical appointment information.",
       hotspots: [
         { id: "service-list", label: "Services", contentKey: "services.offerings" },
@@ -597,9 +596,9 @@ export const siteContent = {
       title: "Assessment Room",
       exteriorEntry: "Smaller side door",
       sourceUrls: [
-        "https://www.therapyhouse.com.au/assessments/",
-        "https://www.therapyhouse.com.au/assessments/what-is-adhd/",
-        "https://www.therapyhouse.com.au/assessments/is-your-child-learning-to-the-best-of-their-capacity/"
+        asset("assessments/"),
+        asset("library/what-is-adhd/"),
+        asset("library/is-your-child-learning-to-the-best-of-their-capacity/")
       ],
       summary: "Assessment process, required documentation, assessment packages and FAQ content.",
       hotspots: [
@@ -619,9 +618,7 @@ export const siteContent = {
       title: "Group Room",
       exteriorEntry: "Upper group therapy window/sign",
       sourceUrls: [
-        "https://www.therapyhouse.com.au/group-therapy/",
-        "https://www.therapyhouse.com.au/group-therapy/circle-of-security-parenting-program/",
-        "https://www.therapyhouse.com.au/external-workshop-expression-of-interest/"
+        asset("group-therapy/")
       ],
       summary: "Group therapy programs, Circle of Security Parenting and workshop/seminar expression-of-interest content.",
       hotspots: [
@@ -640,11 +637,7 @@ export const siteContent = {
       title: "Library",
       exteriorEntry: "Left blogs sign / tower window",
       sourceUrls: [
-        "https://www.therapyhouse.com.au/blogs/",
-        "https://www.therapyhouse.com.au/products/",
-        "https://www.therapyhouse.com.au/videos/",
-        "https://www.therapyhouse.com.au/publications/",
-        "https://www.therapyhouse.com.au/media/"
+        asset("library/")
       ],
       summary: "Resource hub for blogs, products, videos, publications and media appearances.",
       hotspots: [
@@ -661,7 +654,7 @@ export const siteContent = {
       id: "philosophy",
       title: "Attic Reading Room",
       exteriorEntry: "Up the library ladder",
-      sourceUrls: ["https://www.therapyhouse.com.au/our-philosophy/"],
+      sourceUrls: [asset("philosophy/")],
       summary: "The attic over the library, where the five principles the clinic works to are hung on the objects in the room.",
       hotspots: [
         { id: "philosophy-overview", label: "Our Philosophy", contentKey: "philosophy" },
@@ -677,7 +670,7 @@ export const siteContent = {
       id: "contact",
       title: "Reception",
       exteriorEntry: "Mailbox",
-      sourceUrls: ["https://www.therapyhouse.com.au/contact/"],
+      sourceUrls: [asset("contact/")],
       summary: "Practical contact, booking, parking and location information.",
       hotspots: [
         { id: "book-online", label: "Book Online", contentKey: "contact.bookingUrl" },
@@ -692,7 +685,7 @@ export const siteContent = {
       id: "work-with-us",
       title: "Work With Us",
       exteriorEntry: "Side door / staff noticeboard",
-      sourceUrls: ["https://www.therapyhouse.com.au/workwithus/"],
+      sourceUrls: [asset("work-with-us/")],
       summary: "Clinic culture, values and work-with-us enquiry content.",
       hotspots: [
         { id: "opportunities", label: "Opportunities", contentKey: "workWithUs.opportunities" },
@@ -717,7 +710,7 @@ export const siteContent = {
   },
 
   services: {
-    sourceUrl: "https://www.therapyhouse.com.au/services/",
+    sourceUrl: asset("therapy/"),
     intro: "We have established Therapy House with the aim of providing high quality evidence based services to our clients.",
     offerings: [
       "Assessment of ADHD, Autism, and developmental disorders",
@@ -757,7 +750,7 @@ export const siteContent = {
   },
 
   assessments: {
-    sourceUrl: "https://www.therapyhouse.com.au/assessments/",
+    sourceUrl: asset("assessments/"),
     intro: [
       "Assessment processes can vary across psychology clinics and clinicians.",
       "Therapy House is located in The Gap, Brisbane Northside and has provisional practitioners and fully registered psychologists trained in assessment.",
@@ -823,7 +816,7 @@ export const siteContent = {
   },
 
   groups: {
-    sourceUrl: "https://www.therapyhouse.com.au/group-therapy/",
+    sourceUrl: asset("group-therapy/"),
     overview: [
       "Group therapy is an effective and affordable way to seek help.",
       "In a group setting people can feel supported by others with similar problems and learn structured skills.",
@@ -852,7 +845,7 @@ export const siteContent = {
       }
     },
     circleOfSecurity: {
-      sourceUrl: "https://www.therapyhouse.com.au/group-therapy/circle-of-security-parenting-program/",
+      sourceUrl: asset("group-therapy/"),
       title: "Circle of Security Parenting Program",
       description: "Based on attachment theory and designed to help parents recognise their child's needs and foster secure relationships.",
       details: [
@@ -864,7 +857,7 @@ export const siteContent = {
       ]
     },
     workshops: {
-      sourceUrl: "https://www.therapyhouse.com.au/external-workshop-expression-of-interest/",
+      sourceUrl: asset("group-therapy/"),
       title: "Workshop or Seminar Expression of Interest",
       topics: [
         "Positive parenting",
@@ -877,7 +870,7 @@ export const siteContent = {
   },
 
   team: {
-    sourceUrl: "https://www.therapyhouse.com.au/about/",
+    sourceUrl: asset("team/"),
     availability: [
       { name: "Dr Amelia Shay", status: "Not currently accepting new clients" },
       { name: "Dr Kaya Beinke", status: "Not currently accepting new clients" },
@@ -893,84 +886,84 @@ export const siteContent = {
       {
         name: "Dr Amelia Shay",
         role: "Director, Developmental Psychologist",
-        sourceUrl: "https://www.therapyhouse.com.au/staff-member/dr-amelia-shay/",
+        sourceUrl: asset("team/amelia-shay/"),
         credentials: "PhD, MPsy, BPsySc. Developmental Psychologist",
         summary: "Amelia works with adults, parents and couples, and can deliver counselling and psychological interventions in English and Persian (Farsi)."
       },
       {
         name: "Dr Kaya Beinke",
         role: "Clinical Psychologist, Chief Clinical Officer",
-        sourceUrl: "https://www.therapyhouse.com.au/staff-member/dr-kaya-beinke/",
+        sourceUrl: asset("team/kaya-beinke/"),
         credentials: "BPsych (Hons), PhD Clin Psych",
         summary: "Kaya has experience across clinical psychology, supervision, developmental delay, Autism, ADHD, chronic health and trauma-impacted family support."
       },
       {
         name: "Letitia McVey",
         role: "Psychologist, Educational and Developmental Registrar, Chief Operating Officer",
-        sourceUrl: "https://www.therapyhouse.com.au/staff-member/letitia-mcvey/",
+        sourceUrl: asset("team/letitia-mcvey/"),
         credentials: "BPsychSc (Hons), MPsy (Educational and Developmental Psychology)",
         summary: "Letitia is a warm and collaborative practitioner who works with children, adolescents and adults, with a focus on resilience, strengths and hope."
       },
       {
         name: "Sahar Fattahi",
         role: "Psychologist",
-        sourceUrl: "https://www.therapyhouse.com.au/staff-member/sahar-h-fattahi-general-psychologist/",
+        sourceUrl: asset("team/sahar-fattahi/"),
         credentials: "MSCP Psychologist",
         summary: "Sahar works with clients across the lifespan and can deliver interventions in English, Persian (Farsi) and Filipino (Tagalog)."
       },
       {
         name: "Rani Banks",
         role: "Clinical Psychologist",
-        sourceUrl: "https://www.therapyhouse.com.au/staff-member/rani-banks/",
+        sourceUrl: asset("team/rani-banks/"),
         credentials: "Clinical Psychologist",
         summary: "Rani is listed as accepting new clients on the current team page."
       },
       {
         name: "Jazmin Squire",
         role: "Psychologist",
-        sourceUrl: "https://www.therapyhouse.com.au/staff-member/jazmin-squire/",
+        sourceUrl: asset("team/jazmin-squire/"),
         credentials: "Psychologist",
         summary: "Jazmin is a warm and engaging clinician with a flexible, non-judgemental approach and enjoys working with people of all ages."
       },
       {
         name: "Laura Storey",
         role: "Counsellor",
-        sourceUrl: "https://www.therapyhouse.com.au/staff-member/laura-storey-counsellor/",
+        sourceUrl: asset("team/laura-storey/"),
         credentials: "Counsellor",
         summary: "Laura approaches therapeutic work in a person-centred, trauma-informed and neuro-affirming way."
       },
       {
         name: "Genevieve Hussey",
         role: "Provisional Psychologist",
-        sourceUrl: "https://www.therapyhouse.com.au/staff-member/genevieve-hussey/",
+        sourceUrl: asset("team/genevieve-hussey/"),
         credentials: "Provisional Psychologist",
         summary: "Gen is a warm and dedicated clinician who is passionate about supporting young people and families."
       },
       {
         name: "Natasha",
         role: "Client Support and Marketing Coordinator",
-        sourceUrl: "https://www.therapyhouse.com.au/staff-member/natasha-client-support-marketing/",
+        sourceUrl: asset("team/natasha/"),
         credentials: "Client Support and Marketing Coordinator",
         summary: "Natasha supports clients and contributes to Therapy House marketing and communications."
       },
       {
         name: "Josie",
         role: "Administrative Support",
-        sourceUrl: "https://www.therapyhouse.com.au/staff-member/josie-administrative-support/",
+        sourceUrl: asset("team/josie/"),
         credentials: "Administrative Support",
         summary: "Josie supports the administrative side of Therapy House."
       },
       {
         name: "Reea",
         role: "Therapy Dog",
-        sourceUrl: "https://www.therapyhouse.com.au/staff-member/reea-therapy-dog/",
+        sourceUrl: asset("team/reea/"),
         credentials: "Therapy Dog",
         summary: "Reea is part of the Therapy House team and is described as the clinic's therapy dog."
       },
       {
         name: "Samson",
         role: "Retired Therapy Dog",
-        sourceUrl: "https://www.therapyhouse.com.au/staff-member/samson-therapy-dog/",
+        sourceUrl: asset("team/samson/"),
         credentials: "Retired Therapy Dog",
         summary: "Samson is remembered by Therapy House as a loved presence who helped visitors feel safe."
       }
@@ -981,17 +974,17 @@ export const siteContent = {
     products: [
       {
         title: "Little Koala - Helping children with their fears",
-        sourceUrl: "https://www.therapyhouse.com.au/products/",
+        sourceUrl: asset("library/"),
         description: "A children's story addressing fear and separation anxiety, suitable for bedtime reading or early-childhood settings."
       },
       {
         title: "What Is Going On In My Head",
-        sourceUrl: "https://www.therapyhouse.com.au/products/",
+        sourceUrl: asset("library/"),
         description: "A 68-page book for therapists working with children, guiding CBT and ACT techniques across three phases of therapy."
       }
     ],
     videos: {
-      sourceUrl: "https://www.therapyhouse.com.au/videos/",
+      sourceUrl: asset("library/"),
       topics: [
         "A note on happiness",
         "The approaches we use and a welcome message from Dr Amelia",
@@ -1000,11 +993,11 @@ export const siteContent = {
       ]
     },
     publications: {
-      sourceUrl: "https://www.therapyhouse.com.au/publications/",
+      sourceUrl: asset("library/"),
       description: "Scholarly works by Dr Amelia Shay, including book chapters, journal articles, conference presentations and Persian-language publications."
     },
     media: {
-      sourceUrl: "https://www.therapyhouse.com.au/media/",
+      sourceUrl: asset("library/"),
       items: [
         "If you can only do one thing for your children, it should be shared reading",
         "Diversity in the classroom means children develop differently",
@@ -1014,171 +1007,185 @@ export const siteContent = {
     },
     blogArticles: [
       {
+        title: "Mindfulness and Journalling for Your Mental Wellbeing",
+        slug: "mindfulness-and-journalling",
+        date: "2026-10-07",
+        url: asset("library/mindfulness-and-journalling/"),
+        excerpt: "A Therapy House article about mindfulness and journalling as everyday practices for wellbeing."
+      },
+      {
+        title: "Play Therapy: Therapy Made for Children, With Children's Minds in Mind",
+        slug: "play-therapy-therapy-made-for-children-with-childrens-minds-in-mind",
+        date: "2026-07-30",
+        url: asset("library/play-therapy-therapy-made-for-children-with-childrens-minds-in-mind/"),
+        excerpt: "A Therapy House article about play therapy and how it works with the way children think."
+      },
+      {
         title: "The Lasting Value of Long-Term Psychodynamic Therapy: Who It Helps and Why It Works",
         slug: "long-term-psychodynamic-therapy",
         date: "2025-10-14",
-        url: "https://www.therapyhouse.com.au/therapy/long-term-psychodynamic-therapy/",
+        url: asset("library/long-term-psychodynamic-therapy/"),
         excerpt: "In today's wellness culture, quick fixes are everywhere - apps for mindfulness, short-term coaching, or fast-acting therapies that aim to relieve symptoms quickly."
       },
       {
         title: "Helping Kids Build Healthy Screen Time Habits: A Parent's Guide",
         slug: "screen-time",
         date: "2025-10-01",
-        url: "https://www.therapyhouse.com.au/child-psychologists/screen-time/",
+        url: asset("library/screen-time/"),
         excerpt: "A parent guide to helping children build healthy screen time habits in a digital world."
       },
       {
         title: "Practicing Self-Compassion to Manage Uncomfortable Emotions",
         slug: "practicing-self-compassion",
         date: "2025-08-05",
-        url: "https://www.therapyhouse.com.au/therapy/practicing-self-compassion/",
+        url: asset("library/practicing-self-compassion/"),
         excerpt: "How responding with self-compassion rather than self-criticism can make it easier to handle overwhelming situations."
       },
       {
         title: "How To Have A Loving Relationship With Your Body",
         slug: "how-to-have-a-loving-relationship-with-your-body",
         date: "2025-06-10",
-        url: "https://www.therapyhouse.com.au/therapy/how-to-have-a-loving-relationship-with-your-body/",
+        url: asset("library/how-to-have-a-loving-relationship-with-your-body/"),
         excerpt: "A Therapy House article about healing a relationship with food and body image."
       },
       {
         title: "12 Practical Tips to Manage Depression from Behavioural Therapy Experts",
         slug: "practical-tips-to-manage-depression",
         date: "2025-05-27",
-        url: "https://www.therapyhouse.com.au/therapy/practical-tips-to-manage-depression/",
+        url: asset("library/practical-tips-to-manage-depression/"),
         excerpt: "Practical behavioural strategies for managing depression."
       },
       {
         title: "Holding Two Truths: The Power of Emotional Duality in Relationships",
         slug: "emotional-duality-in-relationships",
         date: "2025-05-22",
-        url: "https://www.therapyhouse.com.au/relationship/emotional-duality-in-relationships/",
+        url: asset("library/emotional-duality-in-relationships/"),
         excerpt: "A Therapy House article about holding two emotions or truths as valid at the same time in relationships."
       },
       {
         title: "Nurturing Healthy Self-Esteem in Children",
         slug: "nurturing-healthy-self-esteem",
         date: "2025-04-01",
-        url: "https://www.therapyhouse.com.au/child-psychologists/nurturing-healthy-self-esteem/",
+        url: asset("library/nurturing-healthy-self-esteem/"),
         excerpt: "How parents and caregivers can foster a strong sense of self-worth in children."
       },
       {
         title: "Why We Procrastinate: Understanding the Psychology Behind It",
         slug: "procrastination",
         date: "2025-01-28",
-        url: "https://www.therapyhouse.com.au/therapy/procrastination/",
+        url: asset("library/procrastination/"),
         excerpt: "A Therapy House article exploring the psychology behind procrastination."
       },
       {
         title: "Understanding and Supporting School Readiness",
         slug: "school-readiness",
         date: "2024-12-03",
-        url: "https://www.therapyhouse.com.au/therapy/school-readiness/",
+        url: asset("library/school-readiness/"),
         excerpt: "A guide to supporting children and families through the transition to formal schooling."
       },
       {
         title: "Conflict",
         slug: "conflict",
         date: "2024-11-11",
-        url: "https://www.therapyhouse.com.au/therapy/conflict/",
+        url: asset("library/conflict/"),
         excerpt: "A Therapy House article about conflict in relationships and problem solving at home."
       },
       {
         title: "Self Care",
         slug: "self-care",
         date: "2024-05-21",
-        url: "https://www.therapyhouse.com.au/therapy/self-care/",
+        url: asset("library/self-care/"),
         excerpt: "How to establish a self-care routine that actually works."
       },
       {
         title: "Sense of Self",
         slug: "sense-of-self",
         date: "2024-05-08",
-        url: "https://www.therapyhouse.com.au/child-psychologists/sense-of-self/",
+        url: asset("library/sense-of-self/"),
         excerpt: "A Therapy House article about sense of self across adults and children."
       },
       {
         title: "The Autonomic Nervous System and Mental Health: Strategies to Ease Anxiety, Depression and Trauma Response",
         slug: "autonomic-nervous-system",
         date: "2024-04-02",
-        url: "https://www.therapyhouse.com.au/therapy/autonomic-nervous-system/",
+        url: asset("library/autonomic-nervous-system/"),
         excerpt: "Strategies to ease anxiety, depression and trauma responses through understanding the nervous system."
       },
       {
         title: "What is Depression?",
         slug: "what-is-depression",
         date: "2024-03-12",
-        url: "https://www.therapyhouse.com.au/therapy/what-is-depression/",
+        url: asset("library/what-is-depression/"),
         excerpt: "A Therapy House article explaining depression as a combination of symptoms beyond feeling low."
       },
       {
         title: "How Involved Should Parents Be In Their Child's Therapy?",
         slug: "parent-involvement-in-child-therapy",
         date: "2024-02-13",
-        url: "https://www.therapyhouse.com.au/therapy/parent-involvement-in-child-therapy/",
+        url: asset("library/parent-involvement-in-child-therapy/"),
         excerpt: "Guidance for parents about involvement in a child's therapy."
       },
       {
         title: "What Is Therapy?",
         slug: "what-actually-is-therapy",
         date: "2024-01-22",
-        url: "https://www.therapyhouse.com.au/therapy/what-actually-is-therapy/",
+        url: asset("library/what-actually-is-therapy/"),
         excerpt: "A first-time guide for people considering therapy for themselves or their child."
       },
       {
         title: "Are You Learning At Your Full Potential?",
         slug: "is-your-child-learning-to-the-best-of-their-capacity",
         date: "2023-08-30",
-        url: "https://www.therapyhouse.com.au/assessments/is-your-child-learning-to-the-best-of-their-capacity/",
+        url: asset("library/is-your-child-learning-to-the-best-of-their-capacity/"),
         excerpt: "A Therapy House assessment article about strengths, weaknesses and learning capacity."
       },
       {
         title: "Do You Really Know What Anxiety Is?",
         slug: "do-you-really-know-what-anxiety-is",
         date: "2023-06-28",
-        url: "https://www.therapyhouse.com.au/workshops/self-regulation/do-you-really-know-what-anxiety-is/",
+        url: asset("library/do-you-really-know-what-anxiety-is/"),
         excerpt: "A Therapy House article about the function of anxiety and how it protects us."
       },
       {
         title: "New Cancellation Policy",
         slug: "new-cancellation-policy",
         date: "2023-05-05",
-        url: "https://www.therapyhouse.com.au/news/new-cancellation-policy/",
+        url: asset("library/new-cancellation-policy/"),
         excerpt: "A Therapy House update about cancellation policy and appointment commitment."
       },
       {
         title: "Therapy is a Commitment",
         slug: "therapy-house-update",
         date: "2023-05-05",
-        url: "https://www.therapyhouse.com.au/news/therapy-house-update/",
+        url: asset("library/therapy-house-update/"),
         excerpt: "A Therapy House update about therapy as a commitment to yourself."
       },
       {
         title: "What is ADHD?",
         slug: "what-is-adhd",
         date: "2023-05-05",
-        url: "https://www.therapyhouse.com.au/assessments/what-is-adhd/",
+        url: asset("library/what-is-adhd/"),
         excerpt: "An introduction to ADHD as a neurodevelopmental disorder affecting attention, impulses and activity."
       },
       {
         title: "Different Parenting Approaches and How Successful They Are",
         slug: "parenting-styles-parenting-tips",
         date: "2023-03-20",
-        url: "https://www.therapyhouse.com.au/workshops/circle-of-security-parenting-program/parenting-styles-parenting-tips/",
+        url: asset("library/parenting-styles-parenting-tips/"),
         excerpt: "A Therapy House article about parenting approaches and child social-emotional development."
       },
       {
         title: "Emotion Regulation Skills, Tips and Strategy",
         slug: "emotion-regulation-skills-strategy",
         date: "2023-01-10",
-        url: "https://www.therapyhouse.com.au/workshops/self-regulation/emotion-regulation-skills-strategy/",
+        url: asset("library/emotion-regulation-skills-strategy/"),
         excerpt: "A Therapy House article explaining emotion regulation and useful skills."
       }
     ]
   },
 
   workWithUs: {
-    sourceUrl: "https://www.therapyhouse.com.au/workwithus/",
+    sourceUrl: asset("work-with-us/"),
     values: ["care", "compassion", "respect"],
     culture: [
       "Therapy House describes a pleasant work environment with sound-proof rooms, ergonomic furniture and a focus on long-term commitment.",
@@ -1189,7 +1196,7 @@ export const siteContent = {
     ],
     enquiry: {
       email: "admin@therapyhouse.com.au",
-      sourceUrl: "https://www.therapyhouse.com.au/workwithus/"
+      sourceUrl: asset("work-with-us/")
     }
   }
 };

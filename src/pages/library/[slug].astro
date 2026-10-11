@@ -1,0 +1,19 @@
+---
+/**
+ * Every article in `src/content/articles/`. The layout does the work; this
+ * file only decides which entries become pages under /library/.
+ */
+import { getCollection } from 'astro:content';
+import ArticlePage from '../../layouts/ArticlePage.astro';
+import { includeInBuild, isProductionSite } from '../../lib/services.js';
+
+export async function getStaticPaths() {
+  const production = isProductionSite(import.meta.env.SITE);
+  const entries = await getCollection('articles', (entry) => includeInBuild(entry.data, production));
+  return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+---
+
+<ArticlePage entry={entry} />

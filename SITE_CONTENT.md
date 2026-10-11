@@ -49,7 +49,7 @@ separate site — it is a presentation layer mounted over the same pages.
 | `/team/` | Team Parlour | Our Team | `team` | ✅ |
 | `/team/<slug>/` | — (carousel card) | Individual practitioner ×12 | `team.members[]` | ✏️ |
 | `/library/` | Library | Library — articles, books, videos | `library` | ✅ |
-| `/library/<slug>/` | — (blog hotspot) | Individual article ×23 | `library.blogArticles[]` | ❓ |
+| `/library/<slug>/` | — (blog hotspot) | Individual article ×25 | `src/content/articles/` | ✅ |
 | `/contact/` | Reception | Contact & Booking | `contact` | ✅ |
 | `/work-with-us/` | Work With Us | Work With Us | `workWithUs` | ✏️ |
 | `/philosophy/` | — (modal today) | Our Philosophy | `philosophy` | ✅ |
@@ -258,12 +258,15 @@ at the top of `src/data/library-shelf.js`.
 
 ### `/library/<slug>/` — Articles
 
-23 posts. **Full article text is not in the repo** — only titles, slugs, dates
-and excerpts. The bodies sit in `archive/live-site-scrape/html/`, which is
-gitignored and will be lost if that folder is ever cleaned.
+25 posts, migrated in issue #39 with their published wording to
+`src/content/articles/<slug>.md` (one file each, `BlogPosting` structured data,
+in-body images in `public/assets/library/`). The house's library room still
+reads the short list in `content-data.js`, which now links to these pages.
 
 | # | Date | Title | New slug |
 |---|---|---|---|
+| 0a | 2026-10-07 | Mindfulness and Journalling for Your Mental Wellbeing | `mindfulness-and-journalling` |
+| 0b | 2026-07-30 | Play Therapy: Therapy Made for Children, With Children's Minds in Mind | `play-therapy-therapy-made-for-children-with-childrens-minds-in-mind` |
 | 1 | 2025-10-14 | The Lasting Value of Long-Term Psychodynamic Therapy | `long-term-psychodynamic-therapy` |
 | 2 | 2025-10-01 | Helping Kids Build Healthy Screen Time Habits | `screen-time` |
 | 3 | 2025-08-05 | Practicing Self-Compassion to Manage Uncomfortable Emotions | `practicing-self-compassion` |
@@ -288,7 +291,7 @@ gitignored and will be lost if that folder is ever cleaned.
 | 22 | 2023-03-20 | Different Parenting Approaches and How Successful They Are | `parenting-styles-parenting-tips` |
 | 23 | 2023-01-10 | Emotion Regulation Skills, Tips and Strategy | `emotion-regulation-skills-strategy` |
 
-**Clinic to curate:** tick which of these 23 still represent the clinic. Retired
+**Clinic to curate:** tick which of these 25 still represent the clinic. Retired
 ones get a 301 to `/library/`, never a 404. Note that #19 and #21 read as
 operational notices rather than articles and may belong elsewhere — or nowhere.
 
@@ -387,12 +390,12 @@ jazmin-squire · rani-banks (unchanged) · `sahar-h-fattahi-general-psychologist
 `natasha-client-support-marketing` → `natasha` · `josie-administrative-support` →
 `josie` · `reea-therapy-dog` → `reea` · `samson-therapy-dog` → `samson`.
 
-### Posts (23)
+### Posts (25)
 
 All flatten to `/library/<slug>/` using the slugs in the article table above.
-The old paths span six different category prefixes (`/therapy/`,
+The old paths span seven different category prefixes (`/blog/`, `/therapy/`,
 `/child-psychologists/`, `/assessments/`, `/news/`, `/workshops/`,
-`/relationship/`); consolidating them is a deliberate choice for a cleaner IA,
+`/relationship/`); each has a line in `docs/redirects.md`; consolidating them is a deliberate choice for a cleaner IA,
 paid for with 301s. Flag if you would rather preserve the keyword-rich old paths
 exactly as they are.
 
@@ -409,7 +412,7 @@ Ranked by how much each one blocks the site's actual goal.
 5. **Fee review date**, and resolve the assessment-price conflict between `/services/` and `/assessments/`.
 6. **Group program intake dates** — when does the next one run.
 7. **Opening hours.**
-8. **Blog curation** — which of the 23 articles stay.
+8. **Blog curation** — which of the 25 articles stay, and whether the 2023 cancellation fees in `new-cancellation-policy` are still current.
 9. **Video URLs** — where the 4 video topics actually live.
 10. **Book purchase links and cover images.**
 11. **Acknowledgement of country** — whether the clinic wants one.
