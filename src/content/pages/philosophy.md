@@ -1,5 +1,6 @@
 ---
 title: Our Philosophy
+documentTitle: "Our Approach to Psychology | Therapy House, The Gap"
 description: How Therapy House works — holistic, inclusive, neuro-affirming psychology and counselling in The Gap, Brisbane.
 lede: Counselling and psychology should feel warm and inviting. Our clinic is a nurturing place where people can feel safe, understood and supported.
 principles:

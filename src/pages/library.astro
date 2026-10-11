@@ -44,7 +44,7 @@ const formatDayMonth = (iso: string) =>
   new Intl.DateTimeFormat('en-AU', { day: 'numeric', month: 'long' }).format(new Date(iso));
 ---
 
-<PlainLayout title={title} description={description}>
+<PlainLayout title={title} documentTitle={page.data.documentTitle} description={description}>
   <HeroReveal
     room="library"
     roomName="the library"

@@ -17,6 +17,14 @@ export const site = {
 };
 
 /**
+ * The suburbs next to the clinic, named in plain text on the home and contact
+ * pages. People search "psychologist Ashgrove" rather than "psychologist near
+ * The Gap", and a suburb named nowhere on the site cannot be matched. These are
+ * neighbouring suburbs, not a claim about where clients come from.
+ */
+export const nearbySuburbs = ['Ashgrove', 'Bardon', 'Keperra', 'Ferny Grove', 'Mitchelton'];
+
+/**
  * Primary and secondary CTA carry equal weight (PRODUCT.md): some parents
  * self-serve, others need to talk first, and neither path is the fallback for
  * the other.

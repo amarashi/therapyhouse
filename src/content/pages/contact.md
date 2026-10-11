@@ -1,5 +1,6 @@
 ---
 title: Contact & Booking
+documentTitle: "Contact & Book a Psychologist, The Gap | Therapy House"
 description: Contact Therapy House — 1290 Waterworks Rd, The Gap, Brisbane. Book online through the client portal or call reception on 07 3300 2170.
 lede: Book online, or call reception and describe what is going on. Either way works, and neither is the long way round.
 sourceUrl: https://www.therapyhouse.com.au/contact/

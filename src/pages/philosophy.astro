@@ -11,7 +11,7 @@ const { Content } = await render(page);
 const { title, description, lede, principles, closing } = page.data;
 ---
 
-<PlainLayout title={title} description={description}>
+<PlainLayout title={title} documentTitle={page.data.documentTitle} description={description}>
   <HeroReveal
     room="philosophy"
     roomName="the attic reading room"

@@ -1,5 +1,6 @@
 ---
 title: Library
+documentTitle: "Psychology Articles & Resources | Therapy House"
 description: Articles, books, videos and publications from the Therapy House team on child development, anxiety, parenting and therapy.
 lede: Things the team has written, recorded and published — for parents, for clients, and for other clinicians.
 sourceUrl: https://www.therapyhouse.com.au/blogs/

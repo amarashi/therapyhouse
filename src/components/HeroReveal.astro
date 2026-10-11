@@ -5,6 +5,13 @@ interface Props {
   title: string;
   /** Second clause, in the lighter sage. */
   titleAccent?: string;
+  /**
+   * A smaller line inside the same <h1>, under the title: what the place is
+   * and where. The home page's greeting ("Welcome to Therapy House") says
+   * neither, and the heading is the strongest signal a search engine reads
+   * for what a page is about. Set at the lede size so the greeting still leads.
+   */
+  titleSub?: string;
   image: string;
   /** Half-width variant of `image`, served to narrow viewports. Same aspect
       ratio; the intrinsic size below still describes the full-size file. */
@@ -82,6 +89,7 @@ interface Props {
 const {
   title,
   titleAccent,
+  titleSub,
   image,
   imageSmall,
   imageMedium,
@@ -177,7 +185,7 @@ const sizes = imageSmall
   <div class="hero__stage">
     <div class="hero__copy">
       <h1>
-        {title}{titleAccent && <><br /><br /><span class="hero__accent">{titleAccent}</span></>}
+        {title}{titleSub && <span class="hero__sub">{titleSub}</span>}{titleAccent && <><br /><br /><span class="hero__accent">{titleAccent}</span></>}
       </h1>
       {lede && <p class="lede">{lede}</p>}
     </div>
@@ -550,6 +558,20 @@ const sizes = imageSmall
     height: 2px;
     margin-block: clamp(var(--space-md), 1.8vh, var(--space-lg));
     background: var(--chestnut);
+  }
+
+  /* Block-level so it sits under the greeting, and above the chestnut rule
+     the h1's ::after draws. Body face at the lede size: a description of the
+     place, not a second greeting. */
+  .hero__sub {
+    display: block;
+    margin-top: var(--space-sm);
+    font-family: var(--font-body);
+    font-size: var(--text-lede);
+    line-height: var(--lh-lede);
+    letter-spacing: normal;
+    font-weight: 500;
+    color: var(--heading-accent);
   }
 
   .hero__accent {

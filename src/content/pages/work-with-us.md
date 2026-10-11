@@ -1,5 +1,6 @@
 ---
 title: Work With Us
+documentTitle: "Psychologist Careers in Brisbane | Work With Us"
 description: Psychologists and clinicians at any career stage are welcome to enquire about joining Therapy House in The Gap, Brisbane.
 lede: Psychologists and clinicians at various career stages are encouraged to enquire.
 sourceUrl: https://www.therapyhouse.com.au/workwithus/
