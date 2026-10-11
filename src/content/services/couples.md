@@ -19,7 +19,7 @@ fees:
 medicare:
   - Medicare does not cover couple and family sessions.
   - Private health insurance may include psychology. Check with your fund whether your cover includes couples sessions.
-related: [adults]
+related: [adults, approaches]
 redirectFrom:
   - /relationship/
   - /category/relationship/
