@@ -24,7 +24,7 @@ medicare:
 faqs:
   - question: Is this a real page?
     answer: No. It is a draft fixture for the layout.
-related: [example-assessment]
+related: []
 draft: true
 ---
 

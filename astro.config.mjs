@@ -1,5 +1,6 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
+import { rehypeBaseLinks } from './src/lib/rehype-base-links.js';
 
 // Therapy House — static site.
 //
@@ -77,6 +78,11 @@ export default defineConfig({
      real 301s, listed in docs/redirects.md for the launch redirect map. */
   redirects: {
     '/services': `${base.replace(/\/$/, '')}/therapy/`,
+  },
+  /* Links written in Markdown content (`[text](/children/)`) get the same base
+     prefix `withBase` gives links in .astro files. */
+  markdown: {
+    rehypePlugins: [[rehypeBaseLinks, { base }]],
   },
   build: {
     // Emit `/services/index.html` rather than `/services.html` so the live URLs

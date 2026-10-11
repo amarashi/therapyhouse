@@ -303,3 +303,77 @@ test("every group program still publishes an age range the scale can read", asyn
     );
   }
 });
+
+/* ---- Assessment pages (issues #17 to #22) ----
+   Each page's title, H1 and description are the ones its issue specifies:
+   they were chosen for the searches the page is meant to answer, so a quiet
+   edit should fail here rather than drift. Read as text, like the rest of
+   this file. */
+
+const readService = async (name) =>
+  readFile(fileURLToPath(new URL(`../src/content/services/${name}.md`, import.meta.url)), "utf8");
+
+const frontValue = (markdown, key) => {
+  const front = markdown.split(/^---$/m)[1] ?? "";
+  const line = front.match(new RegExp(`^${key}:\s*(.+)$`, "m"));
+  return line ? line[1].trim().replace(/^"(.*)"$/, "$1") : undefined;
+};
+
+const assessmentPages = [
+  {
+    file: "child-adhd",
+    title: "Child ADHD Assessment Brisbane | Therapy House, The Gap",
+    h1: "ADHD assessment for children and teenagers",
+    description:
+      "ADHD assessment for children and teens in The Gap, Brisbane: the process, what to bring, report timing and cost from $1,000.",
+    phrase: "ADHD assessment",
+  },
+];
+
+for (const page of assessmentPages) {
+  test(`${page.file}: title, H1 and description are the ones the issue specifies`, async () => {
+    const text = await readService(page.file);
+    assert.equal(frontValue(text, "title"), page.title);
+    assert.equal(frontValue(text, "h1"), page.h1);
+    assert.equal(frontValue(text, "description"), page.description);
+    assert.ok(page.title.length < 60, "title must be under 60 characters");
+    assert.ok(page.description.length < 160, "description must be under 160 characters");
+  });
+
+  test(`${page.file}: the target phrase is in the title, H1, opening and description`, async () => {
+    const text = await readService(page.file);
+    const has = (value) => value.toLowerCase().includes(page.phrase.toLowerCase());
+    assert.ok(has(page.title), "title");
+    assert.ok(has(page.h1), "h1");
+    assert.ok(has(frontValue(text, "lede")), "lede (the opening paragraph)");
+    assert.ok(has(page.description), "description");
+  });
+
+  test(`${page.file}: every fee it shows is one /assessments/ already publishes`, async () => {
+    const text = await readService(page.file);
+    const front = text.split(/^---$/m)[1] ?? "";
+    for (const amount of front.match(/\$[\d,]+/g) ?? []) {
+      assert.ok(assessments.includes(amount), `${page.file} shows ${amount}, which assessments.md does not publish`);
+    }
+  });
+}
+
+test("service page titles and descriptions are unique across the site", async () => {
+  const { readdir } = await import("node:fs/promises");
+  const seen = new Map();
+  for (const dir of ["services", "pages"]) {
+    const base = new URL(`../src/content/${dir}/`, import.meta.url);
+    for (const file of (await readdir(base)).filter((f) => f.endsWith(".md"))) {
+      const text = await readFile(new URL(file, base), "utf8");
+      for (const key of ["title", "documentTitle", "description"]) {
+        const value = frontValue(text, key);
+        if (!value) continue;
+        const where = `${dir}/${file} ${key}`;
+        // A title and a documentTitle compete in the same search result slot.
+        const slot = `${key === "description" ? "description" : "title"}:${value}`;
+        assert.ok(!seen.has(slot), `${where} repeats ${seen.get(slot)}`);
+        seen.set(slot, where);
+      }
+    }
+  }
+});
