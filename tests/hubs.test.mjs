@@ -94,7 +94,7 @@ test("the home page, the /therapy/ hub and the footer link the audience hubs fro
     assert.match(source, /hubLinks\(/, `${path} should link the audience hubs with hubLinks`);
     assert.match(source, /includeInBuild\(/, `${path} should keep draft hubs off production`);
   }
-  const route = await read("src/pages/[hub].astro");
-  assert.match(route, /kind === 'hub'/);
+  const route = await read("src/pages/[...page].astro");
+  assert.match(route, /builtAtOwnPath\(/);
   assert.match(route, /includeInBuild\(/);
 });

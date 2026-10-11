@@ -27,7 +27,8 @@ export function draftServicePaths(dir) {
       const frontMatter = readFileSync(join(dir, file), 'utf8').match(/^---\r?\n([\s\S]*?)\r?\n---/);
       if (!frontMatter || !/^draft:\s*true\s*$/m.test(frontMatter[1])) return [];
       const kind = frontMatter[1].match(/^kind:\s*['"]?(\w+)/m)?.[1];
-      return [servicePath(kind, file.replace(/\.md$/, ''))];
+      const path = frontMatter[1].match(/^path:\s*['"]?([^'"\s]+)/m)?.[1];
+      return [servicePath(kind, file.replace(/\.md$/, ''), path)];
     });
 }
 

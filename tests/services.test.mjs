@@ -209,7 +209,7 @@ async function knownPaths() {
   for (const file of (await readdir(servicesDir)).filter((f) => f.endsWith(".md"))) {
     const front = frontmatter(await readFile(new URL(file, servicesDir), "utf8"));
     const id = file.slice(0, -3);
-    const path = servicePath(field(front, "kind"), id);
+    const path = servicePath(field(front, "kind"), id, field(front, "path"));
     services[path] = { draft: /^draft: true$/m.test(front), id };
     paths.add(path);
   }
@@ -236,7 +236,6 @@ async function knownPaths() {
  * clinic's domain. Delete a line when its page is built.
  */
 const PLANNED = {
-  "/ndis/": 13,
   "/group-therapy/circle-of-security-parenting-program/": 14,
   "/therapy/family/": 16,
   "/telehealth/": 25,
@@ -277,4 +276,16 @@ test("a page on the usual session fees points to /fees/ instead of copying the p
   const layout = await readFile(new URL("../src/layouts/ServicePage.astro", import.meta.url), "utf8");
   assert.match(layout, /data\.sessionFees && !data\.fees\?\.length/);
   assert.match(layout, /withBase\('\/fees\/'\)/);
+});
+
+test("an entry's own path overrides the address its kind gives it", async () => {
+  const { builtAtOwnPath } = await import("../src/lib/services.js");
+  assert.equal(servicePath("therapy", "ndis", "/ndis/"), "/ndis/");
+  assert.equal(
+    servicePath("therapy", "circle-of-security", "/group-therapy/circle-of-security-parenting-program/"),
+    "/group-therapy/circle-of-security-parenting-program/"
+  );
+  assert.equal(builtAtOwnPath({ kind: "therapy", path: "/ndis/" }), true);
+  assert.equal(builtAtOwnPath({ kind: "hub" }), true);
+  assert.equal(builtAtOwnPath({ kind: "therapy" }), false);
 });

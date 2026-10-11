@@ -45,7 +45,7 @@ export function businessSchema({ site, contact, facts, services = [], siteUrl, p
   const availableService = services
     .filter((entry) => entry.data.kind === 'therapy' || entry.data.kind === 'assessment')
     .map((entry) => {
-      const url = at(servicePath(entry.data.kind, entry.id));
+      const url = at(servicePath(entry.data.kind, entry.id, entry.data.path));
       return {
         '@type': entry.data.kind === 'assessment' ? 'MedicalTest' : 'MedicalTherapy',
         name: entry.data.h1,

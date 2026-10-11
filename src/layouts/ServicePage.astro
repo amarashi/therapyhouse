@@ -214,7 +214,7 @@ const reviewedLabel = data.lastReviewed
         <ul class="service__related">
           {related.map((other) => (
             <li>
-              <a class="standalone-link" href={withBase(servicePath(other.data.kind, other.id))}>
+              <a class="standalone-link" href={withBase(servicePath(other.data.kind, other.id, other.data.path))}>
                 {other.data.h1}
               </a>
             </li>

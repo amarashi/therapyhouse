@@ -225,6 +225,16 @@ const services = defineCollection({
     lede: z.string(),
     kind: z.enum(['therapy', 'assessment', 'hub']),
     /**
+     * The page's address, when it is not the kind's usual one: /ndis/, or the
+     * Circle of Security page, which keeps its Current Site address. Built by
+     * src/pages/[...page].astro. Leave unset for /therapy/<file>/ and
+     * /assessments/<file>/.
+     */
+    path: z
+      .string()
+      .regex(/^\/[a-z0-9-]+(\/[a-z0-9-]+)*\/$/, 'a site path such as /ndis/')
+      .optional(),
+    /**
      * Which heading a therapy page sits under on the /therapy/ hub. Optional
      * so a page can be written before anyone decides where it belongs; an
      * ungrouped page is still listed, under the hub's last heading, rather

@@ -518,6 +518,17 @@ const SERVICE_PAGES = [
     phrase: "cbt",
     h1Word: "therapies",
   },
+  {
+    id: "ndis",
+    title: "NDIS Psychologist Brisbane, The Gap | Plan & Self-Managed",
+    h1: "NDIS psychology at Therapy House",
+    description:
+      "NDIS psychology in The Gap, Brisbane and by video for plan-managed and self-managed participants: therapy, assessment and reports.",
+    phrase: "ndis psychologist",
+    h1Word: "ndis",
+    // The issue's description says "NDIS psychology".
+    descWords: ["ndis", "psycholog"],
+  },
 ];
 
 test("approaches: every approach has the anchor the condition pages link to", async () => {
