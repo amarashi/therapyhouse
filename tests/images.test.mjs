@@ -57,8 +57,13 @@ const DECORATIVE = {
   // The team card's portrait link is aria-hidden; the name link follows.
   "src/components/PersonCard.astro": 1,
   // Home page: room art inside a link whose heading names the page, and
-  // faces inside a link that carries the person's name.
-  "src/pages/index.astro": 2,
+  // faces inside a link that carries the person's name. Plus three vignettes
+  // (the reading nook, the coat rack, the garden gate) that carry no
+  // information the words beside them do not.
+  "src/pages/index.astro": 5,
+  // The telephone over "Talk to us" and the garden strip on the footer rule:
+  // atmosphere only, next to a heading and links that say everything.
+  "src/layouts/PlainLayout.astro": 2,
 };
 
 async function* astroFiles(dir) {

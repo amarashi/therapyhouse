@@ -83,11 +83,27 @@ const faces = [
   <WelcomeHeroPrototype />
 
   <div class="wrap">
-    <div class="prose--flush prose stack intro">
-      <Content />
-      {philosophy && (
-        <p class="intro__more"><a class="standalone-link" href={withBase("/philosophy/")}>How we work, and what we believe →</a></p>
-      )}
+    <div class="intro">
+      <div class="prose--flush prose stack">
+        <Content />
+        {philosophy && (
+          <p class="intro__more"><a class="standalone-link" href={withBase("/philosophy/")}>How we work, and what we believe →</a></p>
+        )}
+      </div>
+      {/* Decorative, and after the words in the source: the armchair and the
+          sleeping dog show the kind of room this is, so the copy never has to
+          say so. Lazy — it is below the hero and must never compete with it. */}
+      <img
+        class="intro__art"
+        src={withBase("/assets/home/nook-360.webp")}
+        srcset={`${withBase("/assets/home/nook-360.webp")} 360w, ${withBase("/assets/home/nook-720.webp")} 720w`}
+        sizes="(min-width: 58rem) 320px, 240px"
+        alt=""
+        width="720"
+        height="560"
+        loading="lazy"
+        decoding="async"
+      />
     </div>
 
     {/*
@@ -142,7 +158,21 @@ const faces = [
 
     {practitioners.length > 0 && (
     <section aria-labelledby="people">
-      <div class="section-head">
+      <div class="section-head people-head">
+        {/* Coats of every size on one rack: grown-ups and children come
+            through the same door. Decorative; sits beside the heading on wide
+            screens and tucks to the right of it on a phone. */}
+        <img
+          class="people-head__art"
+          src={withBase("/assets/home/hall-360.webp")}
+          srcset={`${withBase("/assets/home/hall-360.webp")} 360w, ${withBase("/assets/home/hall-571.webp")} 571w`}
+          sizes="(min-width: 44rem) 150px, 96px"
+          alt=""
+          width="571"
+          height="836"
+          loading="lazy"
+          decoding="async"
+        />
         <h2 id="people">The people you would meet</h2>
         {/* At zero this said "0 practitioners are currently accepting new
             clients." and stopped — a flat dead end on the page's most
@@ -254,6 +284,19 @@ const faces = [
             Reception: <a href={withBase(callsToAction.call.href)}>{contact.phone}</a> ·{' '}
             <a href={`mailto:${contact.email}`}>{contact.email}</a>
           </p>
+          {/* The gate, the letterbox and a car parked on the street: the
+              arrival the notes above describe. Decorative. */}
+          <img
+            class="finding__art"
+            src={withBase("/assets/home/gate-360.webp")}
+            srcset={`${withBase("/assets/home/gate-360.webp")} 360w, ${withBase("/assets/home/gate-720.webp")} 720w`}
+            sizes="(min-width: 58rem) 300px, 240px"
+            alt=""
+            width="720"
+            height="553"
+            loading="lazy"
+            decoding="async"
+          />
         </div>
       </div>
     </section>
@@ -264,6 +307,58 @@ const faces = [
 
   .intro {
     margin-top: var(--space-2xl);
+    display: grid;
+    gap: var(--space-xl);
+    align-items: center;
+  }
+
+  /* The art is a picture of the place, not a frame around the words: on the
+     right of the reading column on wide screens, under it on a phone. The
+     artwork carries its own transparency, so it needs no blend to sit on the
+     page's ground. */
+  .intro__art {
+    display: block;
+    width: min(240px, 70%);
+    height: auto;
+    justify-self: center;
+  }
+
+  @media (min-width: 58rem) {
+    .intro {
+      grid-template-columns: minmax(0, var(--content-max)) minmax(0, 320px);
+      column-gap: clamp(var(--space-2xl), 5vw, 88px);
+    }
+
+    .intro__art {
+      width: 100%;
+    }
+  }
+
+  /* The coat rack stands at the right of the heading and its note, the words
+     wrapping beside it; `flow-root` keeps the faces below clear of it. */
+  .people-head {
+    display: flow-root;
+  }
+
+  .people-head__art {
+    float: right;
+    width: 96px;
+    height: auto;
+    margin: 0 0 var(--space-sm) var(--space-lg);
+  }
+
+  @media (min-width: 44rem) {
+    .people-head__art {
+      width: 150px;
+      margin-left: var(--space-2xl);
+    }
+  }
+
+  .finding__art {
+    display: block;
+    width: min(300px, 80%);
+    height: auto;
+    margin-top: var(--space-xl);
   }
 
   .section-head__note {

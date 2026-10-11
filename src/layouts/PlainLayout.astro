@@ -181,6 +181,19 @@ const businessSchema = notFound
       {showClosing && (
       <section class="wrap closing" aria-labelledby="closing-heading">
         <div class="card closing__card">
+          {/* The telephone on the hall table: the call this block offers,
+              drawn rather than described. Decorative and lazy. */}
+          <img
+            class="closing__art"
+            src={withBase("/assets/home/phone-360.webp")}
+            srcset={`${withBase("/assets/home/phone-360.webp")} 360w, ${withBase("/assets/home/phone-720.webp")} 720w`}
+            sizes="180px"
+            alt=""
+            width="720"
+            height="602"
+            loading="lazy"
+            decoding="async"
+          />
           <h2 id="closing-heading">Talk to us</h2>
           <p>
             Book online, or call reception and describe what is going on — either
@@ -191,6 +204,20 @@ const businessSchema = notFound
       </section>
       )}
     </main>
+
+    {/* The garden along the front of the house, standing on the footer's top
+        rule: the page ends at the hedge rather than at a line. Decorative. */}
+    <img
+      class="garden-edge"
+      src={withBase("/assets/home/border-720.webp")}
+      srcset={`${withBase("/assets/home/border-720.webp")} 720w, ${withBase("/assets/home/border-1440.webp")} 1440w`}
+      sizes="(min-width: 60rem) 60rem, 100vw"
+      alt=""
+      width="1440"
+      height="281"
+      loading="lazy"
+      decoding="async"
+    />
 
     <footer class="site-footer">
       <div class="wrap site-footer__inner">
@@ -319,6 +346,23 @@ const businessSchema = notFound
 
       .closing__card h2 {
         margin-top: 0;
+      }
+
+      .closing__art {
+        display: block;
+        width: 180px;
+        height: auto;
+        margin: 0 auto var(--space-md);
+      }
+
+      /* Wide but capped, so it stays a garden bed and not a billboard; the
+         grass line sits exactly on the footer's top rule. */
+      .garden-edge {
+        display: block;
+        width: min(100%, 60rem);
+        height: auto;
+        margin: var(--space-2xl) auto -1px;
+        position: relative;
       }
 
       /* The card spans the full wrap, so its copy needs its own measure —
