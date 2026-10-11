@@ -13,6 +13,7 @@ on:
   workflow_dispatch:
 
 # Pages deployment needs to mint an ID token; nothing here writes to the repo.
+# The `report` job asks for its own, separate set.
 permissions:
   contents: read
   pages: write
@@ -27,6 +28,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      failed_step: ${{ steps.failed.outputs.step }}
     steps:
       - uses: actions/checkout@v4
 
@@ -39,20 +42,59 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
 
-      - run: pnpm install --frozen-lockfile
+      - id: install
+        run: pnpm install --frozen-lockfile
 
       # The suite is what guards the published content — specialisms, contact
       # details, the responsive portrait ladder — so a failure here should stop
-      # the deploy rather than ship the page it describes.
-      - run: pnpm test
+      # the deploy rather than ship the page it describes. The output is also
+      # kept in a file so the failure report can quote it; pipefail makes the
+      # step fail with the tests rather than succeed with `tee`.
+      - id: test
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm test 2>&1 | tee test.log
 
-      - run: pnpm build
+      - id: build
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm build 2>&1 | tee build.log
 
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
+
+      # Names the failed step in plain words for the `report` job. A failure
+      # before `install` ran (checkout, pnpm, Node) is the runner's own setup.
+      - id: failed
+        if: failure()
+        shell: bash
+        env:
+          INSTALL: ${{ steps.install.outcome }}
+          TEST: ${{ steps.test.outcome }}
+          BUILD: ${{ steps.build.outcome }}
+        run: |
+          if   [ "$TEST" = failure ];    then step="Running the tests (pnpm test)"
+          elif [ "$BUILD" = failure ];   then step="Building the site (pnpm build)"
+          elif [ "$INSTALL" = failure ]; then step="Installing dependencies (pnpm install)"
+          elif [ "$INSTALL" != success ]; then step="Setting up the build machine (checkout, pnpm, Node)"
+          else                                step="Packaging the built site for GitHub Pages"
+          fi
+          echo "step=$step" >> "$GITHUB_OUTPUT"
+
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-logs
+          path: |
+            test.log
+            build.log
+          if-no-files-found: ignore
+          retention-days: 7
 
   deploy:
     needs: build
@@ -63,3 +105,42 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # CMS saves are committed by a GitHub App, so GitHub emails nobody when one
+  # breaks the deploy. This opens (or comments on) a `build-failure` issue
+  # assigned to the developer, and closes it once a deploy succeeds again.
+  # A cancelled run reports nothing either way. The work is in
+  # .github/scripts/deploy-alert.sh.
+  report:
+    needs: [build, deploy]
+    if: ${{ !cancelled() && (needs.build.result == 'failure' || needs.deploy.result == 'failure' || needs.deploy.result == 'success') }}
+    runs-on: ubuntu-latest
+    # Only this job writes, and only issues (plus the label it files them under).
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+
+      # The logs exist only when the build job failed, and only for the steps
+      # that got as far as writing one.
+      - if: needs.build.result == 'failure'
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: deploy-logs
+          path: logs
+
+      - name: Open, update or close the build-failure issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          OUTCOME: ${{ needs.deploy.result == 'success' && 'success' || 'failure' }}
+          FAILED_STEP: ${{ needs.build.result == 'failure' && (needs.build.outputs.failed_step || 'The build job (the run log has the details)') || 'Publishing the site to GitHub Pages' }}
+          LOG_DIR: logs
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SHA: ${{ github.sha }}
+          BEFORE: ${{ github.event.before }}
+        run: bash .github/scripts/deploy-alert.sh
