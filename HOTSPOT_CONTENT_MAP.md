@@ -78,8 +78,8 @@ Room content:
 | --- | --- | --- | --- | --- | --- |
 | `service-list` | Services | Opens content modal | - | `services.offerings` | 8 service offerings. |
 | `therapy-models` | Therapy Models | Opens content modal | - | `services.therapyModels` | 5 therapy model descriptions. |
-| `fees` | Fees | Opens content modal | - | `services.fees` | 7 fee records. |
-| `rebates` | Rebates | Opens content modal | - | `services.rebates` | Medicare and private health rebate notes. |
+| `fees` | Fees | Opens content modal | - | `services.fees` | Session fees from `src/content/pages/fees.md`, written into /house/ at build time (#80), then a link to /fees/. |
+| `rebates` | Rebates | Opens content modal | - | `services.rebates` | Medicare rebates from `src/data/medicare.js` and private health notes, built the same way, then a link to /fees/. |
 | `reports` | Reports | Opens content modal | - | `services.reports` | Report and letter fee notes. |
 | `assessment-room` | Assessments | Navigates to room | `assessments` | `rooms.assessments` | Assessment Room summary is configured, but navigation takes priority. |
 | `back` | Back | Returns to exterior | `exterior` by behaviour | - | No content modal. |

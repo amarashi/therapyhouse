@@ -38,35 +38,16 @@ test("services page lists every therapy model from the content model", () => {
   }
 });
 
-test("session fees on the fees page match the content model", () => {
-  // The assessment-package range is deliberately absent: `content-data.js`
-  // quotes $1,200–$3,000 while the itemised packages on /assessments/ total
-  // $846–$2,400. Rather than publish both, the services page links through to
-  // the itemised list. Remove this filter once the clinic confirms which is
-  // correct.
-  const sessionFees = siteContent.services.fees.filter(
-    (fee) => !/assessment packages/i.test(fee.label)
-  );
-
-  for (const fee of sessionFees) {
-    const amount = fee.value.replace(/^\$?/, "").split(" ")[0];
-    assert.ok(
-      fees.includes(amount),
-      `fees.md is missing the fee amount ${fee.value} (${fee.label})`
-    );
-  }
-});
+// Fees, rebates and assessment prices are no longer copied into
+// content-data.js: the house reads them from fees.md, assessments.md and
+// src/data/medicare.js (issue #80). tests/house-facts.test.mjs guards that.
 
 test("the therapy hub no longer carries its own fee table", () => {
   assert.ok(!/^fees:/m.test(services), "services.md still has a fees block; fees live in fees.md");
 });
 
-test("every rebate and report note reaches the fees page", () => {
-  // The first rebate note ("via GP referral and Mental Health Care Plan") is
-  // replaced on /fees/ by the Medicare section, which states the rebate in
-  // dollars from src/data/medicare.js and uses the plan's current name.
-  const [, ...rebateNotes] = siteContent.services.rebates;
-  for (const note of [...rebateNotes, ...siteContent.services.reports]) {
+test("every report note reaches the fees page", () => {
+  for (const note of siteContent.services.reports) {
     const plain = note.replace(/\.$/, "");
     assert.ok(fees.includes(plain), `fees.md is missing: ${note.slice(0, 50)}…`);
   }
@@ -109,29 +90,15 @@ test("assessment documents list is complete", () => {
   }
 });
 
-test("every assessment package price reaches the assessments page", () => {
-  const packages = Object.values(siteContent.assessments.packages);
+test("every assessment package in the house is published on the assessments page", () => {
+  const packages = [
+    ...Object.values(siteContent.assessments.packages),
+    siteContent.assessments.schoolObservations,
+  ];
   assert.ok(packages.length > 0, "content model has no assessment packages");
-
   for (const pkg of packages) {
-    assert.ok(
-      assessments.includes(pkg.title),
-      `assessments.md is missing the package: ${pkg.title}`
-    );
-    // "From $2,400; provisional from $1,900" -> both amounts must be published.
-    for (const amount of pkg.price.match(/\$[\d,]+/g) ?? []) {
-      assert.ok(
-        assessments.includes(amount),
-        `assessments.md is missing ${amount} for ${pkg.title}`
-      );
-    }
+    assert.ok(assessments.includes(pkg.title), `assessments.md is missing the package: ${pkg.title}`);
   }
-});
-
-test("school observation add-on is published with its price", () => {
-  const { title, price } = siteContent.assessments.schoolObservations;
-  assert.ok(assessments.includes(title), `assessments.md is missing: ${title}`);
-  assert.ok(assessments.includes(price.match(/\$[\d,]+/)[0]), "school observation price missing");
 });
 
 test("both calls to action reach every plain page", async () => {
