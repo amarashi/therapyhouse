@@ -81,114 +81,125 @@ export const dogEyeFields = [
 ];
 
 export const defaultDogEyeSettings = {
-  generatedAt: "2026-05-28T00:00:00.000Z",
+  generatedAt: "2026-05-29T07:34:44.308Z",
   insideImageSize,
   eyes: [
     {
       key: "brown-dog-left-eye",
       label: "Brown dog left eye",
-      x: 645,
-      y: 710,
-      size: 17,
+      x: 677,
+      y: 673,
+      size: 21,
       pupilSize: 13,
-      maxX: 4,
-      maxY: 3,
+      maxX: 8,
+      maxY: 11.5,
       visible: 1
     },
     {
       key: "brown-dog-right-eye",
       label: "Brown dog right eye",
-      x: 690,
-      y: 715,
-      size: 17,
+      x: 719,
+      y: 676,
+      size: 18,
       pupilSize: 13,
-      maxX: 4,
-      maxY: 3,
+      maxX: 6,
+      maxY: 7,
       visible: 1
     },
     {
       key: "golden-dog-left-eye",
       label: "Golden dog left eye",
-      x: 1064,
-      y: 666,
-      size: 16,
-      pupilSize: 12,
+      x: 964,
+      y: 630,
+      size: 15,
+      pupilSize: 13,
       maxX: 4,
-      maxY: 3,
+      maxY: 4,
       visible: 1
     },
     {
       key: "golden-dog-right-eye",
       label: "Golden dog right eye",
-      x: 1108,
-      y: 670,
-      size: 16,
-      pupilSize: 12,
-      maxX: 4,
-      maxY: 3,
+      x: 994,
+      y: 641,
+      size: 19,
+      pupilSize: 13,
+      maxX: 7,
+      maxY: 6,
       visible: 1
     }
   ]
 };
 
 export const defaultFirelightSettings = {
-  generatedAt: "2026-05-28T00:00:00.000Z",
+  generatedAt: "2026-05-29T07:03:43.557Z",
   insideImageSize,
   lights: [
     {
       key: "fireplace",
       label: "Fireplace",
-      x: 482,
-      y: 590,
-      width: 150,
-      height: 185,
-      intensity: 0.74,
-      coreIntensity: 0.64,
-      blur: 12
+      x: 491,
+      y: 455,
+      width: 183,
+      height: 226,
+      intensity: 1,
+      coreIntensity: 1,
+      blur: 11
     },
     {
       key: "left-shelf-candle",
       label: "Left shelf candle",
-      x: 70,
-      y: 625,
+      x: 40,
+      y: 484,
       width: 112,
-      height: 128,
+      height: 114,
       intensity: 0.34,
-      coreIntensity: 0.36,
+      coreIntensity: 0.46,
       blur: 10
     },
     {
       key: "coffee-table-lantern",
       label: "Coffee table lantern",
-      x: 840,
-      y: 635,
+      x: 1220,
+      y: 298,
       width: 120,
       height: 130,
-      intensity: 0.32,
-      coreIntensity: 0.28,
+      intensity: 1,
+      coreIntensity: 0.49,
       blur: 10
     },
     {
       key: "right-wall-lantern",
       label: "Right wall lantern",
       x: 1460,
-      y: 340,
+      y: 261,
       width: 128,
       height: 150,
-      intensity: 0.28,
-      coreIntensity: 0.26,
+      intensity: 0.3,
+      coreIntensity: 0.53,
       blur: 10
     },
     {
       key: "right-door-lantern",
       label: "Right door lantern",
       x: 1544,
-      y: 470,
+      y: 372,
       width: 122,
       height: 154,
       intensity: 0.3,
       coreIntensity: 0.28,
       blur: 10
+    },
+    {
+      key: "custom-light-6",
+      label: "Custom light 6",
+      x: 119,
+      y: 395,
+      width: 24,
+      height: 69,
+      intensity: 1,
+      coreIntensity: 1,
+      blur: 5
     }
   ]
 };

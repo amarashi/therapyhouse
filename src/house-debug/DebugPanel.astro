@@ -1,0 +1,83 @@
+---
+/*
+ * The tuning panel for the house: sign positions, firelight and the dogs'
+ * eyes. It is a development tool, so `house.astro` renders it only under
+ * `astro dev` and none of it — markup or scripts — reaches the built site.
+ *
+ * Open `/house/?debug=1` on the dev server. "Confirm" / "Save" writes the
+ * values to this browser's storage and downloads them as JSON; copy the
+ * numbers into `public/assets/scripts/site-data.js` (firelight, dog eyes) or
+ * `content-data.js` and `house.astro` (sign positions) to ship them.
+ */
+/* Served straight from source by the dev server; nothing imports it at build
+   time, so no copy of it lands in `dist/`. */
+import { withBase } from "../lib/base.js";
+---
+<section class="debug-panel" id="debugPanel" aria-label="Button position debug controls" hidden>
+  <div class="debug-panel__inner">
+    <details class="debug-panel__section debug-panel__section--button-debugger">
+      <summary class="debug-panel__summary">
+        <span class="debug-panel__title">Button Position Debugger</span>
+        <span class="debug-panel__status" id="debugStatus" role="status">Open with ?debug=1 to adjust sign positions.</span>
+      </summary>
+      <div class="debug-panel__collapsible-body">
+        <div class="debug-panel__row">
+          <label class="debug-panel__field" for="debugSignSelect">
+            Button
+            <select class="debug-panel__select" id="debugSignSelect"></select>
+          </label>
+          <div class="debug-panel__controls" id="debugControls"></div>
+          <button class="debug-panel__button" id="debugConfirm" type="button">Confirm positions</button>
+        </div>
+        <details class="debug-panel__output">
+          <summary>Stored position JSON</summary>
+          <pre class="debug-panel__json" id="debugOutput">{}</pre>
+        </details>
+      </div>
+    </details>
+    <details class="debug-panel__section debug-panel__section--firelight-debugger">
+      <summary class="debug-panel__summary">
+        <span class="debug-panel__title">Firelight Debugger</span>
+        <span class="debug-panel__status" id="debugFirelightStatus" role="status">Open with ?debug=1 to adjust firelight positions.</span>
+      </summary>
+      <div class="debug-panel__collapsible-body">
+        <div class="debug-panel__row">
+          <label class="debug-panel__field" for="debugFirelightSelect">
+            Light
+            <select class="debug-panel__select" id="debugFirelightSelect"></select>
+          </label>
+          <div class="debug-panel__controls" id="debugFirelightControls"></div>
+          <div class="debug-panel__actions">
+            <button class="debug-panel__button debug-panel__button--secondary" id="debugFirelightAdd" type="button">Add light</button>
+            <button class="debug-panel__button debug-panel__button--secondary" id="debugFirelightRemove" type="button">Remove light</button>
+            <button class="debug-panel__button" id="debugFirelightConfirm" type="button">Save firelight JSON</button>
+          </div>
+        </div>
+        <details class="debug-panel__output">
+          <summary>Stored firelight JSON</summary>
+          <pre class="debug-panel__json" id="debugFirelightOutput">{}</pre>
+        </details>
+      </div>
+    </details>
+    <section class="debug-panel__section" aria-label="Dog eye movement debug controls">
+      <div class="debug-panel__header">
+        <h2 class="debug-panel__title">Dog Eye Debugger</h2>
+        <p class="debug-panel__status" id="debugDogEyeStatus" role="status">Open with ?debug=1 to adjust dog eye movement.</p>
+      </div>
+      <div class="debug-panel__row">
+        <label class="debug-panel__field" for="debugDogEyeSelect">
+          Eye
+          <select class="debug-panel__select" id="debugDogEyeSelect"></select>
+        </label>
+        <div class="debug-panel__controls" id="debugDogEyeControls"></div>
+        <button class="debug-panel__button" id="debugDogEyeConfirm" type="button">Save eye JSON</button>
+      </div>
+      <details class="debug-panel__output">
+        <summary>Stored dog eye JSON</summary>
+        <pre class="debug-panel__json" id="debugDogEyeOutput">{}</pre>
+      </details>
+    </section>
+  </div>
+</section>
+
+<script is:inline type="module" src={withBase("/src/house-debug/mount.js")}></script>

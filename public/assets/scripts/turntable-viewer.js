@@ -8,7 +8,14 @@ export function createTurntableViewer({
   exteriorHotspots = [],
   onExteriorHotspot,
   frames,
-  frameCount
+  frameCount,
+  /*
+   * Hold the house still on its front view: one frame instead of 48 (about
+   * 2.8 MB), and no rotation by drag, hover, wheel or keys. For visitors who
+   * ask for reduced motion or for reduced data (Save-Data). The doors and the
+   * other exterior hotspots work exactly as before.
+   */
+  still = false
 }) {
   const context = canvas.getContext("2d", { alpha: false });
   const imageCache = new Array(frameCount);
@@ -197,7 +204,7 @@ export function createTurntableViewer({
   }
 
   function setTargetAngle(nextAngle, immediate = false) {
-    targetAngle = clamp(nextAngle, 0, frameCount - 1);
+    targetAngle = still ? centreAngle : clamp(nextAngle, 0, frameCount - 1);
     if (immediate) {
       displayAngle = targetAngle;
       displayVelocity = 0;
@@ -352,6 +359,11 @@ export function createTurntableViewer({
 
   function stageFrameLoads() {
     const centreIndex = Math.round(centreAngle);
+    if (still) {
+      loadFrame(centreIndex).then(() => setTargetAngle(centreAngle, true));
+      return;
+    }
+
     const nearbyIndexes = [];
     for (let offset = 1; offset <= 4; offset += 1) {
       nearbyIndexes.push(centreIndex - offset, centreIndex + offset);
@@ -392,6 +404,7 @@ export function createTurntableViewer({
   function init() {
     renderExteriorHotspots();
     updateExteriorHotspots();
+    if (still) return;
 
     stage.addEventListener("pointerdown", (event) => {
       if (isInteractionLocked) return;

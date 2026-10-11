@@ -1,11 +1,8 @@
 import {
-  asset,
   defaultFirelightSettings,
   defaultDogEyeSettings,
-  dogEyeDownloadName,
   dogEyeFields,
   dogEyeStorageKey,
-  firelightDownloadName,
   firelightFields,
   firelightStorageKey,
   frameCount,
@@ -13,20 +10,15 @@ import {
   insideEdgeFallbackColors,
   insideImageSize,
   insideParallaxDepths,
-  signPositionDownloadName,
-  signPositionFields,
-  signPositionStorageKey,
   teamMembers
 } from "./site-data.js";
+import { requestIdleTask } from "./utils.js";
 import { exteriorHotspots, roomSceneDefaults, siteContent } from "./content-data.js";
 import { createDogEyeController } from "./dog-eye-controller.js?v=20260529-eye-scale";
-import { createDogEyeDebugger } from "./dog-eye-debugger.js";
 import { createEntranceVideoController } from "./entrance-video.js";
 import { createFirelightController } from "./firelight-controller.js";
-import { createFirelightDebugger } from "./firelight-debugger.js";
 import { createInsideScene } from "./inside-scene.js";
 import { createModalDialog } from "./modal-dialog.js";
-import { createSignPositionDebugger } from "./sign-position-debugger.js";
 import { createTeamCarousel } from "./team-carousel.js";
 import { createTurntableViewer } from "./turntable-viewer.js";
 
@@ -64,14 +56,21 @@ const contactModalClose = document.getElementById("contactModalClose");
 const cursorSparkleLayer = document.getElementById("cursorSparkleLayer");
 const houseExit = document.getElementById("houseExit");
 const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+/*
+ * Save-Data is the browser passing on "this visitor is on a metered or slow
+ * connection". With it, or with reduced motion, the exterior holds still on
+ * one frame instead of fetching the 48-frame turntable, and with Save-Data
+ * the interior waits to be walked into before it loads.
+ */
+const saveData = navigator.connection?.saveData === true;
+const holdStill = saveData || reducedMotionQuery.matches;
 
 const firelightController = createFirelightController({
   layer: insideFirelightLayer,
   defaultSettings: defaultFirelightSettings,
   fields: firelightFields,
   insideImageSize,
-  storageKey: firelightStorageKey,
-  sourceUrl: asset(firelightDownloadName)
+  storageKey: firelightStorageKey
 });
 
 const dogEyeController = createDogEyeController({
@@ -80,8 +79,7 @@ const dogEyeController = createDogEyeController({
   defaultSettings: defaultDogEyeSettings,
   fields: dogEyeFields,
   insideImageSize,
-  storageKey: dogEyeStorageKey,
-  sourceUrl: asset(dogEyeDownloadName)
+  storageKey: dogEyeStorageKey
 });
 
 const turntable = createTurntableViewer({
@@ -96,7 +94,8 @@ const turntable = createTurntableViewer({
     entranceVideo.enterInsideView(hotspot.targetRoom);
   },
   frames,
-  frameCount
+  frameCount,
+  still: holdStill
 });
 
 const insideScene = createInsideScene({
@@ -172,55 +171,6 @@ const entranceVideo = createEntranceVideoController({
   onEnterInside: () => {
     teamCarousel.preloadImages();
   }
-});
-
-const debuggerPanel = createSignPositionDebugger({
-  elements: {
-    panel: document.getElementById("debugPanel"),
-    signSelect: document.getElementById("debugSignSelect"),
-    controls: document.getElementById("debugControls"),
-    confirmButton: document.getElementById("debugConfirm"),
-    status: document.getElementById("debugStatus"),
-    output: document.getElementById("debugOutput")
-  },
-  sceneSigns,
-  signPositionFields,
-  insideImageSize,
-  storageKey: signPositionStorageKey,
-  downloadName: signPositionDownloadName,
-  updateSceneSigns: insideScene.updateSceneSigns
-});
-
-const firelightDebugger = createFirelightDebugger({
-  elements: {
-    select: document.getElementById("debugFirelightSelect"),
-    controls: document.getElementById("debugFirelightControls"),
-    addButton: document.getElementById("debugFirelightAdd"),
-    removeButton: document.getElementById("debugFirelightRemove"),
-    confirmButton: document.getElementById("debugFirelightConfirm"),
-    status: document.getElementById("debugFirelightStatus"),
-    output: document.getElementById("debugFirelightOutput")
-  },
-  controller: firelightController,
-  fields: firelightFields,
-  insideImageSize,
-  storageKey: firelightStorageKey,
-  downloadName: firelightDownloadName
-});
-
-const dogEyeDebugger = createDogEyeDebugger({
-  elements: {
-    select: document.getElementById("debugDogEyeSelect"),
-    controls: document.getElementById("debugDogEyeControls"),
-    confirmButton: document.getElementById("debugDogEyeConfirm"),
-    status: document.getElementById("debugDogEyeStatus"),
-    output: document.getElementById("debugDogEyeOutput")
-  },
-  controller: dogEyeController,
-  fields: dogEyeFields,
-  insideImageSize,
-  storageKey: dogEyeStorageKey,
-  downloadName: dogEyeDownloadName
 });
 
 let resizeFrameId = 0;
@@ -603,11 +553,7 @@ function init() {
   bindModalScrolling();
   bindKeyboardShortcuts();
 
-  debuggerPanel.applyStoredPositions();
   insideScene.updateEdgeColors();
-  const debugMode = debuggerPanel.init();
-  firelightDebugger.init();
-  dogEyeDebugger.init();
 
   window.addEventListener("resize", scheduleResize);
   if (window.visualViewport) {
@@ -620,12 +566,47 @@ function init() {
   bindHouseExit();
 
   const requestedRoom = readRequestedRoom();
-  if (debugMode) {
-    entranceVideo.enterInsideView();
-  } else if (requestedRoom) {
+  if (requestedRoom) {
     entranceVideo.enterInsideView(requestedRoom);
   }
   turntable.stageFrameLoads();
+  scheduleInteriorLoad();
+  exposeDebugHooks();
+}
+
+/*
+ * The interior layers are hidden on arrival, so they wait until the page has
+ * painted and gone quiet, then load in the background so the room is ready
+ * when the front door opens. Walking in sooner loads them at once (see
+ * `insideScene.enter`). Under Save-Data they wait for that walk.
+ */
+function scheduleInteriorLoad() {
+  if (saveData) return;
+
+  const start = () => requestIdleTask(() => insideScene.loadLayers());
+  if (document.readyState === "complete") {
+    start();
+  } else {
+    window.addEventListener("load", start, { once: true });
+  }
+}
+
+/*
+ * The tuning panel (`src/house-debug/`) exists only on the dev server. When
+ * its markup is on the page, hand it the pieces it adjusts; on the built site
+ * there is no panel and nothing is exposed.
+ */
+function exposeDebugHooks() {
+  if (!document.getElementById("debugPanel")) return;
+
+  window.__houseDebugHooks = {
+    dogEyeController,
+    enterInside: () => entranceVideo.enterInsideView(),
+    firelightController,
+    insideScene,
+    sceneSigns
+  };
+  document.dispatchEvent(new Event("house:debug-ready"));
 }
 
 init();
