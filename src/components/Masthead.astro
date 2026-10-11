@@ -12,8 +12,9 @@ import { site, contact, callsToAction } from '../data/site.js';
  * Georgia in hedge green is the system's own voice and reads at any size.
  *
  * The two actions sit here as quiet links rather than as the pair of pills that
- * used to interrupt the hero. They stay on every page, which is what PRODUCT.md
- * asks for — equal weight, always reachable — without either one shouting.
+ * used to interrupt the hero, in the same colour, because they carry equal
+ * weight. Once the masthead scrolls away, ActionBar.astro's floating pair takes
+ * over, so the two stay reachable on every page without either one shouting.
  */
 const { book, call } = callsToAction;
 ---
@@ -108,12 +109,7 @@ const { book, call } = callsToAction;
   }
 
   .masthead__link--phone {
-    color: var(--chestnut);
     font-variant-numeric: lining-nums tabular-nums;
-  }
-
-  .masthead__link--phone:hover {
-    color: var(--wood-brown);
   }
 
   /* ---- Phones ----

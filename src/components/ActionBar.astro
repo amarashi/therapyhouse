@@ -3,34 +3,41 @@ import { withBase } from '../lib/base.js';
 import { callsToAction } from '../data/site.js';
 
 /**
- * The two calls to action, held in the thumb zone, on phones only.
+ * The two calls to action, kept within reach at every scroll position.
  *
  * PRODUCT.md asks for booking and calling at equal weight, neither buried.
- * On a desktop the masthead carries both and they are on screen the whole
- * time. On a phone they were not: the masthead's booking link was a 143x26px
- * text link in the top-right corner — out of reach of a thumb and under the
- * 44px the site's own `.btn` honours — the phone number was dropped entirely,
- * and the next affordance of any kind was the closing card, 4,790px down the
- * homepage. Five and a half screens of scrolling, on the device this audience
- * actually uses, with nothing to act on.
  *
- * So on a phone the pair moves to where a thumb already is. It is a bar rather
- * than a floating button because the two actions are equal and a single
- * floating button would have to pick one; both are pills of the same width, so
- * neither reads as the fallback for the other.
+ * On a phone the pair is a bar in the thumb zone. The masthead's booking link
+ * there was a 143x26px text link in the top-right corner — out of reach of a
+ * thumb and under the 44px the site's own `.btn` honours — the phone number was
+ * dropped entirely, and the next affordance of any kind was the closing card,
+ * 4,790px down the homepage. So on a phone the pair moves to where a thumb
+ * already is, on screen the whole time.
+ *
+ * On a desktop the masthead carries both, but the masthead scrolls away with
+ * the page, and the homepage then ran about 3,300px — four rooms and six faces
+ * — with no way to book or call until the closing card. So above phone width
+ * the same pair floats in the bottom-right corner, but only while it is
+ * needed: it stays out of the way while the masthead's own pair is on screen,
+ * and again while the closing card's pair is, so the page never shows the
+ * two actions twice at once. At rail widths it stands in the rail's margin,
+ * under the lift, where it covers no content at all.
+ *
+ * Both buttons are the same button. A filled Book beside an outlined Call
+ * still reads as "the action, and the fallback", which is exactly what
+ * PRODUCT.md rules out; the labels are what tell them apart.
  *
  * Labels are `site.js`'s, unchanged — the call button shows the number itself
  * because a parent scanning for one is looking for digits, not for a verb.
  *
- * Height is reserved by the footer rather than by `body`, so the extra space
- * carries the footer's own white behind the bar instead of opening a strip of
- * page ground beneath it. Over-reserving is therefore free, which is what
- * keeps this from drifting if a label ever wraps.
+ * Phone height is reserved by the footer rather than by `body`, so the extra
+ * space carries the footer's own white behind the bar instead of opening a
+ * strip of page ground beneath it.
  */
 const { book, call } = callsToAction;
 ---
 
-<div class="actionbar">
+<div class="actionbar" data-actionbar>
   <a
     class="btn btn--primary actionbar__btn"
     href={withBase(book.href)}
@@ -39,37 +46,122 @@ const { book, call } = callsToAction;
   >
     {book.label}<span class="sr-only"> (opens in a new tab)</span>
   </a>
-  <a class="btn btn--secondary actionbar__btn actionbar__btn--call" href={withBase(call.href)}>
+  <a class="btn btn--primary actionbar__btn actionbar__btn--call" href={withBase(call.href)}>
     {call.label}
   </a>
 </div>
 
+<script is:inline>
+  /*
+   * Desktop only: hide the floating pair while another copy of it is on
+   * screen — the masthead's at the top, the closing card's at the bottom.
+   * Runs straight after the markup, so a page that opens with the masthead in
+   * view never paints the pair first and then takes it away. Without a script
+   * the pair simply stays, which is the safe way round to fail.
+   */
+  (function () {
+    var bar = document.querySelector('[data-actionbar]');
+    if (!bar || !('IntersectionObserver' in window)) return;
+    var others = [document.querySelector('.masthead__actions'), document.querySelector('.closing .cta')].filter(Boolean);
+    if (!others.length) return;
+    var visible = new Set();
+    bar.classList.add('is-tucked');
+    var watch = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) visible.add(entry.target);
+        else visible.delete(entry.target);
+      });
+      bar.classList.toggle('is-tucked', visible.size > 0);
+    });
+    others.forEach(function (el) { watch.observe(el); });
+  })();
+</script>
+
 <style>
-  /* Nowhere but a phone. Above this width the masthead's own pair is on screen
-     and a bar would be taking a strip of viewport to repeat it. */
-  .actionbar {
-    display: none;
+  .actionbar__btn--call {
+    /* A published number a parent is reading off the screen. */
+    font-variant-numeric: lining-nums tabular-nums;
   }
 
-  @media (max-width: 44rem) {
+  /* ---- Desktop: the floating pair ----
+     An opaque tray rather than two loose pills: DESIGN.md's glass is for small
+     ambient objects over the illustration, and this stands over text. */
+  .actionbar {
+    position: fixed;
+    right: var(--space-lg);
+    bottom: var(--space-lg);
+    z-index: 45;
+    display: flex;
+    gap: var(--space-sm);
+    padding: var(--space-sm);
+    background: var(--surface-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    /* The lit top edge every raised surface carries, and the system's object
+       shadow — brown-black, never neutral. */
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.86),
+      0 16px 36px rgba(48, 25, 8, 0.18);
+    transition:
+      opacity 200ms ease,
+      transform 260ms cubic-bezier(0.2, 0.72, 0.2, 1),
+      visibility 0s linear 0s;
+  }
+
+  /* Tucked: out of sight and out of the tab order, since the same two links
+     are on screen elsewhere. */
+  .actionbar.is-tucked {
+    opacity: 0;
+    transform: translateY(12px);
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      opacity 160ms ease,
+      transform 160ms ease,
+      visibility 0s linear 160ms;
+  }
+
+  .actionbar__btn {
+    white-space: nowrap;
+  }
+
+  /* At rail widths the margin to the right of the content belongs to the lift,
+     and its lower end is empty: the pair stacks there, one above the other at
+     one width, clear of every line of content. */
+  @media (min-width: 90rem) {
     .actionbar {
-      position: fixed;
+      right: calc((var(--rail-gutter) - 14rem) / 2);
+      width: 14rem;
+      flex-direction: column;
+      border-radius: var(--radius-xl);
+    }
+
+    .actionbar__btn {
+      width: 100%;
+    }
+  }
+
+  /* ---- Phones: the bar in the thumb zone ----
+     On screen the whole time; the masthead carries no actions at this width,
+     so there is nothing to tuck behind. */
+  @media (max-width: 44rem) {
+    .actionbar,
+    .actionbar.is-tucked {
       inset: auto 0 0;
-      z-index: 45;
-      display: flex;
-      gap: var(--space-sm);
+      width: auto;
+      opacity: 1;
+      transform: none;
+      visibility: visible;
+      pointer-events: auto;
       padding: var(--space-sm) var(--space-md);
       /* The home indicator's strip on a phone that reports one. `max()` keeps
          the ordinary padding everywhere else. */
       padding-bottom: max(var(--space-sm), env(safe-area-inset-bottom));
-      /* Opaque, never translucent: DESIGN.md's glass is for small ambient
-         objects over the illustration, and this is a content surface with the
-         page scrolling underneath it. */
-      background: var(--surface-raised);
+      border: 0;
       border-top: 1px solid var(--line);
-      /* The lit top edge every raised surface in this system carries, and a
-         warm shadow thrown upward — brown-black, never neutral. The bar is
-         standing in front of the page, not printed on it. */
+      border-radius: 0;
+      /* A warm shadow thrown upward: the bar is standing in front of the page,
+         not printed on it. */
       box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.86),
         0 -6px 20px rgba(48, 25, 8, 0.1);
@@ -84,11 +176,7 @@ const { book, call } = callsToAction;
       min-height: 48px;
       padding-inline: var(--space-sm);
       text-align: center;
-    }
-
-    .actionbar__btn--call {
-      /* A published number a parent is reading off the screen. */
-      font-variant-numeric: lining-nums tabular-nums;
+      white-space: normal;
     }
   }
 
@@ -106,6 +194,13 @@ const { book, call } = callsToAction;
     .actionbar__btn {
       font-size: var(--text-meta);
       padding-inline: var(--space-xs);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .actionbar,
+    .actionbar.is-tucked {
+      transform: none;
     }
   }
 </style>

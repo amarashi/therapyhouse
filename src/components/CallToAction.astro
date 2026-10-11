@@ -7,8 +7,9 @@ import { callsToAction } from '../data/site.js';
  *
  * PRODUCT.md: booking online and calling reception carry *equal* weight —
  * some parents self-serve, others need to talk first, and neither path is the
- * fallback for the other. That is why the second button is outlined rather
- * than faded, and why neither is ever rendered alone.
+ * fallback for the other. So the two are the same button: a filled Book beside
+ * an outlined Call still read as "the action, and the fallback". The labels
+ * tell them apart, and neither is ever rendered alone.
  */
 const { book, call } = callsToAction;
 ---
@@ -19,7 +20,7 @@ const { book, call } = callsToAction;
   <a class="btn btn--primary" href={withBase(book.href)} target="_blank" rel="noopener noreferrer">
     {book.label}<span class="sr-only"> (opens in a new tab)</span>
   </a>
-  <a class="btn btn--secondary" href={withBase(call.href)}>{call.label}</a>
+  <a class="btn btn--primary cta__call" href={withBase(call.href)}>{call.label}</a>
 </div>
 
 <style>
@@ -27,6 +28,11 @@ const { book, call } = callsToAction;
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-md);
+  }
+
+  /* A published number a parent is reading off the screen. */
+  .cta__call {
+    font-variant-numeric: lining-nums tabular-nums;
   }
 
   @media (max-width: 420px) {
