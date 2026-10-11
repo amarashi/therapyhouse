@@ -5,6 +5,7 @@ import { rehypeBaseLinks } from './src/lib/rehype-base-links.js';
 import sitemap from '@astrojs/sitemap';
 
 import { draftServicePaths, sitemapFilter } from './src/lib/sitemap.js';
+import { securityHeaders } from './src/integrations/security-headers.js';
 
 // Therapy House — static site.
 //
@@ -80,6 +81,8 @@ export default defineConfig({
   base,
   integrations: [
     guardBase,
+    /* dist/_headers for Cloudflare: security and cache headers (issue #44). */
+    securityHeaders(),
     /* sitemap-index.xml at the site root, named in robots.txt. Drafts, the
        404 page and redirect stubs are left out (src/lib/sitemap.js). */
     sitemap({
