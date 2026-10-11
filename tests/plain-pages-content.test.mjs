@@ -533,7 +533,25 @@ const SERVICE_PAGES = [
     phrase: "grief counselling",
     h1Word: "grief",
   },
+  {
+    id: "couples",
+    title: "Couples Counselling Brisbane | Relationship Therapy",
+    h1: "Couples and relationship therapy",
+    description:
+      "Couples and relationship counselling in The Gap, Brisbane and by video, using Emotionally Focused Therapy. Session fees, who we see and how to book.",
+    phrase: "couples counselling",
+    h1Word: "couples",
+  },
 ];
+
+test("couples: the fee and the Medicare line are the ones /fees/ publishes", async () => {
+  const couples = await readService("couples");
+  const fees = await readPage("fees");
+  for (const amount of couples.split(/^---$/m)[1].match(/\$[\d,]+/g) ?? []) {
+    assert.ok(fees.includes(amount), `couples.md shows ${amount}, which fees.md does not publish`);
+  }
+  assert.match(couples, /Medicare does not cover couple and family sessions./);
+});
 
 for (const page of SERVICE_PAGES) {
   test(`${page.id}: title, H1 and description are the ones the issue specifies`, async () => {
