@@ -60,47 +60,68 @@ separate site — it is a presentation layer mounted over the same pages.
 | `/work-with-us/` | Work With Us | Work With Us | `workWithUs` | ✏️ |
 | `/philosophy/` | — (modal today) | Our Philosophy | `philosophy` | ✅ |
 | `/privacy-policy/` | — | Privacy Policy (built in #42, linked in the footer) | `src/content/pages/privacy-policy.md` | ⚖️ ❓ |
-| `/feedback/` | — | Feedback | WordPress scrape | ❓ |
 
-**Totals:** 11 content pages + 12 practitioner pages + 25 articles, plus the
-SEO launch pages below.
+**Totals:** 10 content pages + 12 practitioner pages + 25 articles, plus the
+SEO launch pages below. The Current Site's `/feedback/` page is not rebuilt:
+it forwards to `/contact/` (see the `/feedback/` section below).
 
 ### SEO launch pages (issues #5 to #30)
 
 Added for the SEO launch (GitHub milestone "SEO launch"). Every one of these is
 a **plain page, not a room**: no house door, no hero animation, the answer
 first. Therapy and assessment pages are Markdown files in `src/content/services/`
-(the file name is the address). "Status on main" is what had been merged on
-11 October 2026, when this file was last updated; issues marked needs-info are built on the Preview
-but wait on facts from the clinic before they go live (drafts and unconfirmed
-fees never reach the production build).
+(the file name is the address, unless the file gives its own `path`); Town
+Pages are in `src/content/towns/`.
 
-| URL | Page | Issue | Status on main |
-|---|---|---|---|
-| `/adults/` | Adult therapy hub (includes ADHD therapy for adults) | #5 | ✅ built; waiting on the clinic (needs-info) |
-| `/children/` | Child and adolescent psychology hub (includes ADHD therapy for children) | #6 | ✅ built; waiting on the clinic (needs-info) |
-| `/therapy/trauma/` | Trauma and EMDR | #7 | not yet merged |
-| `/therapy/anxiety/` | Anxiety and OCD | #8 | not yet merged |
-| `/therapy/depression/` | Depression | #9 | not yet merged |
-| `/therapy/grief/` | Grief | #10 | not yet merged |
-| `/therapy/couples/` | Couples and relationship therapy (replaces the Current Site's `/relationship/`) | #11 | not yet merged |
-| `/therapy/approaches/` | How we work: therapy approaches | #12 | not yet merged |
-| `/ndis/` | NDIS psychology | #13 | not yet merged |
-| `/group-therapy/circle-of-security-parenting-program/` | Circle of Security parenting program, at its existing address | #14 | not yet merged |
-| `/group-therapy/` | Group therapy page, reworded for searches (existing page) | #15 | not yet merged |
-| `/therapy/family/` | Family therapy | #16 | not yet merged |
-| `/assessments/adult-adhd/` | Adult ADHD assessment | #17 | ✅ built; waiting on the clinic (needs-info) |
-| `/assessments/adult-autism/` | Adult autism assessment | #18 | ✅ built; waiting on the clinic (needs-info) |
-| `/assessments/child-adhd/` | Child ADHD assessment | #19 | ✅ built; waiting on the clinic (needs-info) |
-| `/assessments/child-autism/` | Child autism assessment | #20 | ✅ built; waiting on the clinic (needs-info) |
-| `/assessments/learning/` | Learning assessment (dyslexia, dysgraphia, dyscalculia) | #21 | ✅ built; waiting on the clinic (needs-info) |
-| `/assessments/cognitive/` | Cognitive and giftedness assessment | #22 | not yet merged |
-| `/telehealth/` | Telehealth (the Telehealth Room): seeing a psychologist by video | #25 | ✅ built; waiting on the clinic (needs-info) |
-| `/telehealth/toowoomba/` | Town Page: Toowoomba | #26 | not yet merged |
-| `/telehealth/townsville/` | Town Page: Townsville | #27 | not yet merged |
-| `/telehealth/cairns/` | Town Page: Cairns | #28 | not yet merged |
-| `/telehealth/rockhampton/` | Town Page: Rockhampton | #29 | not yet merged |
-| `/fees/` | Fees and Medicare rebates | #30 | ✅ built; waiting on the clinic (needs-info) |
+Every page from #5 to #30 has now been built and merged. The "Status on main"
+column was checked against `main` on 11 October 2026 (after PR #91), by
+building both the Preview and the production site. It uses three states:
+
+- **Live** — built in the production build, so it goes live at launch. Some
+  live pages still have an open issue for facts the clinic has not confirmed;
+  until then the page uses only the clinic's published wording or tells the
+  visitor to ask reception.
+- **Draft** — built on the Preview (`https://amarashi.github.io/therapyhouse/`)
+  for review, but marked `draft: true`, so the production build leaves it out.
+  It goes live when the clinic answers the open questions on its issue and the
+  draft flag is removed. While a draft is not built, any Current Site address
+  that points at it is a temporary 302 redirect to a stand-in page (see the
+  redirect map below).
+- **Not built** — no page yet. None of the pages from #5 to #30 is in this
+  state today.
+
+| URL | Page | Issue | Status on main | Waiting on the clinic for |
+|---|---|---|---|---|
+| `/adults/` | Adult therapy hub (includes ADHD therapy for adults) | #5 | Draft | Sign-off of `docs/team-specialisms-review.md` (which clinicians see adults) |
+| `/children/` | Child and adolescent psychology hub (includes ADHD therapy for children) | #6 | Draft | Sign-off of the review file; the ages the clinic sees |
+| `/therapy/trauma/` | Trauma and EMDR | #7 | Draft | Sign-off of the review file; whether EMDR is offered by video |
+| `/therapy/anxiety/` | Anxiety and OCD | #8 | Draft | Sign-off of the review file; who treats OCD |
+| `/therapy/depression/` | Depression | #9 | Draft | Sign-off of the review file |
+| `/therapy/grief/` | Grief | #10 | Draft | Sign-off of the review file |
+| `/therapy/couples/` | Couples and relationship therapy (replaces the Current Site's `/relationship/`) | #11 | Draft | Sign-off of the review file; session length |
+| `/therapy/approaches/` | How we work: therapy approaches | #12 | Draft | Which clinicians use each approach; whether schema therapy is offered |
+| `/ndis/` | NDIS psychology, at the Current Site's own address | #13 | Draft | Plan types accepted; whether the clinic is a registered NDIS provider; what it provides |
+| `/group-therapy/circle-of-security-parenting-program/` | Circle of Security parenting program, at its existing address | #14 | Live (issue open) | Next dates, current cost, facilitator, format, Medicare item |
+| `/group-therapy/` | Group therapy page, reworded for searches (existing page) | #15 | Live (issue closed) | Nothing |
+| `/therapy/family/` | Family therapy | #16 | Draft | Sign-off of the review file; which clinicians do family therapy |
+| `/assessments/adult-adhd/` | Adult ADHD assessment | #17 | Draft | Fee or starting price; wait time; who assesses adults; whether video is possible |
+| `/assessments/adult-autism/` | Adult autism assessment | #18 | Draft | Fee or starting price; wait time; who assesses adults; whether video is possible |
+| `/assessments/child-adhd/` | Child ADHD assessment | #19 | Draft | Sign-off of the review file; wait time; who assesses children |
+| `/assessments/child-autism/` | Child autism assessment | #20 | Draft | Sign-off of the review file; wait time; who assesses children |
+| `/assessments/learning/` | Learning assessment (dyslexia, dysgraphia, dyscalculia) | #21 | Draft | Whether dyscalculia is assessed; sign-off of the review file |
+| `/assessments/cognitive/` | Cognitive and giftedness assessment | #22 | Draft | The school readiness wording; the ages assessed |
+| `/telehealth/` | Telehealth (the Telehealth Room): seeing a psychologist by video | #25 | Live (issue open) | Which clinicians offer video and for which ages; whether video fees equal in-room fees; the video platform |
+| `/telehealth/toowoomba/` | Town Page: Toowoomba | #26 | Live (issue open) | Optional: clinicians who already see clients there; the shared #25 questions |
+| `/telehealth/townsville/` | Town Page: Townsville | #27 | Live (issue open) | As for Toowoomba |
+| `/telehealth/cairns/` | Town Page: Cairns | #28 | Live (issue open) | As for Toowoomba |
+| `/telehealth/rockhampton/` | Town Page: Rockhampton | #29 | Live (issue open) | As for Toowoomba |
+| `/fees/` | Fees and Medicare rebates | #30 | Live (issue open) | Confirm each published fee (then set `lastReviewed`); video fees; cancellation policy; NDIS rate; Medicare billing; adult assessment fees |
+
+"The review file" is `docs/team-specialisms-review.md`, which says which
+clinician does what. Each issue's last comment lists its open questions in
+full. Mackay, Bundaberg, Gladstone and Mount Isa are sections of
+`/telehealth/`, not Town Pages; each becomes a Town Page once it has three
+sourced local facts.
 
 Issue #23 is the pull request that built the services collection, and #24 is a
 build bug, so neither adds a page. A Town Page never says or implies the clinic
@@ -145,7 +166,7 @@ The exterior turntable is the site map. Beneath/behind it, the plain page:
 
 1. **Hero** — "Therapy House is a place for all children, and anyone who has once been a child." ✅
 2. **Intro** — boutique psychology clinic, leafy Brisbane suburb, designed to feel at home ✅
-3. **What we do** — three routes: Therapy → `/services/`, Assessments → `/assessments/`, Groups → `/group-therapy/` ✅
+3. **What we do** — three routes: Therapy → `/therapy/`, Assessments → `/assessments/`, Groups → `/group-therapy/` ✅
 4. **The team** — 4–6 practitioner faces + "Meet the whole team" ✅ *(carries the credibility load — see PRODUCT.md)*
 5. **Philosophy** — 5 principles, condensed ✅
 6. **Practical** — address, parking, phone, booking ✅
@@ -435,26 +456,36 @@ the website itself (Google Analytics, online booking).
 
 ### `/feedback/`
 
-Existing WordPress page. ❓ Needs a form backend decision (Cloudflare Pages
-Functions is the obvious fit) and a check on whether submissions can contain
-health information — if so, handling needs to match.
-
-Also in this bucket: `/external-workshop-expression-of-interest/` and
-`/workshops-feedback/`.
+Not rebuilt as a page. The new site has no forms yet, so `/feedback/` and
+`/workshops-feedback/` forward to `/contact/`, and
+`/external-workshop-expression-of-interest/` forwards to
+`/group-therapy/#workshops` (all in `docs/redirects.md`). ❓ A form needs a
+backend decision (Cloudflare Pages Functions is the obvious fit) and a check on
+whether submissions can contain health information; if so, handling needs to
+match (see #67).
 
 ---
 
 ## Redirect map — Current Site addresses
 
-Every one of these needs a 301 on launch day. **This section is now a summary.**
-The source of truth is `docs/redirects.md`, which issue #41 turns into the
-Cloudflare `public/_redirects` file and checks with a test against every
-Current Site URL in the crawl. Where the two disagree, `docs/redirects.md`
-wins. Pages added for the SEO launch change some targets below; for example
-`/relationship/` now goes to `/therapy/couples/` (#11) rather than
-`/library/`, and the Circle of Security page keeps its own address (#14).
+Every one of these must land on a real page on launch day. **This section is
+a summary.** The source of truth is `docs/redirects.md`: every build writes
+Cloudflare's `_redirects` file from it (issue #41), and a test checks it
+against every Current Site URL in the crawl. Where the two disagree,
+`docs/redirects.md` wins.
 
-### Pages (20)
+A redirect whose target page is still a draft is not a 301 yet (issue #90). The
+production build writes it as a 302 (temporary redirect) to a stand-in page,
+and writes the permanent 301 automatically once the real page is built. The
+build fails if any redirect would land on a page it did not build. Today that
+affects: `/relationship/` and `/category/relationship/` (302 to `/therapy/`
+until `/therapy/couples/` is live, #11), `/child-psychologists/` and
+`/category/child-psychologists/` (302 to `/therapy/` until `/children/` is
+live, #6), the old learning article address (302 to `/assessments/` until
+`/assessments/learning/` is live, #21), and `/ndis/` (302 to `/fees/#ndis`
+until the NDIS page is live at that address, #13).
+
+### Pages (21)
 
 | Old | New |
 |---|---|
@@ -469,15 +500,16 @@ wins. Pages added for the SEO launch change some targets below; for example
 | `/contact/` | `/contact/` |
 | `/workwithus/` | `/work-with-us/` |
 | `/blogs/` | `/library/` |
-| `/products/` | `/library/#books` |
-| `/videos/` | `/library/#videos` |
+| `/products/` | `/library/#shelf-heading` (the book and video shelf) |
+| `/videos/` | `/library/#shelf-heading` |
 | `/publications/` | `/library/#publications` |
 | `/media/` | `/library/#media` |
-| `/relationship/` | `/therapy/couples/` (#11) |
+| `/relationship/` | `/therapy/couples/` (#11); 302 to `/therapy/` while that page is a draft |
 | `/privacy-policy/` | `/privacy-policy/` |
-| `/feedback/` | `/feedback/` |
-| `/workshops-feedback/` | `/feedback/` |
-| `/sitemap/` | `/sitemap.xml` |
+| `/feedback/` | `/contact/` |
+| `/workshops-feedback/` | `/contact/` |
+| `/sitemap/` | `/sitemap-index.xml` |
+| `/ndis/` | stays at its own address (#13); 302 to `/fees/#ndis` while that page is a draft |
 
 ### Staff (14 on the Current Site)
 
@@ -488,12 +520,15 @@ jazmin-squire · rani-banks (unchanged) · `sahar-h-fattahi-general-psychologist
 `sahar-fattahi` · `laura-storey-counsellor` → `laura-storey` ·
 `natasha-senior-client-support` → `natasha` · `samson-therapy-dog` → `samson`.
 
+Also `natasha-client-support-marketing` (her older address) → `natasha`,
+`josie-administrative-support` → `josie` and `reea-therapy-dog` → `reea`
+(no longer on the Current Site's staff sitemap, but redirected in case an old
+link still exists).
+
 ❓ `ace`, `an-yang-provisional-psychologist` and
-`brooke-client-support-marketing` have no Rebuild page yet. Where they go
-depends on the clinic's answer about the team list (R-30); until then they
-should forward to `/team/`. `josie-administrative-support` and `reea-therapy-dog` are
-no longer on the Current Site's staff sitemap, so they need a redirect only if
-an old link to them still exists.
+`brooke-client-support-marketing` have no Rebuild page, so they forward to
+`/team/`, as does any other `/staff-member/` address. That can change once
+the clinic answers about the team list (R-30).
 
 ### Posts (25)
 
