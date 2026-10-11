@@ -505,6 +505,15 @@ const SERVICE_PAGES = [
     phrase: "trauma therapy",
     h1Word: "trauma",
   },
+  {
+    id: "anxiety",
+    title: "Anxiety Psychologist Brisbane, The Gap & Telehealth",
+    h1: "Help with anxiety, for children, teens and adults",
+    description:
+      "Psychologists for anxiety in The Gap, Brisbane and by video: worry, panic, school refusal, social anxiety and OCD, for children, teenagers and adults.",
+    phrase: "anxiety psychologist",
+    h1Word: "anxiety",
+  },
 ];
 
 for (const page of SERVICE_PAGES) {

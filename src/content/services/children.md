@@ -54,7 +54,9 @@ in play. Play therapy uses toys, games, drawing and pretend play as the
 language of the session. Through play a child can express and work through
 worries, practise calming down, and try out new ways of responding. It is
 usually used with children aged about 3 to 11. Older children and teenagers
-mostly talk, sometimes with drawing or activities alongside.
+mostly talk, sometimes with drawing or activities alongside. Our library
+article on [play therapy](/library/play-therapy-therapy-made-for-children-with-childrens-minds-in-mind/)
+explains more.
 
 ## How parents are involved
 
@@ -68,7 +70,9 @@ Goals are set together with you and, depending on age, with your child. The
 younger the child, the more the work happens through parents. With teenagers,
 what the psychologist shares with parents depends on the young person's age
 and their ability to consent, and the psychologist explains how that will work
-at the start.
+at the start. The article
+[parent involvement in child therapy](/library/parent-involvement-in-child-therapy/)
+answers the questions parents ask most.
 
 ## Working with your child's school
 
