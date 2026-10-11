@@ -125,7 +125,10 @@ test("every clinician named on a service page is on the team", async () => {
 });
 
 test("the fixtures are drafts, so they can never reach the clinic's domain", async () => {
-  for (const file of ["example-therapy.md", "example-assessment.md"]) {
+  // A fixture is deleted once a real page of its kind lands, so check the ones
+  // that are still here rather than a fixed list.
+  const files = (await readdir(servicesDir)).filter((f) => /^example-.*\.md$/.test(f));
+  for (const file of files) {
     const text = await readFile(new URL(file, servicesDir), "utf8");
     assert.match(text, /^draft: true$/m, `${file} must stay a draft`);
   }
