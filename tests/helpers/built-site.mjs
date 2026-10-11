@@ -1,8 +1,8 @@
-import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readdirSync, readFileSync, statSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { existsSync, readdirSync, readFileSync, statSync, rmSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { buildSite } from "../../tools/build-site.mjs";
 
 /**
  * Build the site into a temporary folder and read its pages back.
@@ -13,32 +13,22 @@ import { fileURLToPath } from "node:url";
  * build. CI runs `pnpm test` before `pnpm build`, so the tests build for
  * themselves instead of reading `dist/`.
  *
- * Builds run one after another, never in parallel: Astro keeps one content
- * cache per project, and two builds writing it at once could corrupt it. Keep
- * every test that needs a build in `tests/built-site.test.mjs`.
+ * Astro keeps one content cache per project, so `pnpm test` runs test files
+ * one at a time (`--test-concurrency=1`) and two builds never write it at
+ * once.
  */
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
-const astroBin = join(root, "node_modules", "astro", "bin", "astro.mjs");
-
-/** The GitHub Pages review copy, as `astro.config.mjs` builds it today. */
-export const PREVIEW = { site: "https://amarashi.github.io", base: "/therapyhouse" };
-/** The clinic's real domain, as the config will read on launch day. */
-export const PRODUCTION = { site: "https://www.therapyhouse.com.au", base: "/" };
 
 const made = [];
 
-export function buildSite({ site, base }) {
-  const outDir = mkdtempSync(join(tmpdir(), "th-build-"));
+/**
+ * Build for a deploy target ("preview" or "production", see astro.config.mjs)
+ * and return its pages. Uses the same builder as `tests/production-build`.
+ */
+export function buildPages(target) {
+  const outDir = buildSite(target);
   made.push(outDir);
-  const run = spawnSync(
-    process.execPath,
-    [astroBin, "build", "--silent", "--outDir", outDir, "--site", site, "--base", base],
-    { cwd: root, encoding: "utf8" }
-  );
-  if (run.status !== 0) {
-    throw new Error(`astro build failed for ${site}${base}:\n${run.stdout}\n${run.stderr}`);
-  }
   return readPages(outDir);
 }
 

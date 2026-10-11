@@ -1,19 +1,18 @@
 import assert from "node:assert/strict";
 import { before, after, test } from "node:test";
 
-import { buildSite, cleanUp, textOf, PREVIEW } from "./helpers/built-site.mjs";
+import { buildPages, cleanUp, textOf } from "./helpers/built-site.mjs";
 import { TITLE_MAX, DESCRIPTION_MAX } from "../src/lib/seo.js";
 import { nearbySuburbs } from "../src/data/site.js";
 
 /**
- * Checks on the built HTML. One file, because each build here is a real
- * `astro build` and builds must not run in parallel (see the helper).
+ * Checks on the built HTML of the Preview build (see the helper).
  */
 
 let preview;
 
 before(() => {
-  preview = buildSite(PREVIEW);
+  preview = buildPages("preview");
 });
 
 after(cleanUp);
