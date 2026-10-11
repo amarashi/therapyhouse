@@ -1,4 +1,4 @@
-import { defineCollection, z } from 'astro:content';
+import { defineCollection, reference, z } from 'astro:content';
 import { glob } from 'astro/loaders';
 
 /**
@@ -181,4 +181,55 @@ const team = defineCollection({
   }),
 });
 
-export const collections = { pages, team };
+/**
+ * One file per service page: a therapy (`/therapy/<file>/`) or an assessment
+ * (`/assessments/<file>/`). The file name is the address, so renaming a file
+ * moves a page — add the old path to `redirectFrom` when that happens.
+ *
+ * Built for the SEO launch (issue #3): about twenty pages are coming, and each
+ * one should be a Markdown file a person can read and the clinic can check,
+ * not a hand-built route. The rules that decide what a page may say — drafts,
+ * unconfirmed fees, clinicians who exist — are in `src/lib/services.js`.
+ */
+const services = defineCollection({
+  loader: glob({ base: './src/content/services', pattern: '**/*.md' }),
+  schema: z.object({
+    /** The document title, written in full. Search results show it, so it
+        carries the service and the place rather than the page's H1. */
+    title: z.string().max(60),
+    /** The heading a reader sees. Free to be plainer than the title. */
+    h1: z.string(),
+    description: z.string().max(160),
+    lede: z.string(),
+    kind: z.enum(['therapy', 'assessment', 'hub']),
+    /** Who the page is written for. Not rendered; it is how the hubs (issue
+        #4) and the gap register group pages. */
+    audiences: z.array(z.enum(['local-family', 'telehealth', 'adult'])).min(1),
+    /** Team slugs. Checked against the team collection at build time. */
+    clinicians: z.array(reference('team')).default([]),
+    formats: z.array(z.enum(['in-room', 'video'])).default(['in-room']),
+    /** Conditions an assessment diagnoses, for the MedicalTest structured data. */
+    diagnoses: z.array(z.string()).optional(),
+    process: z.array(z.string()).optional(),
+    fees: z.array(feeRow).optional(),
+    /**
+     * `published`: the clinic publishes these figures.
+     * `quote`: no figure is published; the page says to call for a quote.
+     * `needs-confirmation`: a draft figure the clinic has not confirmed. Shown
+     * on the preview with a marker, and a production build refuses to run.
+     */
+    feeStatus: z.enum(['published', 'quote', 'needs-confirmation']).default('quote'),
+    medicare: z.array(z.string()).optional(),
+    /** Only questions the clinic has actually answered. */
+    faqs: z.array(z.object({ question: z.string(), answer: z.string() })).optional(),
+    related: z.array(reference('services')).default([]),
+    sourceUrl: z.string().url().optional(),
+    lastReviewed: z.coerce.date().optional(),
+    /** Current Site paths that should forward here (feeds the redirect map). */
+    redirectFrom: z.array(z.string()).default([]),
+    /** Visible on the preview for review, never built for production. */
+    draft: z.boolean().default(false),
+  }),
+});
+
+export const collections = { pages, team, services };
