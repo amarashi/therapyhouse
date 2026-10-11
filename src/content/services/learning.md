@@ -3,9 +3,8 @@
 # text: the Current Site's /assessments/ page (the psycho-educational package,
 # process and documents) and its article "Are You Learning At Your Full
 # Potential?" (the three specific learning disorders, the signs, the criteria
-# and the tests used). Where that article's old address should forward is
-# open in issue #60; until it is decided it goes to the library copy, so it
-# is not in redirectFrom here. A draft until the
+# and the tests used). That article's old address forwards here (decided in
+# #60); the article itself stays in the library. A draft until the
 # clinic confirms that dyscalculia is assessed and signs off
 # docs/team-specialisms-review.md.
 title: Dyslexia & Learning Assessment Brisbane | The Gap
@@ -38,6 +37,8 @@ medicare:
   - Medicare does not usually pay towards a learning assessment, so plan on the package fee. Ask reception what applies before anything is booked.
 related: [child-adhd]
 sourceUrl: https://www.therapyhouse.com.au/assessments/is-your-child-learning-to-the-best-of-their-capacity/
+redirectFrom:
+  - /assessments/is-your-child-learning-to-the-best-of-their-capacity/
 draft: true
 ---
 
