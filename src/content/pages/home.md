@@ -1,6 +1,7 @@
 ---
 title: Therapy House
-description: Therapy House is a boutique psychology clinic in The Gap, Brisbane — therapy, assessments and group programs for children, adults, couples and families.
+documentTitle: "Psychologist The Gap, Brisbane | Therapy House"
+description: Psychologists in The Gap, Brisbane for children, teens, adults, couples and families, plus ADHD and autism assessments. In person or by video session.
 lede: Therapy House is a boutique psychology clinic for people of all ages, in a leafy suburb of Brisbane.
 headline: A place for all children,
 headlineAccent: and anyone who has once been a child.

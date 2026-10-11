@@ -4,6 +4,7 @@ import { getCollection, render } from 'astro:content';
 import PlainLayout from '../../layouts/PlainLayout.astro';
 import CallToAction from '../../components/CallToAction.astro';
 import { site, isAcceptingNewClients } from '../../data/site.js';
+import { practitionerTitle, personDescription } from '../../lib/seo.js';
 
 export async function getStaticPaths() {
   const everyone = await getCollection('team');
@@ -12,8 +13,13 @@ export async function getStaticPaths() {
 
 const { person } = Astro.props;
 const { Content } = await render(person);
-const { name, role, image, imageAlt, credentials, worksWith, worksOn, languages, availability, kind } =
+const { name, role, image, imageAlt, credentials, worksWith, worksOn, languages, availability, kind, summary } =
   person.data;
+
+/* Built per person, from their own published summary, so no two profiles
+   share a title or a description (src/lib/seo.js has the length rules). */
+const documentTitle = practitionerTitle(name, role);
+const description = personDescription(summary);
 
 /* Same two facts as the team card. A card that promises "Works on: Autism,
    ADHD" and a profile that does not repeat it is the kind of gap a parent
@@ -51,7 +57,8 @@ const personSchema =
 
 <PlainLayout
   title={name}
-  description={`${name}, ${role} at Therapy House in The Gap, Brisbane.`}
+  documentTitle={documentTitle}
+  description={description}
   showClosing={false}
 >
   {personSchema && (

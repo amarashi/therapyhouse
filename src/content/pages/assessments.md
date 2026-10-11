@@ -1,5 +1,6 @@
 ---
 title: Assessments
+documentTitle: "Psychological Assessments Brisbane | ADHD, Autism, Learning"
 description: ADHD, Autism, cognitive and psycho-educational assessments at Therapy House, The Gap, Brisbane — the process, what to bring, and what each package costs.
 lede: Assessment processes can vary across psychology clinics and clinicians. Here is exactly how ours works.
 sourceUrl: https://www.therapyhouse.com.au/assessments/

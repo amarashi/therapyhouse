@@ -29,11 +29,12 @@ const otherLanguageList = new Intl.ListFormat('en-AU', {
 }).format(otherLanguages);
 
 const title = 'Our Team';
+const documentTitle = 'Psychologists & Counsellors, The Gap | Therapy House';
 const description =
   'Meet the psychologists, counsellors and support team at Therapy House in The Gap, Brisbane — including who is currently accepting new clients.';
 ---
 
-<PlainLayout title={title} description={description}>
+<PlainLayout title={title} documentTitle={documentTitle} description={description}>
   <HeroReveal
     room="team"
     roomName="the team parlour"

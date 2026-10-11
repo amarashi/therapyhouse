@@ -1,5 +1,6 @@
 ---
 title: Group Therapy & Programs
+documentTitle: "Children's Group Programs & Parenting | The Gap, Brisbane"
 description: Group programs at Therapy House in The Gap, Brisbane — emotion regulation, social skills, Lego Club and Circle of Security parenting.
 lede: Group therapy is an effective and affordable way to seek help.
 sourceUrl: https://www.therapyhouse.com.au/group-therapy/

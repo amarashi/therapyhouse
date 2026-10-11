@@ -5,7 +5,8 @@ import PlainLayout from '../layouts/PlainLayout.astro';
 import HeroReveal from '../components/HeroReveal.astro';
 import PersonPortrait from '../components/PersonPortrait.astro';
 import LocationMap from '../components/LocationMap.astro';
-import { contact, callsToAction, isAcceptingNewClients } from '../data/site.js';
+import { contact, callsToAction, isAcceptingNewClients, nearbySuburbs } from '../data/site.js';
+import { listOf } from '../lib/seo.js';
 // PROTOTYPE — throwaway, remove with WelcomeHeroPrototype.astro.
 import WelcomeHeroPrototype from '../components/WelcomeHeroPrototype.astro';
 
@@ -46,7 +47,7 @@ const faces = [
 ].slice(0, 6);
 ---
 
-<PlainLayout title={title} description={description}>
+<PlainLayout title={title} documentTitle={page.data.documentTitle} description={description}>
   {/* One left edge: the welcome sits on the same margin as the masthead above
       it and every heading below it, and the house runs off the opposite edge.
       The line that used to be the headline is still here, at the size of an
@@ -58,6 +59,7 @@ const faces = [
     slot="hero"
     layout="anchored"
     title="Welcome to Therapy House"
+    titleSub="Psychologists in The Gap, Brisbane"
     lede="A place for all children, and anyone who has once been a child."
     image={withBase("/assets/media/house-hero-loop-poster.webp")}
     imageSmall={withBase("/assets/media/house-hero-loop-poster-597.webp")}
@@ -226,6 +228,9 @@ const faces = [
           <ul class="tick-list">
             {practicalNotes?.map((note) => <li>{note}</li>)}
           </ul>
+          <p class="finding__suburbs">
+            We are in The Gap, Brisbane, a short drive from {listOf(nearbySuburbs)}.
+          </p>
           <p class="finding__reception">
             Reception: <a href={withBase(callsToAction.call.href)}>{contact.phone}</a> ·{' '}
             <a href={`mailto:${contact.email}`}>{contact.email}</a>

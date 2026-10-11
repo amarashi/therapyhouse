@@ -5,7 +5,8 @@ import PlainLayout from '../layouts/PlainLayout.astro';
 import HeroReveal from '../components/HeroReveal.astro';
 import LocationMap from '../components/LocationMap.astro';
 import CallToAction from '../components/CallToAction.astro';
-import { contact, callsToAction } from '../data/site.js';
+import { contact, callsToAction, nearbySuburbs } from '../data/site.js';
+import { listOf } from '../lib/seo.js';
 
 const page = await getEntry('pages', 'contact');
 if (!page) throw new Error('Missing content: src/content/pages/contact.md');
@@ -22,7 +23,7 @@ const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComp
   it on says the same sentence twice and puts the buttons a second time under
   the ones that already carry them.
 */}
-<PlainLayout title={title} description={description} showClosing={false}>
+<PlainLayout title={title} documentTitle={page.data.documentTitle} description={description} showClosing={false}>
   {/* Still, not scrolling: a visitor on the contact page has already decided,
       and the phone number belongs on the first screen. */}
   <HeroReveal
@@ -93,6 +94,14 @@ const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComp
         thing a parent needs at a different moment. */}
     <section class="finding" aria-labelledby="finding-us">
       <h2 id="finding-us">Finding us</h2>
+      {/* The getting-here paragraph. Only what the clinic already publishes:
+          the address, with parking left to the notes below, which already say
+          it. No public transport line, because the clinic has not published
+          one. */}
+      <p class="finding__intro">
+        Therapy House is at {contact.address}. The clinic is a short drive from
+        {' '}{listOf(nearbySuburbs)}.
+      </p>
       <div class="finding__body">
         <LocationMap sizes="(min-width: 62rem) 46vw, calc(100vw - clamp(1.5rem, 5vw, 7rem))" />
         <ul class="tick-list finding__notes">
@@ -227,6 +236,11 @@ const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComp
 
   .finding > h2 {
     margin-top: 0;
+  }
+
+  .finding__intro {
+    max-width: 40rem;
+    margin-bottom: var(--space-xl);
   }
 
   .finding__body {
