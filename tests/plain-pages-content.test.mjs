@@ -394,6 +394,14 @@ const assessmentPages = [
       "Psycho-educational assessment in The Gap, Brisbane for dyslexia, dysgraphia and dyscalculia: what it shows, the process and cost from $2,400.",
     phrase: "dyslexia",
   },
+  {
+    file: "cognitive",
+    title: "Cognitive & Giftedness Assessment Brisbane | The Gap",
+    h1: "Cognitive and giftedness assessment",
+    description:
+      "Cognitive assessment in The Gap, Brisbane for giftedness, school readiness and learning strengths: what it measures, the process and cost from $1,621.",
+    phrase: "cognitive",
+  },
 ];
 
 test("the learning page has an anchored section for each learning disorder", async () => {

@@ -35,7 +35,7 @@ fees:
     note: The same package. The report is signed off by a fully registered psychologist.
 medicare:
   - Medicare does not usually pay towards a learning assessment, so plan on the package fee. Ask reception what applies before anything is booked.
-related: [child-adhd]
+related: [cognitive, child-adhd]
 sourceUrl: https://www.therapyhouse.com.au/assessments/is-your-child-learning-to-the-best-of-their-capacity/
 redirectFrom:
   - /assessments/is-your-child-learning-to-the-best-of-their-capacity/
@@ -134,5 +134,8 @@ School information matters most for a learning assessment:
 - any earlier assessment reports
 - a referral, if you have one
 
-For support after the assessment, see
+If you want to understand your child's thinking skills without the academic
+testing, for example because you suspect they are gifted, see our
+[cognitive and giftedness assessment](/assessments/cognitive/). For support
+after the assessment, see
 [psychology for children and teenagers](/children/).
