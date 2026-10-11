@@ -47,3 +47,11 @@ test("the old /services/ address forwards to /therapy/ at the domain root", () =
   assert.match(html, /url=\/therapy\/"/);
   assert.doesNotMatch(html, /\/therapyhouse\//);
 });
+
+test("robots.txt and the sitemap use the clinic's domain", () => {
+  const robots = readFileSync(join(dist, "robots.txt"), "utf8");
+  assert.match(robots, /^Sitemap: https:\/\/www\.therapyhouse\.com\.au\/sitemap-index\.xml$/m);
+  const locs = [...readFileSync(join(dist, "sitemap-0.xml"), "utf8").matchAll(/<loc>([^<]+)<\/loc>/g)];
+  assert.ok(locs.length > 10);
+  for (const [, loc] of locs) assert.match(loc, /^https:\/\/www\.therapyhouse\.com\.au\//);
+});

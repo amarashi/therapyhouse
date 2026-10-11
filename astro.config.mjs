@@ -1,6 +1,10 @@
 // @ts-check
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'astro/config';
 import { rehypeBaseLinks } from './src/lib/rehype-base-links.js';
+import sitemap from '@astrojs/sitemap';
+
+import { draftServicePaths, sitemapFilter } from './src/lib/sitemap.js';
 
 // Therapy House — static site.
 //
@@ -57,6 +61,13 @@ const guardBase = {
   },
 };
 
+/* Addresses that moved inside the Rebuild. On GitHub Pages Astro writes a
+   small page that forwards the visitor; on Cloudflare the same moves become
+   real 301s, listed in docs/redirects.md for the launch redirect map. */
+const redirects = {
+  '/services': `${base.replace(/\/$/, '')}/therapy/`,
+};
+
 export default defineConfig({
   // The Preview is published to GitHub Pages as a project site, so it hangs
   // off the `/therapyhouse` prefix rather than a domain root. `base` is what
@@ -65,7 +76,20 @@ export default defineConfig({
   // `__ASSET_BASE__`. Production is the domain root.
   site: target.site,
   base,
-  integrations: [guardBase],
+  integrations: [
+    guardBase,
+    /* sitemap-index.xml at the site root, named in robots.txt. Drafts, the
+       404 page and redirect stubs are left out (src/lib/sitemap.js). */
+    sitemap({
+      filter: sitemapFilter({
+        base,
+        excluded: [
+          ...Object.keys(redirects),
+          ...draftServicePaths(fileURLToPath(new URL('./src/content/services/', import.meta.url))),
+        ],
+      }),
+    }),
+  ],
   output: 'static',
   /* Opt-in only: the rail's links carry `data-astro-prefetch`, so hovering a
      floor both calls the lift and fetches that floor. By the time the car has
@@ -73,12 +97,7 @@ export default defineConfig({
      which is what keeps a deliberate transition from becoming a wait. Nothing
      else on the site prefetches. */
   prefetch: true,
-  /* Addresses that moved inside the Rebuild. On GitHub Pages Astro writes a
-     small page that forwards the visitor; on Cloudflare the same moves become
-     real 301s, listed in docs/redirects.md for the launch redirect map. */
-  redirects: {
-    '/services': `${base.replace(/\/$/, '')}/therapy/`,
-  },
+  redirects,
   /* Links written in Markdown content (`[text](/children/)`) get the same base
      prefix `withBase` gives links in .astro files. */
   markdown: {
