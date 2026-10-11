@@ -18,7 +18,8 @@ import { getCollection, getEntry, render } from 'astro:content';
 import PlainLayout from '../../layouts/PlainLayout.astro';
 import HeroReveal from '../../components/HeroReveal.astro';
 import ServiceList from '../../components/ServiceList.astro';
-import { hubGroups, hubLinks, includeInBuild, isProductionSite } from '../../lib/services.js';
+import { hubGroups, hubLinks } from '../../lib/services.js';
+import { includeInBuild, isProductionSite } from '../../lib/drafts.js';
 
 const production = isProductionSite(Astro.site);
 const built = await getCollection('services', (entry) => includeInBuild(entry.data, production));

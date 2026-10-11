@@ -4,7 +4,8 @@ import { getEntry, render } from 'astro:content';
 import PlainLayout from '../layouts/PlainLayout.astro';
 import HeroReveal from '../components/HeroReveal.astro';
 import { contact, site } from '../data/site.js';
-import { includeInBuild, isProductionSite, serviceSchema, servicePath } from '../lib/services.js';
+import { serviceSchema, servicePath } from '../lib/services.js';
+import { includeInBuild, isProductionSite, shownItems } from '../lib/drafts.js';
 
 const page = await getEntry('pages', 'group-therapy');
 if (!page) throw new Error('Missing content: src/content/pages/group-therapy.md');
@@ -72,7 +73,8 @@ const factNotes = factRows.filter((row) => !row.term).map((row) => row.value);
  */
 const AGE_RANGE = /(\d+)\s*(?:–|—|-|to)\s*(\d+)/;
 
-const rows = (programs ?? []).map((program) => {
+/* Programs switched off ("Show on the live website") stay on the Preview only. */
+const rows = shownItems(programs, production).map((program) => {
   const found = program.audience?.match(AGE_RANGE);
   const from = found ? Number(found[1]) : null;
   const to = found ? Number(found[2]) : null;

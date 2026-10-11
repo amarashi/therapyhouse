@@ -206,6 +206,7 @@ export const defaultFirelightSettings = {
 
 export const teamMembers = [
   {
+    id: "amelia-shay",
     name: "Dr Amelia Shay",
     role: "Director, Developmental Psychologist",
     image: asset("assets/team/amelia-shay.webp"),
@@ -214,6 +215,7 @@ export const teamMembers = [
     bio: "Amelia has worked in psychology since the early 2000s and holds several psychology qualifications, including a PhD in Developmental Psychology. Her therapy work includes individual therapy, couples counselling, EMDR-informed trauma work, and support in English and Persian/Farsi."
   },
   {
+    id: "kaya-beinke",
     name: "Dr Kaya Beinke",
     role: "Clinical Psychologist, Chief Clinical Officer",
     image: asset("assets/team/kaya-beinke.webp"),
@@ -222,6 +224,7 @@ export const teamMembers = [
     bio: "Kaya trained as a clinical psychologist and is a board approved supervisor. Her practice draws on approaches including CBT, trauma-focused CBT, ACT, DBT and Dyadic Developmental Psychotherapy, with experience across chronic health, developmental delay, assessment and family support."
   },
   {
+    id: "letitia-mcvey",
     name: "Letitia McVey",
     role: "Psychologist, Educational and Developmental Registrar, Chief Operating Officer",
     image: asset("assets/team/letitia-mcvey.webp"),
@@ -230,6 +233,7 @@ export const teamMembers = [
     bio: "Letitia supports neurodevelopmental differences, learning difficulties, autism, ADHD, anxiety, depression, trauma and specific phobias. Her style is attachment-informed, creative and non-judgemental, with parents involved where useful for wrap-around support."
   },
   {
+    id: "sahar-fattahi",
     name: "Sahar Fattahi",
     role: "Psychologist",
     image: asset("assets/team/sahar-fattahi.webp"),
@@ -238,6 +242,7 @@ export const teamMembers = [
     bio: "Sahar has experience with mood and anxiety concerns, diagnostic assessment, neurodevelopmental conditions, emotional and behavioural dysregulation, and parent coaching. She uses approaches such as CBT, ACT and DBT, and can work in English, Persian/Farsi and Filipino/Tagalog."
   },
   {
+    id: "rani-banks",
     name: "Rani Banks",
     role: "Clinical Psychologist",
     image: asset("assets/team/rani-banks.webp"),
@@ -246,6 +251,7 @@ export const teamMembers = [
     bio: "Rani provides assessment and therapy for concerns including anxiety, low mood, trauma, learning difficulties, ADHD, autism, relationship and family challenges, anger, bullying and identity questions. Their practice is neuroaffirming, trauma-informed and attentive to wider cultural and social context."
   },
   {
+    id: "jazmin-squire",
     name: "Jazmin Squire",
     role: "Psychologist",
     image: asset("assets/team/jazmin-squire.webp"),
@@ -254,6 +260,7 @@ export const teamMembers = [
     bio: "Jazmin values safe therapeutic relationships and believes people can build insight, skills and more fulfilling ways of living. She has experience with children, young people, parents and couples, including complex trauma, grief, domestic and family violence, depression, anxiety and emotional dysregulation."
   },
   {
+    id: "laura-storey",
     name: "Laura Storey",
     role: "Counsellor",
     image: asset("assets/team/laura-storey.webp"),
@@ -262,6 +269,7 @@ export const teamMembers = [
     bio: "Laura has worked in mental health since 2011 and also practices in the eating disorder field. Her work draws on developmental psychology, narrative therapy, schema therapy, feminist frameworks, ACT, grief and loss frameworks, and a strong commitment to safety, trust and humour."
   },
   {
+    id: "genevieve-hussey",
     name: "Genevieve Hussey",
     role: "Provisional Psychologist",
     image: asset("assets/team/genevieve-hussey.webp"),
@@ -270,6 +278,7 @@ export const teamMembers = [
     bio: "Gen has experience supporting children with autism-related needs and brings a background in nursing and psychology. She has worked as a Mental Health Registered Nurse in a private psychiatric hospital and values multidisciplinary, compassionate care."
   },
   {
+    id: "natasha",
     name: "Natasha",
     role: "Client Support and Marketing Coordinator",
     image: asset("assets/team/natasha.webp"),
@@ -278,6 +287,7 @@ export const teamMembers = [
     bio: "Natasha has backgrounds in business, creative industries, public relations and marketing. She supports Therapy House clients and contributes to print, digital and community marketing while also studying psychological science."
   },
   {
+    id: "josie",
     name: "Josie",
     role: "Administrative Support",
     image: asset("assets/team/josie.webp"),
@@ -286,6 +296,7 @@ export const teamMembers = [
     bio: "Josie is listed by Therapy House as administrative support. Her role helps the broader team keep the clinic experience organised and welcoming."
   },
   {
+    id: "reea",
     name: "Reea",
     role: "Therapy House dog",
     image: asset("assets/team/reea.webp"),
@@ -294,6 +305,7 @@ export const teamMembers = [
     bio: "Reea previously travelled as a show dog and is now on the path to becoming a therapy dog. Therapy House notes that she is not a certified therapy dog and asks visitors to speak with reception if they have any concerns."
   },
   {
+    id: "samson",
     name: "Samson",
     role: "Retired Therapy House dog",
     image: asset("assets/team/samson.webp"),

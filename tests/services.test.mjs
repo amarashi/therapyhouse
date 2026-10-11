@@ -7,12 +7,11 @@ import {
   businessId,
   hubLinks,
   hubMembers,
-  includeInBuild,
-  isProductionSite,
   missingIds,
   serviceSchema,
   servicePath,
 } from "../src/lib/services.js";
+import { includeInBuild, isProductionSite } from "../src/lib/drafts.js";
 
 /**
  * The service pages (issue #3) make statements about fees and about which
@@ -271,7 +270,9 @@ test("pages about trauma and depression point to urgent help", async () => {
 
 test("a page on the usual session fees points to /fees/ instead of copying the prices", async () => {
   const layout = await readFile(new URL("../src/layouts/ServicePage.astro", import.meta.url), "utf8");
-  assert.match(layout, /data\.sessionFees && !data\.fees\?\.length/);
+  // `fees` is the page's rows less any switched off for this build (issue #95).
+  assert.match(layout, /const fees = shownItems\(data\.fees, production\)/);
+  assert.match(layout, /data\.sessionFees && !fees\.length/);
   assert.match(layout, /withBase\('\/fees\/'\)/);
 });
 

@@ -4,7 +4,7 @@ import { defineConfig } from 'astro/config';
 import { rehypeBaseLinks } from './src/lib/rehype-base-links.js';
 import sitemap from '@astrojs/sitemap';
 
-import { draftServicePaths, sitemapFilter } from './src/lib/sitemap.js';
+import { draftPaths, sitemapFilter } from './src/lib/sitemap.js';
 import { securityHeaders } from './src/integrations/security-headers.js';
 import { redirectsFileIntegration } from './src/integrations/redirects-file.js';
 import { teamPortraits } from './src/integrations/team-portraits.js';
@@ -95,7 +95,7 @@ export default defineConfig({
         base,
         excluded: [
           ...Object.keys(redirects),
-          ...draftServicePaths(fileURLToPath(new URL('./src/content/services/', import.meta.url))),
+          ...draftPaths(fileURLToPath(new URL('./src/content/', import.meta.url))),
         ],
       }),
     }),

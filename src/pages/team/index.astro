@@ -5,8 +5,13 @@ import PlainLayout from '../../layouts/PlainLayout.astro';
 import HeroReveal from '../../components/HeroReveal.astro';
 import PersonCard from '../../components/PersonCard.astro';
 import { isAcceptingNewClients } from '../../data/site.js';
+import { includeInBuild, isProductionSite } from '../../lib/drafts.js';
 
-const everyone = (await getCollection('team')).sort((a, b) => a.data.order - b.data.order);
+/* Switched-off team members ("Show on the live website") stay on the Preview only. */
+const production = isProductionSite(Astro.site);
+const everyone = (await getCollection('team', (entry) => includeInBuild(entry.data, production))).sort(
+  (a, b) => a.data.order - b.data.order
+);
 const practitioners = everyone.filter((p) => p.data.kind === 'practitioner');
 const support = everyone.filter((p) => p.data.kind === 'support');
 const dogs = everyone.filter((p) => p.data.kind === 'dog');

@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { readFileSync, readdirSync, rmSync, statSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { draftServicePaths, sitemapFilter } from "../src/lib/sitemap.js";
+import { draftPaths, draftServicePaths, sitemapFilter } from "../src/lib/sitemap.js";
 import { buildSite } from "../tools/build-site.mjs";
 
 /**
@@ -24,6 +25,31 @@ test("the filter drops the 404 page and excluded paths, with or without the base
   const root = sitemapFilter({ base: "/", excluded: ["/services"] });
   assert.equal(root("https://www.example.com/services/"), false);
   assert.equal(root("https://www.example.com/"), true);
+});
+
+test("draft team, article and town pages are found from their front matter", () => {
+  const dir = mkdtempSync(join(tmpdir(), "therapyhouse-drafts-"));
+  try {
+    const write = (folder, id, front) => {
+      mkdirSync(join(dir, folder), { recursive: true });
+      writeFileSync(join(dir, folder, `${id}.md`), `---\n${front}\n---\n\nBody.\n`);
+    };
+    write("services", "trauma", "kind: therapy\ndraft: true");
+    write("services", "anxiety", "kind: therapy");
+    write("team", "someone", 'name: "Someone"\ndraft: true');
+    write("team", "everyone", 'name: "Everyone"');
+    write("articles", "a-draft", "title: A draft\ndraft: true");
+    write("towns", "cairns", "kind: page\ndraft: true");
+    write("towns", "mackay", "kind: section\ndraft: true");
+    assert.deepEqual(draftPaths(dir).sort(), [
+      "/library/a-draft/",
+      "/team/someone/",
+      "/telehealth/cairns/",
+      "/therapy/trauma/",
+    ]);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test("draft service pages are found from their front matter", () => {
@@ -56,7 +82,7 @@ function builtPages(dir = dist) {
 }
 const pages = builtPages();
 const isRedirectStub = (html) => /http-equiv="refresh"/i.test(html);
-const isDraft = (html) => html.includes("Draft for review. This page is not on the clinic's website.");
+const isDraft = (html) => /Draft for review\. This (page|article) is not on the clinic's website\./.test(html);
 
 test("the sitemap lists every built page that is not a draft or a redirect", () => {
   const indexable = pages.filter(([, html]) => !isRedirectStub(html) && !isDraft(html));
