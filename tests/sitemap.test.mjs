@@ -29,7 +29,8 @@ test("the filter drops the 404 page and excluded paths, with or without the base
 test("draft service pages are found from their front matter", () => {
   const dir = fileURLToPath(new URL("../src/content/services/", import.meta.url));
   for (const path of draftServicePaths(dir)) {
-    assert.match(path, /^\/(therapy|assessments)\/[^/]+\/$/);
+    // Audience hubs (/adults/, /children/) sit at the site root.
+    assert.match(path, /^\/((therapy|assessments)\/)?[^/]+\/$/);
   }
 });
 

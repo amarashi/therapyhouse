@@ -443,3 +443,44 @@ test("service page titles and descriptions are unique across the site", async ()
     }
   }
 });
+
+/* ---- Service pages: the title, H1 and description each issue specifies ----
+   One row per page. The target phrase must reach the title, the description
+   and the opening of the page (the lede or first paragraph), because that is
+   what a search result and the first screen show. */
+
+/** The lede and the first paragraph of the body, lower-cased: the page's opening. */
+const opening = (text) => {
+  const body = text.split(/^---$/m).slice(2).join("---").trim();
+  return `${frontValue(text, "lede")} ${body.split(/\n\s*\n/)[0]}`.replace(/\s+/g, " ").toLowerCase();
+};
+
+const SERVICE_PAGES = [
+  {
+    id: "adults",
+    title: "Psychologist for Adults, The Gap Brisbane & Telehealth",
+    h1: "Therapy for adults",
+    description:
+      "Psychologists for adults in The Gap, Brisbane and by video across Queensland: anxiety, depression, trauma, grief, couples, and ADHD and autism assessment.",
+    phrase: "psychologist for adults",
+  },
+];
+
+for (const page of SERVICE_PAGES) {
+  test(`${page.id}: title, H1 and description are the ones the issue specifies`, async () => {
+    const text = (await readService(page.id)).replace(/\r\n/g, "\n");
+    assert.equal(frontValue(text, "title"), page.title);
+    assert.equal(frontValue(text, "h1"), page.h1);
+    assert.equal(frontValue(text, "description"), page.description);
+    const phrase = page.phrase.toLowerCase();
+    // Title and description: every word of the phrase (a plural still counts).
+    for (const word of phrase.split(" ")) {
+      assert.ok(page.title.toLowerCase().includes(word), `title lacks "${word}" of "${page.phrase}"`);
+      assert.ok(page.description.toLowerCase().includes(word), `description lacks "${word}" of "${page.phrase}"`);
+    }
+    assert.ok(page.h1.toLowerCase().includes(page.h1Word ?? phrase.split(" ").at(-1)), `H1 lacks the topic of "${page.phrase}"`);
+    assert.ok(opening(text).includes(phrase), `the opening of ${page.id} lacks "${page.phrase}"`);
+    // No second H1 in the body: the layout renders the only one.
+    assert.ok(!/^# /m.test(text.split(/^---$/m).slice(2).join("---")), `${page.id} body has its own H1`);
+  });
+}

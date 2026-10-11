@@ -27,7 +27,8 @@ export function isProductionSite(site) {
 export function servicePath(kind, id) {
   if (kind === 'therapy') return `/therapy/${id}/`;
   if (kind === 'assessment') return `/assessments/${id}/`;
-  // Hubs get their own routes (issue #4); until then they have no address.
+  // Audience hubs sit at the site root: /adults/, /children/ (issues #5, #6).
+  if (kind === 'hub') return `/${id}/`;
   throw new Error(`No route for service kind "${kind}" (${id})`);
 }
 
@@ -87,7 +88,7 @@ export function businessId(origin) {
  * video — the in-room service is a Brisbane one, and claiming otherwise would
  * be a statement the page does not make.
  */
-export function serviceSchema(data, { url, origin }) {
+export function serviceSchema(data, { url, origin, items = [] }) {
   const area = [{ '@type': 'City', name: 'Brisbane' }];
   if (data.formats?.includes('video')) {
     area.push({ '@type': 'State', name: 'Queensland' });
@@ -115,6 +116,22 @@ export function serviceSchema(data, { url, origin }) {
       ...(data.diagnoses?.length
         ? { usedToDiagnose: data.diagnoses.map((name) => ({ '@type': 'MedicalCondition', name })) }
         : {}),
+    });
+  }
+
+  /* A hub is also a list of the pages it links to. `items` are absolute
+     URLs and names, in the order the page shows them. */
+  if (data.kind === 'hub' && items.length > 0) {
+    graph.push({
+      '@type': 'ItemList',
+      '@id': `${url}#list`,
+      name: data.h1,
+      itemListElement: items.map((item, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        name: item.name,
+        url: item.url,
+      })),
     });
   }
 
@@ -167,4 +184,36 @@ export function hubGroups(entries) {
     label: group.label,
     links: links.filter((link) => link.hubGroup === group.key),
   })).filter((group) => group.links.length > 0);
+}
+
+/**
+ * Who an audience hub is for. The hub's own `audiences` say it; every other
+ * service page that shares one of them is listed on it. `telehealth` is left
+ * out of the match because it describes how a session is held, not who it is
+ * for, and would otherwise put every video page on every hub.
+ */
+const HUB_MATCH_EXCLUDES = new Set(['telehealth']);
+
+/**
+ * The service pages an audience hub lists: therapy pages first, then
+ * assessments, each sorted by heading. Read from the collection, so a new page
+ * written for adults appears on /adults/ the moment its file exists.
+ */
+export function hubMembers(hub, entries) {
+  const wanted = new Set((hub.data.audiences ?? []).filter((a) => !HUB_MATCH_EXCLUDES.has(a)));
+  const members = entries.filter(
+    (entry) =>
+      entry.id !== hub.id &&
+      entry.data.kind !== 'hub' &&
+      (entry.data.audiences ?? []).some((a) => wanted.has(a))
+  );
+  return [
+    { key: 'therapy', label: 'Therapy', links: serviceLinks(members.filter((e) => e.data.kind === 'therapy')) },
+    { key: 'assessments', label: 'Assessments', links: serviceLinks(members.filter((e) => e.data.kind === 'assessment')) },
+  ].filter((group) => group.links.length > 0);
+}
+
+/** The audience hubs, as links, for the home page and the /therapy/ hub. */
+export function hubLinks(entries) {
+  return serviceLinks(entries.filter((entry) => entry.data.kind === 'hub'));
 }

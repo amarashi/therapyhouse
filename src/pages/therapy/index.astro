@@ -18,12 +18,14 @@ import { getCollection, getEntry, render } from 'astro:content';
 import PlainLayout from '../../layouts/PlainLayout.astro';
 import HeroReveal from '../../components/HeroReveal.astro';
 import ServiceList from '../../components/ServiceList.astro';
-import { hubGroups, includeInBuild, isProductionSite } from '../../lib/services.js';
+import { hubGroups, hubLinks, includeInBuild, isProductionSite } from '../../lib/services.js';
 
 const production = isProductionSite(Astro.site);
-const groups = hubGroups(
-  await getCollection('services', (entry) => includeInBuild(entry.data, production))
-);
+const built = await getCollection('services', (entry) => includeInBuild(entry.data, production));
+const groups = hubGroups(built);
+/* The audience hubs (/adults/, /children/) gather therapy and assessments for
+   one age group; linked here for the visitor who starts from who, not what. */
+const audienceHubs = hubLinks(built);
 
 const page = await getEntry('pages', 'services');
 if (!page) throw new Error('Missing content: src/content/pages/services.md');
@@ -52,6 +54,13 @@ const { title, documentTitle, description, lede, offerings, therapyModels } = pa
     <div class="prose--flush prose stack">
       <Content />
     </div>
+
+    {audienceHubs.length > 0 && (
+      <section class="hub" aria-labelledby="by-age">
+        <h2 id="by-age">Start from who the help is for</h2>
+        <ServiceList links={audienceHubs} />
+      </section>
+    )}
 
     {groups.length > 0 && (
       <section class="hub" aria-labelledby="therapy-pages">
