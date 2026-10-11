@@ -17,6 +17,7 @@
     "build:production": "node tools/build-site.mjs production"
   },
   "devDependencies": {
+    "@astrojs/sitemap": "^3.7.4",
     "astro": "^6.4.8"
   },
   "dependencies": {

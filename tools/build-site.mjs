@@ -7,6 +7,11 @@
 // no base path), selected with DEPLOY_TARGET — see astro.config.mjs for why
 // that is an environment variable and not `--base /`. The tests import
 // `buildSite` to build into a temporary folder and check the output.
+//
+// Two Astro builds of the same project must not run at once: they share the
+// content store in node_modules/.astro and each clears it when it sees a
+// different config. That is why `pnpm test` runs its files one at a time
+// (`--test-concurrency=1`).
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
