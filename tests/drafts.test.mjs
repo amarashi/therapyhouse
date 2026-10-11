@@ -30,7 +30,7 @@ test("the house leaves out hidden team members, packages and programs, and their
     fees: [],
     packages: [],
     medicare,
-    hidden: { team: ["laura-storey", "reea"], titles: ["ADHD Assessment", "School Observations", "Lego Club"] },
+    hidden: { team: ["laura-storey", "reea"], packages: ["adhd", "schoolObservations"], programs: ["legoClub"] },
   });
   const json = houseFactsJson(facts);
   globalThis.document = { getElementById: (id) => (id === HOUSE_FACTS_ID ? { textContent: json } : null) };
@@ -75,10 +75,34 @@ test("the house's team ids are the team collection's ids", async () => {
     .sort();
   const copy = JSON.parse(readFileSync(new URL("../public/assets/content/house-copy.json", import.meta.url), "utf8"));
   const { teamMembers } = await import("../public/assets/scripts/site-data.js");
-  assert.deepEqual(copy.team.members.map((m) => m.id).sort(), ids);
-  assert.deepEqual(teamMembers.map((m) => m.id).sort(), ids);
+  // Every person in the house is a real team entry, so switching an entry off
+  // reaches the house. The reverse need not hold: someone added through the
+  // CMS is on the team page at once, and in the illustrated house only once a
+  // developer has placed them there (site-data.js).
+  for (const id of copy.team.members.map((m) => m.id)) assert.ok(ids.includes(id), `house-copy.json member ${id}`);
+  for (const id of teamMembers.map((m) => m.id)) assert.ok(ids.includes(id), `site-data.js member ${id}`);
+  assert.deepEqual(teamMembers.map((m) => m.id).sort(), copy.team.members.map((m) => m.id).sort());
   for (const row of copy.team.availability) assert.ok(ids.includes(row.id), `availability id ${row.id}`);
   for (const dog of copy.team.dogs) assert.ok(copy.team.members.some((m) => m.name === dog), `dog ${dog} has no member entry`);
+});
+
+test("every package and program the house keeps a copy of has a page item with the same id", async () => {
+  // The house joins prices and the "Show on the live website" switch by id
+  // (src/pages/house.astro), so a title can be reworded in the CMS freely, but
+  // a key in house-copy.json with no matching `id` would never be priced or
+  // switched off.
+  const { readFileSync } = await import("node:fs");
+  const { frontmatter: parse } = await import("./helpers/markdown.mjs");
+  const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+  const frontmatter = (path) => parse(read(path));
+  const copy = JSON.parse(read("public/assets/content/house-copy.json"));
+  const ids = (items) => items.map((item) => item.id).filter(Boolean).sort();
+
+  assert.deepEqual(
+    ids(frontmatter("src/content/pages/assessments.md").packages),
+    [...Object.keys(copy.assessments.packages), "schoolObservations"].sort()
+  );
+  assert.deepEqual(ids(frontmatter("src/content/pages/group-therapy.md").programs), Object.keys(copy.groups.programs).sort());
 });
 
 test("with nothing hidden the house keeps everything", async () => {

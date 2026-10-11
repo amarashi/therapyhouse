@@ -57,8 +57,10 @@ test("the house rebates use the current plan name and the amounts in medicare.js
 
 test("the house assessment prices are the packages published on /assessments/", async () => {
   const assessmentsMd = await read("src/content/pages/assessments.md");
-  const titles = values(assessmentsMd, "title").filter((t) => t !== "Assessments");
-  assert.deepEqual(Object.keys(facts.packagePrices).sort(), titles.sort());
+  // Keyed by each package's `id`, its key in house-copy.json.
+  const ids = values(assessmentsMd, "id");
+  assert.ok(ids.length >= 5);
+  assert.deepEqual(Object.keys(facts.packagePrices).sort(), ids.sort());
   for (const price of Object.values(facts.packagePrices)) {
     for (const amount of price.match(/\$\d{1,3}(?:,\d{3})*/g) ?? []) {
       assert.ok(assessmentsMd.includes(amount), `${amount} is not on /assessments/`);
@@ -93,8 +95,8 @@ test("content-data.js reads the facts from the page and ends each list with a li
     assert.deepEqual(fees.slice(0, -1), facts.fees);
     assert.deepEqual(rebates.slice(0, -1), facts.rebates);
     assert.match(fees.at(-1).link.href, /fees\/$/);
-    assert.equal(siteContent.assessments.packages.adhd.price, facts.packagePrices["ADHD Assessment"]);
-    assert.equal(siteContent.assessments.schoolObservations.price, facts.packagePrices["School Observations"]);
+    assert.equal(siteContent.assessments.packages.adhd.price, facts.packagePrices.adhd);
+    assert.equal(siteContent.assessments.schoolObservations.price, facts.packagePrices.schoolObservations);
   } finally {
     delete globalThis.document;
   }
@@ -104,12 +106,13 @@ test("the builder keeps notes, wording and provisional prices", () => {
   const built = houseFacts({
     fees: [{ label: "Initial session", amount: "$320" }, { label: "Provisional", amount: "$170", note: "No Medicare rebate applies" }],
     sessionLength: "Each appointment is 50 minutes.",
-    packages: [{ title: "ADHD Assessment", price: "from $1,000", provisionalPrice: "from $846" }, { title: "Add-on", price: "$250 plus travel" }],
+    packages: [{ id: "adhd", title: "ADHD Assessment", price: "from $1,000", provisionalPrice: "from $846" }, { title: "Add-on", price: "$250 plus travel" }],
     medicare,
   });
   assert.equal(built.fees[0], "Each appointment is 50 minutes.");
   assert.deepEqual(built.fees[2], { title: "Provisional", price: "$170", description: "No Medicare rebate applies" });
-  assert.equal(built.packagePrices["ADHD Assessment"], "From $1,000, or from $846 with a provisional psychologist");
+  assert.equal(built.packagePrices.adhd, "From $1,000, or from $846 with a provisional psychologist");
+  assert.deepEqual(Object.keys(built.packagePrices), ["adhd"], "a package with no id is not in the house");
   assert.equal(packagePrice({ price: "$250 plus travel" }), "$250 plus travel");
   assert.ok(!houseFactsJson({ a: "</script>" }).includes("</script>"));
 });

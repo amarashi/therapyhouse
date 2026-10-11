@@ -465,7 +465,8 @@ function readHouseFacts() {
 
 export const houseFacts = readHouseFacts();
 
-const packagePrice = (title) => houseFacts.packagePrices?.[title];
+/* By house-copy.json key, which is also the package's `id` in assessments.md. */
+const packagePrice = (key) => houseFacts.packagePrices?.[key];
 
 /*
  * "Show on the live website" (issue #95). The team, packages and programs in
@@ -475,13 +476,16 @@ const packagePrice = (title) => houseFacts.packagePrices?.[title];
  *   hidden.team    team collection ids, which are also the `id`s in
  *                  house-copy.json and site-data.js, so renaming someone in
  *                  the CMS does not undo it;
- *   hidden.titles  package and program titles. src/content/pages gives these
- *                  no id, so the title is the link, as it already is for the
- *                  package prices.
+ *   hidden.packages, hidden.programs
+ *                  keys in house-copy.json (`assessments.packages.<key>`,
+ *                  `assessments.schoolObservations`, `groups.programs.<key>`),
+ *                  which are also the items' `id`s in assessments.md and
+ *                  group-therapy.md, so rewording a title does not undo it.
  */
 const hidden = {
   team: new Set(houseFacts.hidden?.team ?? []),
-  titles: new Set(houseFacts.hidden?.titles ?? [])
+  packages: new Set(houseFacts.hidden?.packages ?? []),
+  programs: new Set(houseFacts.hidden?.programs ?? [])
 };
 
 /** Whether the house shows a team member, by their team id. */
@@ -655,7 +659,7 @@ export const siteContent = {
     reports: houseCopy.services.reports
   },
 
-  /* A package title is also the key into the prices from assessments.md, so it must match the title there. */
+  /* Prices come from assessments.md by the package's key here, its `id` there. */
   assessments: {
     sourceUrl: asset("assessments/"),
     intro: assessments.intro,
@@ -664,28 +668,28 @@ export const siteContent = {
     packages: {
       psychoeducational: {
         title: packages.psychoeducational.title,
-        price: packagePrice(packages.psychoeducational.title),
+        price: packagePrice("psychoeducational"),
         inclusions: packages.psychoeducational.inclusions
       },
       cognitive: {
         title: packages.cognitive.title,
-        price: packagePrice(packages.cognitive.title),
+        price: packagePrice("cognitive"),
         description: packages.cognitive.description
       },
       adhd: {
         title: packages.adhd.title,
-        price: packagePrice(packages.adhd.title),
+        price: packagePrice("adhd"),
         description: packages.adhd.description
       },
       autism: {
         title: packages.autism.title,
-        price: packagePrice(packages.autism.title),
+        price: packagePrice("autism"),
         description: packages.autism.description
       }
     },
     schoolObservations: {
       title: assessments.schoolObservations.title,
-      price: packagePrice(assessments.schoolObservations.title),
+      price: packagePrice("schoolObservations"),
       description: assessments.schoolObservations.description
     },
     faq: assessments.faq
@@ -766,19 +770,21 @@ export const siteContent = {
 
 /* Take out the packages and programs this build switches off (see `hidden`
    above), and any room sign that would open one of them. */
-if (hidden.titles.size > 0) {
+if (hidden.packages.size > 0 || hidden.programs.size > 0) {
   const removedKeys = new Set();
-  const removeFrom = (parent, key, contentKey) => {
-    if (!parent[key] || !hidden.titles.has(parent[key].title)) return;
+  const removeFrom = (parent, key, switchedOff, contentKey) => {
+    if (!parent[key] || !switchedOff.has(key)) return;
     delete parent[key];
     removedKeys.add(contentKey);
   };
   const { assessments: shownAssessments, groups: shownGroups } = siteContent;
   for (const key of Object.keys(shownAssessments.packages)) {
-    removeFrom(shownAssessments.packages, key, `assessments.packages.${key}`);
+    removeFrom(shownAssessments.packages, key, hidden.packages, `assessments.packages.${key}`);
   }
-  removeFrom(shownAssessments, "schoolObservations", "assessments.schoolObservations");
-  for (const key of Object.keys(shownGroups.programs)) removeFrom(shownGroups.programs, key, `groups.programs.${key}`);
+  removeFrom(shownAssessments, "schoolObservations", hidden.packages, "assessments.schoolObservations");
+  for (const key of Object.keys(shownGroups.programs)) {
+    removeFrom(shownGroups.programs, key, hidden.programs, `groups.programs.${key}`);
+  }
 
   for (const rooms of [roomSceneDefaults.rooms, siteContent.rooms]) {
     for (const room of Object.values(rooms)) {

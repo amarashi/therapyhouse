@@ -4,6 +4,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 
 import { articleDocumentTitle, articlePath, articleSchema, groupByYear, sortArticles } from "../src/lib/articles.js";
 import { buildPages, cleanUp } from "./helpers/built-site.mjs";
+import { splitMarkdown } from "./helpers/markdown.mjs";
 import { parseRedirectsDoc } from "../src/lib/redirects.js";
 
 /**
@@ -16,22 +17,11 @@ const root = new URL("../", import.meta.url);
 const read = (path) => readFileSync(new URL(path, root), "utf8");
 const list = (path) => readdirSync(new URL(path, root));
 
-/** The frontmatter is flat `key: value` lines; strings are JSON-quoted. */
-function frontmatter(source) {
-  const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
-  assert.ok(match, "missing frontmatter");
-  const data = {};
-  for (const line of match[1].split(/\r?\n/)) {
-    const [, key, raw] = line.match(/^(\w+):\s*(.*)$/) ?? [];
-    if (!key) continue;
-    data[key] = raw.startsWith('"') ? JSON.parse(raw) : raw === "true" ? true : raw === "false" ? false : raw;
-  }
-  return { data, body: match[2] };
-}
-
+/* Front matter is parsed (tests/helpers/markdown.mjs): staff create and save
+   articles in Pages CMS, which writes it in its own style. */
 const articles = list("src/content/articles/")
   .filter((file) => file.endsWith(".md"))
-  .map((file) => ({ id: file.replace(/\.md$/, ""), ...frontmatter(read(`src/content/articles/${file}`)) }));
+  .map((file) => ({ id: file.replace(/\.md$/, ""), ...splitMarkdown(read(`src/content/articles/${file}`)) }));
 
 const CURRENT_SITE_PATH = /https?:\/\/(?:www\.)?therapyhouse\.com\.au\/[^\s"'()<>]+/g;
 

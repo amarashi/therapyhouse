@@ -4,7 +4,9 @@ import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { buildSite } from "../tools/build-site.mjs";
+import { stringify } from "yaml";
 import { HOUSE_FACTS_ID } from "../src/lib/house-facts.js";
+import { splitMarkdown } from "./helpers/markdown.mjs";
 
 /**
  * Issue #95: "Show on the live website". Staff switch a team member, or one
@@ -35,33 +37,52 @@ const PERSON = { id: "laura-storey", name: "Laura Storey" };
 const ARTICLE = "how-to-have-a-loving-relationship-with-your-body";
 const SERVICE = "group-therapy/circle-of-security-parenting-program";
 
-/** [content file, text to find once, text to put after it]. */
-const EDITS = [
-  ["src/content/team/laura-storey.md", "\nkind: practitioner\n", "draft: true\n"],
-  ["src/content/pages/fees.md", "\nfees:\n", `  - label: ${FEE}\n    amount: $987\n    draft: true\n`],
-  [
-    "src/content/pages/assessments.md",
-    "\npackages:\n",
-    `  - title: ${PACKAGE}\n    price: from $987\n    description: A package that is switched off.\n    draft: true\n`,
-  ],
-  [
-    "src/content/pages/group-therapy.md",
-    "\nprograms:\n",
-    `  - title: ${PROGRAM}\n    audience: Children aged 7–12\n    description: A program that is switched off.\n    draft: true\n`,
-  ],
-  [
-    "src/content/pages/home.md",
-    "\nroutes:\n",
-    `  - title: ${ROUTE}\n    description: A route card that is switched off.\n    href: /fees/\n    linkText: Fixture route link\n` +
-      `    image: /assets/rooms/consulting-room-out-360.webp\n    draft: true\n`,
-  ],
-  [
-    "src/content/services/circle-of-security.md",
-    "\nfees:\n",
-    `  - label: ${SERVICE_FEE}\n    amount: $987\n    draft: true\n`,
-  ],
-  ["src/content/services/circle-of-security.md", "\nformats: [in-room]\n", `clinicians: [${PERSON.id}]\n`],
-];
+/**
+ * Content file → a change to its front matter. The front matter is parsed and
+ * written back as YAML, so the edits work however the file is laid out (staff
+ * save these files through Pages CMS, which re-wraps them).
+ */
+const EDITS = {
+  "src/content/team/laura-storey.md": (data) => {
+    data.draft = true;
+  },
+  "src/content/pages/fees.md": (data) => {
+    data.fees.unshift({ label: FEE, amount: "$987", draft: true });
+  },
+  "src/content/pages/assessments.md": (data) => {
+    data.packages.unshift({
+      id: "fixturePackage",
+      title: PACKAGE,
+      price: "from $987",
+      description: "A package that is switched off.",
+      draft: true,
+    });
+  },
+  "src/content/pages/group-therapy.md": (data) => {
+    data.programs.unshift({
+      id: "fixtureProgram",
+      title: PROGRAM,
+      audience: "Children aged 7–12",
+      description: "A program that is switched off.",
+      draft: true,
+    });
+  },
+  "src/content/pages/home.md": (data) => {
+    data.routes.unshift({
+      title: ROUTE,
+      description: "A route card that is switched off.",
+      href: "/fees/",
+      linkText: "Fixture route link",
+      image: "/assets/rooms/consulting-room-out-360.webp",
+      draft: true,
+    });
+  },
+  "src/content/services/circle-of-security.md": (data) => {
+    data.fees.unshift({ label: SERVICE_FEE, amount: "$987", draft: true });
+    assert.ok(!data.clinicians?.length, "circle-of-security.md names clinicians; pick another fixture service");
+    data.clinicians = [PERSON.id];
+  },
+};
 
 const originals = new Map();
 function restore() {
@@ -69,11 +90,12 @@ function restore() {
 }
 
 function switchOff() {
-  for (const [path, anchor, insert] of EDITS) {
-    if (!originals.has(path)) originals.set(path, readFileSync(file(path), "utf8"));
-    const text = readFileSync(file(path), "utf8").replace(/\r\n/g, "\n");
-    assert.equal(text.split(anchor).length, 2, `${path}: expected "${anchor.trim()}" exactly once`);
-    writeFileSync(file(path), text.replace(anchor, anchor + insert));
+  for (const [path, edit] of Object.entries(EDITS)) {
+    const text = readFileSync(file(path), "utf8");
+    originals.set(path, text);
+    const { data, body } = splitMarkdown(text);
+    edit(data);
+    writeFileSync(file(path), `---\n${stringify(data)}---\n${body}`);
   }
 }
 
@@ -180,11 +202,11 @@ test("the house is told what production switches off, and quotes no switched-off
   const previewFacts = houseFactsIn(preview);
   const productionFacts = houseFactsIn(production);
   assert.equal(previewFacts.hidden, undefined, "the Preview hides nothing");
-  assert.deepEqual(productionFacts.hidden, { team: [PERSON.id], titles: [PACKAGE, PROGRAM] });
+  assert.deepEqual(productionFacts.hidden, { team: [PERSON.id], packages: ["fixturePackage"], programs: ["fixtureProgram"] });
 
   const feeTitles = (facts) => facts.fees.map((f) => f.title);
   assert.ok(feeTitles(previewFacts).includes(FEE));
   assert.ok(!feeTitles(productionFacts).includes(FEE));
-  assert.ok(PACKAGE in previewFacts.packagePrices);
-  assert.ok(!(PACKAGE in productionFacts.packagePrices));
+  assert.ok("fixturePackage" in previewFacts.packagePrices);
+  assert.ok(!("fixturePackage" in productionFacts.packagePrices));
 });

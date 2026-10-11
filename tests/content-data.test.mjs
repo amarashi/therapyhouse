@@ -29,9 +29,14 @@ assert.deepEqual(
 
 assert.equal(siteContent.team.members.length, 12);
 assert.equal(siteContent.library.blogArticles.length, 25);
-assert.equal(siteContent.contact.phone, "07 3300 2170");
-assert.equal(siteContent.contact.email, "admin@therapyhouse.com.au");
-assert.match(siteContent.contact.address, /1290 Waterworks Rd/);
+// The clinic's details come from clinic.json, which staff edit in the CMS, so
+// they are compared with that file rather than with a copy of today's values.
+const { default: clinic } = await import("../public/assets/content/clinic.json", { with: { type: "json" } });
+assert.equal(siteContent.contact.phone, clinic.phone);
+assert.equal(siteContent.contact.email, clinic.email);
+assert.equal(siteContent.contact.address, clinic.address);
+assert.match(clinic.phone, /^0\d \d{4} \d{4}$/);
+assert.match(clinic.email, /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/);
 
 const assessmentHotspotIds = siteContent.rooms.assessments.hotspots.map((hotspot) => hotspot.id);
 assert.deepEqual(
@@ -39,6 +44,8 @@ assert.deepEqual(
   ["assessment-process", "assessment-documents", "psychoeducational-assessment", "cognitive-assessment", "adhd-assessment", "autism-assessment", "school-observations", "assessment-faq"]
 );
 
-const serviceLabels = siteContent.rooms.services.hotspots.map((hotspot) => hotspot.label);
-assert.ok(serviceLabels.includes("Services"));
-assert.ok(serviceLabels.includes("Fees"));
+// Sign wording comes from house-rooms.json, which staff edit in the CMS, so
+// the check is that every sign has words, not which words.
+const serviceSigns = siteContent.rooms.services.hotspots;
+assert.ok(serviceSigns.some((hotspot) => hotspot.id === "fees"), "the consulting room lost its Fees sign");
+for (const hotspot of serviceSigns) assert.ok(hotspot.label?.trim(), `services sign ${hotspot.id} has no label`);

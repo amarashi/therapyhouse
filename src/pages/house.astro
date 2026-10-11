@@ -58,15 +58,16 @@ if (!feesPage || !assessmentsPage || !groupsPage) {
 /* The house keeps its own copy of the team, packages and group programs
    (house-copy.json and site-data.js), so it cannot filter them from the
    collections. It is told instead what this build switches off ("Show on the
-   live website", issue #95): team members by their collection id, which the
-   house's copies share, and packages and programs by title, because the pages
-   collection gives those no id. content-data.js leaves them out. */
+   live website", issue #95), by the ids the house's copies share: team
+   members by their collection id, and packages and programs by the `id` on
+   the item in assessments.md and group-therapy.md, which is their key in
+   house-copy.json. Titles stay free to reword. content-data.js leaves them out. */
+const switchedOff = (items) =>
+  (items ?? []).filter((item) => item.id && !includeInBuild(item, production)).map((item) => item.id);
 const hidden = {
   team: (await getCollection('team', (entry) => !includeInBuild(entry.data, production))).map((e) => e.id),
-  titles: [
-    ...(assessmentsPage.data.packages ?? []).filter((p) => !includeInBuild(p, production)).map((p) => p.title),
-    ...(groupsPage.data.programs ?? []).filter((p) => !includeInBuild(p, production)).map((p) => p.title),
-  ],
+  packages: switchedOff(assessmentsPage.data.packages),
+  programs: switchedOff(groupsPage.data.programs),
 };
 
 const facts = houseFactsJson(

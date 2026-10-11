@@ -4,7 +4,10 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 import { siteContent } from "../public/assets/scripts/content-data.js";
+import houseCopy from "../public/assets/content/house-copy.json" with { type: "json" };
 import { teamPortrait, UPLOAD_DIR } from "../src/lib/team-portraits.js";
+import { frontmatter, readableText, splitMarkdown } from "./helpers/markdown.mjs";
+import { DESCRIPTION_MAX, TITLE_MAX } from "../src/lib/seo.js";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 
@@ -14,8 +17,9 @@ const root = fileURLToPath(new URL("..", import.meta.url));
  * the page's frontmatter (or the reverse), a parent could be quoted one price
  * in a room and a different price on the page it links to.
  *
- * Frontmatter is read as text rather than parsed — the project has no YAML
- * dependency, and substring checks are enough to catch drift.
+ * Sentences are looked for in the page's readable text (tests/helpers/
+ * markdown.mjs) rather than in the raw file, because Pages CMS re-wraps long
+ * front matter values when staff save a page.
  */
 
 const readPage = async (name) =>
@@ -25,11 +29,14 @@ const services = await readPage("services");
 const assessments = await readPage("assessments");
 // The fee table moved from /therapy/ (services.md) to /fees/ in issue #30.
 const fees = await readPage("fees");
+const servicesText = readableText(services);
+const assessmentsText = readableText(assessments);
+const feesText = readableText(fees);
 
 test("services page lists every service offering from the content model", () => {
   for (const offering of siteContent.services.offerings) {
     assert.ok(
-      services.includes(offering),
+      servicesText.includes(offering),
       `services.md is missing the offering: ${offering}`
     );
   }
@@ -37,7 +44,7 @@ test("services page lists every service offering from the content model", () => 
 
 test("services page lists every therapy model from the content model", () => {
   for (const model of siteContent.services.therapyModels) {
-    assert.ok(services.includes(model), `services.md is missing the therapy model: ${model}`);
+    assert.ok(servicesText.includes(model), `services.md is missing the therapy model: ${model}`);
   }
 });
 
@@ -52,36 +59,33 @@ test("the therapy hub no longer carries its own fee table", () => {
 test("every report note reaches the fees page", () => {
   for (const note of siteContent.services.reports) {
     const plain = note.replace(/\.$/, "");
-    assert.ok(fees.includes(plain), `fees.md is missing: ${note.slice(0, 50)}…`);
+    assert.ok(feesText.includes(plain), `fees.md is missing: ${note.slice(0, 50)}…`);
   }
 });
 
-test("fees page has the title, H1 and description the issue asks for", () => {
-  const field = (name) => fees.match(new RegExp(`^${name}: (.+)$`, "m"))?.[1].trim();
-  const title = field("documentTitle");
-  const h1 = field("title");
-  const description = field("description");
+test("fees page title, H1 and description fit a search result and carry its phrase", () => {
+  // Issue #30's phrase is "fees and Medicare rebates". The heading is the
+  // clinic's to word; the search title (developer-set) and the description
+  // must name both, and the page must open with the phrase.
+  const { data, body } = splitMarkdown(fees);
+  fitsSearchResult("fees", data.documentTitle, data.description);
+  assert.ok(data.title?.trim(), "fees: no heading");
+  assert.match(data.documentTitle, /fees/i);
+  assert.match(data.documentTitle, /medicare rebates/i);
+  assert.match(data.description, /Medicare rebates/i, 'fees: the description must contain "Medicare rebates"');
 
-  assert.equal(title, "Psychologist Fees & Medicare Rebates | Therapy House");
-  assert.equal(h1, "Fees and Medicare rebates");
-  assert.ok(title.length < 60, `title is ${title.length} characters`);
-  assert.ok(description.length < 160, `description is ${description.length} characters`);
-  assert.match(description, /Medicare rebates/);
-
-  // The target phrase in the first paragraph of the body.
-  const body = fees.split(/^---$/m)[2];
   const firstParagraph = body.trim().split(/\n\s*\n/)[0];
-  assert.match(firstParagraph.replace(/\s+/g, " "), /fees and Medicare rebates/i);
+  assert.match(firstParagraph.replace(/\s+/g, " "), /fees and Medicare rebates/i, 'fees: the page text must open with "fees and Medicare rebates"');
 });
 
 test("the fees page states plainly that the clinic does not bulk bill", () => {
-  assert.match(fees, /does not bulk bill/);
+  assert.match(feesText, /(does not|doesn.t) bulk.?bill/i, "fees.md must still say the clinic does not bulk bill");
 });
 
 test("assessment process steps appear in order on the assessments page", () => {
   let cursor = 0;
   for (const step of siteContent.assessments.process) {
-    const at = assessments.indexOf(step, cursor);
+    const at = assessmentsText.indexOf(step, cursor);
     assert.notEqual(at, -1, `assessments.md is missing or misorders the step: ${step}`);
     cursor = at;
   }
@@ -89,18 +93,17 @@ test("assessment process steps appear in order on the assessments page", () => {
 
 test("assessment documents list is complete", () => {
   for (const doc of siteContent.assessments.documents) {
-    assert.ok(assessments.includes(doc), `assessments.md is missing the document: ${doc}`);
+    assert.ok(assessmentsText.includes(doc), `assessments.md is missing the document: ${doc}`);
   }
 });
 
 test("every assessment package in the house is published on the assessments page", () => {
-  const packages = [
-    ...Object.values(siteContent.assessments.packages),
-    siteContent.assessments.schoolObservations,
-  ];
-  assert.ok(packages.length > 0, "content model has no assessment packages");
-  for (const pkg of packages) {
-    assert.ok(assessments.includes(pkg.title), `assessments.md is missing the package: ${pkg.title}`);
+  // Joined by id, not title (issue #97): the house's key for a package is the
+  // `id` of its item in assessments.md, so either title can be reworded.
+  const keys = [...Object.keys(siteContent.assessments.packages), "schoolObservations"];
+  assert.ok(keys.length > 1, "content model has no assessment packages");
+  for (const key of keys) {
+    assert.match(assessments, new RegExp(`^\\s*-?\\s*id: ${key}\\s*$`, "m"), `assessments.md has no package with id ${key}`);
   }
 });
 
@@ -146,16 +149,40 @@ test("availability status is read correctly, including the negative case", async
   assert.equal(isAcceptingNewClients(undefined), false);
   assert.equal(isAcceptingNewClients(""), false);
 
-  // Whatever the clinic writes, the count must match the published statuses.
-  const expected = siteContent.team.availability.filter((a) =>
-    isAcceptingNewClients(a.status)
-  ).length;
-  assert.equal(expected, 2, "expected exactly 2 practitioners accepting new clients");
+  // Whatever the clinic writes, the house and the team profiles must agree on
+  // who is accepting. Staff change statuses in the CMS, so this compares the
+  // two copies rather than a fixed count: the house's list
+  // (house-copy.json) and each person's own profile (src/content/team).
+  const { readdir } = await import("node:fs/promises");
+  const teamDir = fileURLToPath(new URL("../src/content/team", import.meta.url));
+  // Only the people the house lists: someone new is on the team page before
+  // a developer places them in the house.
+  const inHouse = new Set(houseCopy.team.members.map((m) => m.id));
+  const fromProfiles = new Set();
+  for (const file of (await readdir(teamDir)).filter((f) => f.endsWith(".md"))) {
+    const id = file.replace(/\.md$/, "");
+    const md = await readFile(`${teamDir}/${file}`, "utf8");
+    const status = md.match(/^availability:\s*"?([^"\r\n]+?)"?\s*$/m)?.[1];
+    if (inHouse.has(id) && isAcceptingNewClients(status)) fromProfiles.add(id);
+  }
+  const fromHouse = new Set(
+    houseCopy.team.availability.filter((a) => isAcceptingNewClients(a.status)).map((a) => a.id)
+  );
+  assert.ok(fromProfiles.size > 0, "nobody is accepting new clients — check the parse");
+  assert.deepEqual(
+    [...fromHouse].sort(),
+    [...fromProfiles].sort(),
+    "house-copy.json (House > Team) and the team profiles disagree on who is accepting new clients"
+  );
 });
 
 test("every team member has a profile file with a photo that exists", async () => {
   const entries = await teamImages();
-  assert.equal(entries.length, 12, "expected 12 team profiles");
+  // Staff add people through the CMS, and switch them off rather than delete
+  // them (the CMS does not offer delete), so the count only ever grows. The
+  // twelve below are the people the site launched with.
+  const files = entries.map((e) => e.file);
+  for (const id of LAUNCH_TEAM) assert.ok(files.includes(`${id}.md`), `the team profile ${id}.md is missing`);
 
   for (const { file, image } of entries) {
     assert.ok(image, `${file} has no image path`);
@@ -165,6 +192,11 @@ test("every team member has a profile file with a photo that exists", async () =
     );
   }
 });
+
+const LAUNCH_TEAM = [
+  "amelia-shay", "kaya-beinke", "letitia-mcvey", "sahar-fattahi", "rani-banks", "jazmin-squire",
+  "laura-storey", "genevieve-hussey", "natasha", "josie", "reea", "samson",
+];
 
 /** Each team entry's `image` field. A CMS may write it quoted or bare. */
 async function teamImages() {
@@ -212,8 +244,8 @@ test("the therapy dogs are not described as certified", async () => {
     "utf8"
   );
   assert.ok(
-    reea.includes("not a certified therapy dog"),
-    "reea.md must keep the clinic's not-certified wording"
+    /not (a )?certified/i.test(readableText(reea)),
+    "reea.md must still say she is not certified"
   );
   assert.ok(!/^credentials:/m.test(reea), "reea.md must not claim a therapy-dog credential");
 });
@@ -307,61 +339,32 @@ test("every group program still publishes an age range the scale can read", asyn
 const readService = async (name) =>
   readFile(fileURLToPath(new URL(`../src/content/services/${name}.md`, import.meta.url)), "utf8");
 
-const frontValue = (markdown, key) => {
-  const front = markdown.split(/^---$/m)[1] ?? "";
-  const line = front.match(new RegExp(`^${key}:\s*(.+)$`, "m"));
-  return line ? line[1].trim().replace(/^"(.*)"$/, "$1") : undefined;
+const frontValue = (markdown, key) => frontmatter(markdown)[key];
+
+/**
+ * Search limits every page's title and description must keep. Staff reword
+ * these in the CMS (issue #97), so the tests check the rules the SEO issues
+ * set rather than the wording they started with: the length a search result
+ * shows, and the phrase each page is written to be found by.
+ */
+const fitsSearchResult = (where, title, description) => {
+  assert.ok(title?.trim(), `${where}: no title`);
+  assert.ok(description?.trim(), `${where}: no description`);
+  assert.ok(title.length <= TITLE_MAX, `${where}: the title is ${title.length} characters; ${TITLE_MAX} fit a search result`);
+  assert.ok(
+    description.length <= DESCRIPTION_MAX,
+    `${where}: the description is ${description.length} characters; ${DESCRIPTION_MAX} fit a search result`
+  );
 };
 
+/** Each assessment page's search phrase: in its title, H1, opening sentence and description. */
 const assessmentPages = [
-  {
-    file: "child-adhd",
-    title: "Child ADHD Assessment Brisbane | Therapy House, The Gap",
-    h1: "ADHD assessment for children and teenagers",
-    description:
-      "ADHD assessment for children and teens in The Gap, Brisbane: the process, what to bring, report timing and cost from $1,000.",
-    phrase: "ADHD assessment",
-  },
-  {
-    file: "child-autism",
-    title: "Child Autism Assessment Brisbane | Therapy House, The Gap",
-    h1: "Autism assessment for children and teenagers",
-    description:
-      "Autism assessment for children and teens in The Gap, Brisbane: the process, what to bring, report timing and cost from $1,000.",
-    phrase: "Autism assessment",
-  },
-  {
-    file: "adult-adhd",
-    title: "Adult ADHD Assessment Brisbane | Therapy House, The Gap",
-    h1: "Adult ADHD assessment and diagnosis",
-    description:
-      "Adult ADHD assessment in The Gap, Brisbane: the steps, who assesses you, what to bring, how long the report takes, cost and what Medicare covers.",
-    phrase: "ADHD assessment",
-  },
-  {
-    file: "adult-autism",
-    title: "Adult Autism Assessment Brisbane | Therapy House",
-    h1: "Adult autism assessment",
-    description:
-      "Adult autism assessment in The Gap, Brisbane: the steps, who assesses you, what to bring, report timing, cost and what Medicare covers.",
-    phrase: "autism assessment",
-  },
-  {
-    file: "learning",
-    title: "Dyslexia & Learning Assessment Brisbane | The Gap",
-    h1: "Learning assessments: dyslexia, dysgraphia and dyscalculia",
-    description:
-      "Psycho-educational assessment in The Gap, Brisbane for dyslexia, dysgraphia and dyscalculia: what it shows, the process and cost from $2,400.",
-    phrase: "dyslexia",
-  },
-  {
-    file: "cognitive",
-    title: "Cognitive & Giftedness Assessment Brisbane | The Gap",
-    h1: "Cognitive and giftedness assessment",
-    description:
-      "Cognitive assessment in The Gap, Brisbane for giftedness, school readiness and learning strengths: what it measures, the process and cost from $1,621.",
-    phrase: "cognitive",
-  },
+  { file: "child-adhd", phrase: "ADHD assessment" },
+  { file: "child-autism", phrase: "autism assessment" },
+  { file: "adult-adhd", phrase: "ADHD assessment" },
+  { file: "adult-autism", phrase: "autism assessment" },
+  { file: "learning", phrase: "dyslexia" },
+  { file: "cognitive", phrase: "cognitive" },
 ];
 
 test("the learning page has an anchored section for each learning disorder", async () => {
@@ -380,22 +383,18 @@ test("adult assessment pages publish no fee until the clinic gives one", async (
 });
 
 for (const page of assessmentPages) {
-  test(`${page.file}: title, H1 and description are the ones the issue specifies`, async () => {
+  test(`${page.file}: the title, H1 and description fit a search result`, async () => {
     const text = await readService(page.file);
-    assert.equal(frontValue(text, "title"), page.title);
-    assert.equal(frontValue(text, "h1"), page.h1);
-    assert.equal(frontValue(text, "description"), page.description);
-    assert.ok(page.title.length < 60, "title must be under 60 characters");
-    assert.ok(page.description.length < 160, "description must be under 160 characters");
+    fitsSearchResult(page.file, frontValue(text, "title"), frontValue(text, "description"));
+    assert.ok(frontValue(text, "h1")?.trim(), `${page.file}: no H1`);
   });
 
   test(`${page.file}: the target phrase is in the title, H1, opening and description`, async () => {
     const text = await readService(page.file);
-    const has = (value) => value.toLowerCase().includes(page.phrase.toLowerCase());
-    assert.ok(has(page.title), "title");
-    assert.ok(has(page.h1), "h1");
-    assert.ok(has(frontValue(text, "lede")), "lede (the opening paragraph)");
-    assert.ok(has(page.description), "description");
+    const has = (key) => (frontValue(text, key) ?? "").toLowerCase().includes(page.phrase.toLowerCase());
+    for (const key of ["title", "h1", "lede", "description"]) {
+      assert.ok(has(key), `${page.file}: the ${key} must contain "${page.phrase}"`);
+    }
   });
 
   test(`${page.file}: every fee it shows is one /assessments/ already publishes`, async () => {
@@ -427,10 +426,12 @@ test("service page titles and descriptions are unique across the site", async ()
   }
 });
 
-/* ---- Service pages: the title, H1 and description each issue specifies ----
-   One row per page. The target phrase must reach the title, the description
-   and the opening of the page (the lede or first paragraph), because that is
-   what a search result and the first screen show. */
+/* ---- Service pages: the search phrase each issue chose ----
+   One row per page. Staff may reword the title, H1 and description in the
+   CMS; the target phrase must still reach the title, the description and the
+   opening of the page (the lede or first paragraph), because that is what a
+   search result and the first screen show. The same list is in the help text
+   of .pages.yml (Therapy and assessment pages). */
 
 /** The lede and the first paragraph of the body, lower-cased: the page's opening. */
 const opening = (text) => {
@@ -441,82 +442,46 @@ const opening = (text) => {
 const SERVICE_PAGES = [
   {
     id: "adults",
-    title: "Psychologist for Adults, The Gap Brisbane & Telehealth",
-    h1: "Therapy for adults",
-    description:
-      "Psychologists for adults in The Gap, Brisbane and by video across Queensland: anxiety, depression, trauma, grief, couples, and ADHD and autism assessment.",
     phrase: "psychologist for adults",
   },
   {
     id: "children",
-    title: "Child Psychologist The Gap, Brisbane | Children & Teens",
-    h1: "Psychology for children and teenagers",
-    description:
-      "Child and adolescent psychologists in The Gap, Brisbane: anxiety, school worries, emotions, ADHD and autism support, play therapy and parent involvement.",
     phrase: "child psychologist",
     h1Word: "children",
   },
   {
     id: "trauma",
-    title: "Trauma & PTSD Therapy Brisbane, EMDR | Therapy House",
-    h1: "Trauma and PTSD therapy, including EMDR",
-    description:
-      "Trauma therapy in The Gap, Brisbane and by video: EMDR, trauma-focused CBT and complex trauma work with experienced psychologists. Medicare rebates apply.",
     phrase: "trauma therapy",
     h1Word: "trauma",
   },
   {
     id: "anxiety",
-    title: "Anxiety Psychologist Brisbane, The Gap & Telehealth",
-    h1: "Help with anxiety, for children, teens and adults",
-    description:
-      "Psychologists for anxiety in The Gap, Brisbane and by video: worry, panic, school refusal, social anxiety and OCD, for children, teenagers and adults.",
     phrase: "anxiety psychologist",
     h1Word: "anxiety",
   },
   {
     id: "depression",
-    title: "Depression Counselling Brisbane | Psychologists, The Gap",
-    h1: "Depression counselling and therapy",
-    description:
-      "Psychologists for depression and low mood in The Gap, Brisbane and by video across Queensland. Medicare rebates with a Mental Health Treatment Plan.",
     phrase: "depression counselling",
     // The issue's description leads with the topic and the profession.
     descWords: ["depression", "psychologist"],
   },
   {
     id: "grief",
-    title: "Grief Counselling Brisbane | Psychologists, The Gap",
-    h1: "Grief and loss counselling",
-    description:
-      "Grief counselling in The Gap, Brisbane and by video: support after a death, separation or other loss, for adults, teens and children.",
     phrase: "grief counselling",
     h1Word: "grief",
   },
   {
     id: "couples",
-    title: "Couples Counselling Brisbane | Relationship Therapy",
-    h1: "Couples and relationship therapy",
-    description:
-      "Couples and relationship counselling in The Gap, Brisbane and by video, using Emotionally Focused Therapy. Session fees, who we see and how to book.",
     phrase: "couples counselling",
     h1Word: "couples",
   },
   {
     id: "approaches",
-    title: "CBT, ACT, EMDR & EFT Therapy Brisbane | Our Approaches",
-    h1: "The therapies we use",
-    description:
-      "Plain explanations of CBT, ACT, EMDR, Emotionally Focused Therapy, schema and short-term psychodynamic therapy, and which Therapy House clinicians use each.",
     phrase: "cbt",
-    h1Word: "therapies",
+    h1Word: "therap",
   },
   {
     id: "ndis",
-    title: "NDIS Psychologist Brisbane, The Gap | Plan & Self-Managed",
-    h1: "NDIS psychology at Therapy House",
-    description:
-      "NDIS psychology in The Gap, Brisbane and by video for plan-managed and self-managed participants: therapy, assessment and reports.",
     phrase: "ndis psychologist",
     h1Word: "ndis",
     // The issue's description says "NDIS psychology".
@@ -524,19 +489,11 @@ const SERVICE_PAGES = [
   },
   {
     id: "circle-of-security",
-    title: "Circle of Security Parenting Program Brisbane | The Gap",
-    h1: "Circle of Security parenting program",
-    description:
-      "The Circle of Security parenting program in The Gap, Brisbane: what it is, next dates, cost, who runs it and whether it is offered by video.",
     phrase: "circle of security parenting program",
     h1Word: "circle of security",
   },
   {
     id: "family",
-    title: "Family Therapy Brisbane | Family Psychologists, The Gap",
-    h1: "Family therapy",
-    description:
-      "Family therapy in The Gap, Brisbane for families in distress: what it involves, who attends, fees and how to book.",
     phrase: "family therapy",
     h1Word: "family",
   },
@@ -555,24 +512,26 @@ test("couples: the fee and the Medicare line are the ones /fees/ publishes", asy
   for (const amount of couples.split(/^---$/m)[1].match(/\$[\d,]+/g) ?? []) {
     assert.ok(fees.includes(amount), `couples.md shows ${amount}, which fees.md does not publish`);
   }
-  assert.match(couples, /Medicare does not cover couple and family sessions./);
+  assert.match(readableText(couples), /Medicare (does not|doesn.t) cover couple/i, "couples.md must still say Medicare does not cover couple and family sessions");
 });
 
 for (const page of SERVICE_PAGES) {
-  test(`${page.id}: title, H1 and description are the ones the issue specifies`, async () => {
+  test(`${page.id}: the title, H1 and description fit a search result and carry the page's phrase`, async () => {
     const text = (await readService(page.id)).replace(/\r\n/g, "\n");
-    assert.equal(frontValue(text, "title"), page.title);
-    assert.equal(frontValue(text, "h1"), page.h1);
-    assert.equal(frontValue(text, "description"), page.description);
+    const title = frontValue(text, "title");
+    const h1 = frontValue(text, "h1") ?? "";
+    const description = frontValue(text, "description");
+    fitsSearchResult(page.id, title, description);
     const phrase = page.phrase.toLowerCase();
     // Title and description: every word of the phrase (a plural still counts).
     for (const word of phrase.split(" ")) {
-      assert.ok(page.title.toLowerCase().includes(word), `title lacks "${word}" of "${page.phrase}"`);
+      assert.ok(title.toLowerCase().includes(word), `${page.id}: the title lacks "${word}" of "${page.phrase}"`);
     }
     for (const word of page.descWords ?? phrase.split(" ")) {
-      assert.ok(page.description.toLowerCase().includes(word), `description lacks "${word}" of "${page.phrase}"`);
+      assert.ok(description.toLowerCase().includes(word), `${page.id}: the description lacks "${word}" of "${page.phrase}"`);
     }
-    assert.ok(page.h1.toLowerCase().includes(page.h1Word ?? phrase.split(" ").at(-1)), `H1 lacks the topic of "${page.phrase}"`);
+    const topic = page.h1Word ?? phrase.split(" ").at(-1);
+    assert.ok(h1.toLowerCase().includes(topic), `${page.id}: the H1 must contain "${topic}"`);
     assert.ok(opening(text).includes(phrase), `the opening of ${page.id} lacks "${page.phrase}"`);
     // No second H1 in the body: the layout renders the only one.
     assert.ok(!/^# /m.test(text.split(/^---$/m).slice(2).join("---")), `${page.id} body has its own H1`);
@@ -588,17 +547,19 @@ test("circle-of-security: keeps its Current Site address and the fees /group-the
   }
 });
 
-test("group-therapy: title, H1 and description are the ones issue #15 specifies", async () => {
-  const text = (await readPage("group-therapy")).replace(/\r\n/g, "\n");
-  assert.equal(frontValue(text, "title"), "Group therapy and programs");
-  assert.equal(frontValue(text, "documentTitle"), "Group Therapy Brisbane | Kids' Emotion Regulation Groups");
-  assert.equal(
-    frontValue(text, "description"),
-    "Group programs in The Gap, Brisbane for children's emotion regulation and parenting, including Circle of Security. Dates, ages and costs."
-  );
+test("group-therapy: title, H1 and description carry the phrases issue #15 chose", async () => {
+  // "group therapy brisbane" and "therapy for emotional regulation".
+  const { data, body } = splitMarkdown(await readPage("group-therapy"));
+  fitsSearchResult("group-therapy", data.documentTitle, data.description);
+  assert.ok(data.title?.trim(), "group-therapy: no heading");
+  assert.match(data.documentTitle, /group therapy brisbane/i);
+  assert.match(data.description, /emotion regulation/i, 'group-therapy: the description must contain "emotion regulation"');
   // The target phrase opens the body.
-  const body = text.split(/^---$/m).slice(2).join("---").trim();
-  assert.match(body.split(/\n\s*\n/)[0].replace(/\s+/g, " "), /group therapy in The Gap, Brisbane/);
+  assert.match(
+    body.trim().split(/\n\s*\n/)[0].replace(/\s+/g, " "),
+    /group therapy in The Gap, Brisbane/i,
+    'group-therapy: the page text must open with "group therapy in The Gap, Brisbane"'
+  );
 });
 
 test("group-therapy: links the Circle of Security page and the children's hub only where they are built", async () => {
@@ -615,5 +576,5 @@ test("family: the fee and the Medicare line are the ones /fees/ publishes", asyn
   for (const amount of family.split(/^---$/m)[1].match(/\$[\d,]+/g) ?? []) {
     assert.ok(fees.includes(amount), `family.md shows ${amount}, which fees.md does not publish`);
   }
-  assert.match(family, /Medicare does not cover couple and family sessions\./);
+  assert.match(readableText(family), /Medicare (does not|doesn.t) cover couple/i, "family.md must still say Medicare does not cover couple and family sessions");
 });
