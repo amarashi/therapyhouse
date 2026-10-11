@@ -144,6 +144,9 @@ const reviewedLabel = data.lastReviewed
           </table>
         </div>
       )}
+      <p class="service__fees-link">
+        <a class="standalone-link" href={withBase('/fees/')}>All fees and Medicare rebates</a>
+      </p>
     </section>
 
     {data.medicare && data.medicare.length > 0 && (
@@ -243,6 +246,10 @@ const reviewedLabel = data.lastReviewed
 
   .service__faqs dd {
     margin: var(--space-xs) 0 var(--space-lg);
+  }
+
+  .service__fees-link {
+    margin-top: var(--space-lg);
   }
 
   .service__related {

@@ -182,6 +182,10 @@ const groups = [
           ))}
         </table>
       </div>
+      <p class="fees__more">
+        Medicare, private health and NDIS:{' '}
+        <a href={withBase('/fees/')}>fees and Medicare rebates</a>.
+      </p>
     </section>
 
     <section class="notes" aria-labelledby="good-to-know">
@@ -361,6 +365,10 @@ const groups = [
        for; short of the full wrap, because an amount 1,100px from the name it
        belongs to is not a comparison. */
     max-width: 58rem;
+  }
+
+  .fees__more {
+    margin: var(--space-lg) 0 0;
   }
 
   .fees caption {

@@ -71,8 +71,13 @@ export const readyNav = nav.filter((item) => item.ready);
  *
  * So they live here and the footer carries them. Anything written next that is
  * real but not a floor belongs in this list, not in a comment.
+ *
+ * Fees and Medicare (issue #30) is here rather than a seventh floor: the lift
+ * keeps its six floors (issue #4), and the Therapy floor carries a link to
+ * /fees/ where the fee table used to be.
  */
 export const secondaryNav = [
+  { label: 'Fees and Medicare', href: '/fees/' },
   { label: 'Our philosophy', href: '/philosophy/' },
   { label: 'Work with us', href: '/work-with-us/' },
   { label: 'Privacy policy', href: '/privacy-policy/' },

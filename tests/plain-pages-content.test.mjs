@@ -20,6 +20,8 @@ const readPage = async (name) =>
 
 const services = await readPage("services");
 const assessments = await readPage("assessments");
+// The fee table moved from /therapy/ (services.md) to /fees/ in issue #30.
+const fees = await readPage("fees");
 
 test("services page lists every service offering from the content model", () => {
   for (const offering of siteContent.services.offerings) {
@@ -36,7 +38,7 @@ test("services page lists every therapy model from the content model", () => {
   }
 });
 
-test("session fees on the services page match the content model", () => {
+test("session fees on the fees page match the content model", () => {
   // The assessment-package range is deliberately absent: `content-data.js`
   // quotes $1,200–$3,000 while the itemised packages on /assessments/ total
   // $846–$2,400. Rather than publish both, the services page links through to
@@ -49,16 +51,47 @@ test("session fees on the services page match the content model", () => {
   for (const fee of sessionFees) {
     const amount = fee.value.replace(/^\$?/, "").split(" ")[0];
     assert.ok(
-      services.includes(amount),
-      `services.md is missing the fee amount ${fee.value} (${fee.label})`
+      fees.includes(amount),
+      `fees.md is missing the fee amount ${fee.value} (${fee.label})`
     );
   }
 });
 
-test("every rebate and report note reaches the services page", () => {
-  for (const note of [...siteContent.services.rebates, ...siteContent.services.reports]) {
-    assert.ok(services.includes(note), `services.md is missing: ${note.slice(0, 50)}…`);
+test("the therapy hub no longer carries its own fee table", () => {
+  assert.ok(!/^fees:/m.test(services), "services.md still has a fees block; fees live in fees.md");
+});
+
+test("every rebate and report note reaches the fees page", () => {
+  // The first rebate note ("via GP referral and Mental Health Care Plan") is
+  // replaced on /fees/ by the Medicare section, which states the rebate in
+  // dollars from src/data/medicare.js and uses the plan's current name.
+  const [, ...rebateNotes] = siteContent.services.rebates;
+  for (const note of [...rebateNotes, ...siteContent.services.reports]) {
+    const plain = note.replace(/\.$/, "");
+    assert.ok(fees.includes(plain), `fees.md is missing: ${note.slice(0, 50)}…`);
   }
+});
+
+test("fees page has the title, H1 and description the issue asks for", () => {
+  const field = (name) => fees.match(new RegExp(`^${name}: (.+)$`, "m"))?.[1].trim();
+  const title = field("documentTitle");
+  const h1 = field("title");
+  const description = field("description");
+
+  assert.equal(title, "Psychologist Fees & Medicare Rebates | Therapy House");
+  assert.equal(h1, "Fees and Medicare rebates");
+  assert.ok(title.length < 60, `title is ${title.length} characters`);
+  assert.ok(description.length < 160, `description is ${description.length} characters`);
+  assert.match(description, /Medicare rebates/);
+
+  // The target phrase in the first paragraph of the body.
+  const body = fees.split(/^---$/m)[2];
+  const firstParagraph = body.trim().split(/\n\s*\n/)[0];
+  assert.match(firstParagraph.replace(/\s+/g, " "), /fees and Medicare rebates/i);
+});
+
+test("the fees page states plainly that the clinic does not bulk bill", () => {
+  assert.match(fees, /does not bulk bill/);
 });
 
 test("assessment process steps appear in order on the assessments page", () => {
@@ -251,11 +284,12 @@ test("homepage route notes restate figures published on the pages they link to",
     return block.match(/^\s+note: (.+)$/m)?.[1].trim();
   };
 
+  // The Therapy route lands on /therapy/, whose fee link leads to /fees/.
   const therapy = noteFor("Therapy");
   for (const amount of therapy.match(/\$[\d,]+/g)) {
     assert.ok(
-      services.includes(amount),
-      `homepage quotes ${amount} for therapy, which is not in the fees on services.md`
+      fees.includes(amount),
+      `homepage quotes ${amount} for therapy, which is not in the fees on fees.md`
     );
   }
 

@@ -66,6 +66,8 @@ const guardBase = {
    real 301s, listed in docs/redirects.md for the launch redirect map. */
 const redirects = {
   '/services': `${base.replace(/\/$/, '')}/therapy/`,
+  /* The Current Site's cancellation policy address (issue #30). */
+  '/policy': `${base.replace(/\/$/, '')}/fees/#cancellation`,
 };
 
 export default defineConfig({

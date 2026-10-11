@@ -8,8 +8,10 @@
  * the heading of who it is for, generated from `src/content/services/` so a
  * new page is listed the moment its Markdown file exists.
  *
- * The fee table stays here until /fees/ is built (its own issue); moving it
- * first would leave the prices with no page at all.
+ * The fee table moved to /fees/ (issue #30), with the Medicare rebates and
+ * everything else that changes what a session costs. This page keeps a short
+ * pointer where the table used to be, so a visitor who came here for prices
+ * is one link away from them.
  */
 import { withBase } from '../../lib/base.js';
 import { getCollection, getEntry, render } from 'astro:content';
@@ -27,32 +29,7 @@ const page = await getEntry('pages', 'services');
 if (!page) throw new Error('Missing content: src/content/pages/services.md');
 
 const { Content } = await render(page);
-const {
-  title,
-  documentTitle,
-  description,
-  lede,
-  offerings,
-  therapyModels,
-  fees,
-  rebates,
-  reports,
-  lastReviewed,
-} = page.data;
-
-const reviewedLabel = lastReviewed
-  ? new Intl.DateTimeFormat('en-AU', { month: 'long', year: 'numeric' }).format(lastReviewed)
-  : null;
-
-/* An evening surcharge is not a session you can book, so it never joins the
-   column of session prices a visitor is comparing. */
-const sessionFees = fees?.filter((row) => !row.adjustment) ?? [];
-const adjustments = fees?.filter((row) => row.adjustment) ?? [];
-
-const feeGroups = [
-  { label: null, rows: sessionFees },
-  ...(adjustments.length > 0 ? [{ label: 'Adjustments', rows: adjustments }] : []),
-];
+const { title, documentTitle, description, lede, offerings, therapyModels } = page.data;
 ---
 
 <PlainLayout title={title} documentTitle={documentTitle} description={description}>
@@ -114,61 +91,15 @@ const feeGroups = [
       </section>
     </div>
 
-    {/*
-      The page's payload, and the two things that change what it comes to —
-      what Medicare covers and what is billed on top — beside the figures they
-      qualify rather than as sub-headings tucked underneath them.
-    */}
-    <section class="fees" aria-labelledby="fees">
+    <section class="fees-pointer" aria-labelledby="fees">
       <h2 id="fees">Fees and Medicare</h2>
-
-      <div class="band fees__band">
-        <div class="table-scroll">
-          <table class="fee-table">
-            {reviewedLabel && <caption>Fees current as of {reviewedLabel}.</caption>}
-            <thead>
-              <tr>
-                <th scope="col">Session</th>
-                <th scope="col" class="amount">Cost</th>
-              </tr>
-            </thead>
-
-            {feeGroups.map((group) => (
-              <tbody class:list={[group.label && 'fee-table__group']}>
-                {group.label && (
-                  <tr>
-                    <th scope="rowgroup" colspan="2">{group.label}</th>
-                  </tr>
-                )}
-
-                {group.rows.map((row) => (
-                  <tr>
-                    <th scope="row">
-                      {row.label}
-                      {row.note && <span class="fee-table__note">{row.note}</span>}
-                    </th>
-                    <td class="amount">{row.amount}</td>
-                  </tr>
-                ))}
-              </tbody>
-            ))}
-          </table>
-        </div>
-
-        <div class="band__side fees__qualifiers">
-          <section aria-labelledby="rebates">
-            <h3 id="rebates">Rebates</h3>
-            <ul class="tick-list">
-              {rebates?.map((item) => <li>{item}</li>)}
-            </ul>
-          </section>
-
-          <section aria-labelledby="reports">
-            <h3 id="reports">Reports and letters</h3>
-            {reports?.map((item) => <p>{item}</p>)}
-          </section>
-        </div>
-      </div>
+      <p>
+        Session fees, Medicare rebates with a GP referral, private health, NDIS and
+        cancellations are all on one page.
+      </p>
+      <p>
+        <a class="standalone-link" href={withBase('/fees/')}>Fees and Medicare rebates</a>
+      </p>
     </section>
   </div>
 </PlainLayout>
@@ -199,8 +130,7 @@ const feeGroups = [
   }
 
   /* ---- The two-column band ----
-     Used twice, at the same ratio both times, so the page reads as one
-     structure rather than as a stack of one-off arrangements. */
+     What the clinic helps with, beside the methods behind it. */
   .band {
     display: grid;
     gap: var(--space-2xl);
@@ -219,15 +149,13 @@ const feeGroups = [
        deliberate step reads as a misalignment — seven pixels of it, which is
        exactly the amount that looks like a mistake rather than a decision.
        Baseline alignment puts both headings on one line and lets the size
-       difference be the only thing saying which one leads. Scoped to the first
-       band: the fees band opposite opens on a table, whose first baseline is a
-       caption. */
-    .band:not(.fees__band) {
+       difference be the only thing saying which one leads. */
+    .band {
       align-items: baseline;
     }
   }
 
-  /* Supporting, and sized to say so. The methods and the rebate rules are what
+  /* Supporting, and sized to say so. The methods are what
      a visitor reads after they have found their own situation in the column
      beside them, not before. */
   .band__side h2 {
@@ -243,47 +171,12 @@ const feeGroups = [
     margin-bottom: 0;
   }
 
-  /* ---- Fees ---- */
-
-  /* The section heading introduces the whole band, so the band starts under it
-     rather than opening another section-sized gap. */
-  .fees__band {
-    margin-top: var(--space-xl);
+  /* ---- Fees pointer ---- */
+  .fees-pointer {
+    max-width: var(--content-max);
   }
 
-  .fee-table {
-    /* A step wider than the reading measure — it is the answer the page is for
-       — and no wider, because an amount half a screen from its label is not a
-       price list. */
-    max-width: 46rem;
-  }
-
-  .fees caption {
-    max-width: 42rem;
-  }
-
-  .fees__qualifiers > * + * {
-    margin-top: var(--space-2xl);
-  }
-
-  .fees__qualifiers h3 {
-    margin-top: 0;
-  }
-
-  .fees__qualifiers p:last-child,
-  .fees__qualifiers .tick-list {
+  .fees-pointer p:last-child {
     margin-bottom: 0;
-  }
-
-  /* ---- Narrow ----
-     Last in the sheet so these win at equal specificity. */
-  @media (max-width: 52rem) {
-    .fee-table .amount {
-      font-size: var(--text-cardtitle);
-    }
-
-    .fee-table th[scope='row'] {
-      padding-right: var(--space-md);
-    }
   }
 </style>
