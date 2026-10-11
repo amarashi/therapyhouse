@@ -538,6 +538,15 @@ const SERVICE_PAGES = [
     phrase: "circle of security parenting program",
     h1Word: "circle of security",
   },
+  {
+    id: "family",
+    title: "Family Therapy Brisbane | Family Psychologists, The Gap",
+    h1: "Family therapy",
+    description:
+      "Family therapy in The Gap, Brisbane for families in distress: what it involves, who attends, fees and how to book.",
+    phrase: "family therapy",
+    h1Word: "family",
+  },
 ];
 
 test("approaches: every approach has the anchor the condition pages link to", async () => {
@@ -605,4 +614,13 @@ test("group-therapy: links the Circle of Security page and the children's hub on
   assert.match(source, /builtService\('children'\)/);
   assert.match(source, /includeInBuild\(/);
   assert.match(source, /serviceSchema\(/);
+});
+
+test("family: the fee and the Medicare line are the ones /fees/ publishes", async () => {
+  const family = await readService("family");
+  const fees = await readPage("fees");
+  for (const amount of family.split(/^---$/m)[1].match(/\$[\d,]+/g) ?? []) {
+    assert.ok(fees.includes(amount), `family.md shows ${amount}, which fees.md does not publish`);
+  }
+  assert.match(family, /Medicare does not cover couple and family sessions\./);
 });
