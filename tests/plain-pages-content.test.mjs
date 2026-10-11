@@ -524,6 +524,15 @@ const SERVICE_PAGES = [
     // The issue's description leads with the topic and the profession.
     descWords: ["depression", "psychologist"],
   },
+  {
+    id: "grief",
+    title: "Grief Counselling Brisbane | Psychologists, The Gap",
+    h1: "Grief and loss counselling",
+    description:
+      "Grief counselling in The Gap, Brisbane and by video: support after a death, separation or other loss, for adults, teens and children.",
+    phrase: "grief counselling",
+    h1Word: "grief",
+  },
 ];
 
 for (const page of SERVICE_PAGES) {
