@@ -120,3 +120,11 @@ test("the 404 page has no canonical tag and no business structured data", () => 
   assert.equal(notFound.canonical, undefined);
   assert.ok(!schemaTypes(notFound).includes("MedicalBusiness"));
 });
+
+/* ---- Analytics (issue #35) ---- */
+
+test("no Preview page loads Google Analytics", () => {
+  for (const [path, page] of preview) {
+    assert.doesNotMatch(page.html, /googletagmanager|G-XZ6REXQCZ8|gtag\(/, `${path} carries the Analytics tag`);
+  }
+});

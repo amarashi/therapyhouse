@@ -9,6 +9,7 @@ import CallToAction from '../components/CallToAction.astro';
 import ActionBar from '../components/ActionBar.astro';
 import Masthead from '../components/Masthead.astro';
 import SideRail from '../components/SideRail.astro';
+import Analytics from '../components/Analytics.astro';
 
 interface Props {
   title: string;
@@ -112,6 +113,7 @@ const businessSchema = notFound
         and 48px cuts of the same mark (generated from `logo3d.png`). */}
     <link rel="icon" href={withBase("/favicon.ico")} sizes="16x16 32x32 48x48" />
     {businessSchema && <script type="application/ld+json" set:html={JSON.stringify(businessSchema)} />}
+    <Analytics />
     <script is:inline>
       /*
        * The other half of the lift in SideRail.astro. A page reached by the

@@ -135,3 +135,48 @@ test("the CSP allows every external origin the built pages load from", () => {
   }
   assert.ok(allows(directive("frame-src"), "https://www.youtube-nocookie.com"));
 });
+
+/* ---- Analytics (issue #35) ---- */
+
+const GA_SRC = 'src="https://www.googletagmanager.com/gtag/js?id=G-XZ6REXQCZ8"';
+
+test("production pages, the house included, load the Analytics tag once", () => {
+  for (const path of ["", "team", "contact", `team/${teamIds[0]}`, "house"]) {
+    const html = page(path);
+    assert.equal(html.split(GA_SRC).length - 1, 1, `/${path} should load gtag exactly once`);
+    assert.match(html, /gtag\('config', measurementId\)/);
+  }
+});
+
+test("the Analytics script sends the four events from links and forms", () => {
+  /* Run the page's own inline script against a stand-in document, then fire
+     clicks and a submit through the listeners it registered. */
+  const html = page("contact");
+  const script = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)]
+    .map((m) => m[1])
+    .find((s) => s.includes("gtag('config'"));
+  assert.ok(script, "inline Analytics script not found");
+
+  const listeners = {};
+  const window = { dataLayer: [] };
+  const document = { addEventListener: (type, fn) => (listeners[type] = fn) };
+  new Function("window", "document", script)(window, document);
+
+  const sent = () => window.dataLayer.filter((args) => args[0] === "event").map((args) => args[1]);
+  const link = (href) => ({
+    getAttribute: () => href,
+    href,
+    textContent: "x",
+  });
+  const click = (href) =>
+    listeners.click({ target: { closest: () => (href ? link(href) : null) } });
+
+  click("tel:+61733002170");
+  click("mailto:admin@therapyhouse.com.au");
+  click("https://my.powerdiary.com/clientportal/3cjz0");
+  click("https://www.therapyhouse.com.au/team/");
+  click(null);
+  listeners.submit({ target: { id: "enquiry", getAttribute: () => null } });
+
+  assert.deepEqual(sent(), ["phone_click", "email_click", "booking_click", "form_submit"]);
+});
