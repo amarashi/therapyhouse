@@ -542,7 +542,23 @@ const SERVICE_PAGES = [
     phrase: "couples counselling",
     h1Word: "couples",
   },
+  {
+    id: "approaches",
+    title: "CBT, ACT, EMDR & EFT Therapy Brisbane | Our Approaches",
+    h1: "The therapies we use",
+    description:
+      "Plain explanations of CBT, ACT, EMDR, Emotionally Focused Therapy, schema and short-term psychodynamic therapy, and which Therapy House clinicians use each.",
+    phrase: "cbt",
+    h1Word: "therapies",
+  },
 ];
+
+test("approaches: every approach has the anchor the condition pages link to", async () => {
+  const text = await readService("approaches");
+  for (const id of ["cbt", "act", "emdr", "eft", "schema", "psychodynamic"]) {
+    assert.match(text, new RegExp(`<h2 id="${id}">`), `approaches.md has no #${id} section`);
+  }
+});
 
 test("couples: the fee and the Medicare line are the ones /fees/ publishes", async () => {
   const couples = await readService("couples");

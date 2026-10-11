@@ -222,6 +222,10 @@ async function knownPaths() {
     services[path] = { draft: /^draft: true$/m.test(front), id: file.slice(0, -3) };
     paths.add(path);
   }
+  // Team profiles, at /team/<file>/.
+  for (const file of (await readdir(teamDir)).filter((f) => f.endsWith(".md"))) {
+    paths.add(`/team/${file.slice(0, -3)}/`);
+  }
   return { paths, services };
 }
 
@@ -232,7 +236,6 @@ async function knownPaths() {
  * clinic's domain. Delete a line when its page is built.
  */
 const PLANNED = {
-  "/therapy/approaches/": 12,
   "/ndis/": 13,
   "/group-therapy/circle-of-security-parenting-program/": 14,
   "/therapy/family/": 16,
