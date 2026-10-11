@@ -4,8 +4,14 @@ Every page the new site will have, what goes on each one, where that content
 comes from today, and what is still missing.
 
 This is the **human sign-off document** — the thing to send the clinic to review.
-The machine-readable version already exists as `assets/scripts/content-data.js`,
-which is where the copy actually lives; this file describes the *pages*.
+The copy itself lives in `public/assets/scripts/content-data.js` (the house and
+the original plain pages) and in the Markdown files under `src/content/` (one
+file per page, service page, practitioner and article); this file describes the
+*pages*.
+
+Three audiences are served (see [PRODUCT.md](PRODUCT.md)): local families, the
+Telehealth Audience (people anywhere in Australia, regional Queensland first,
+seeing a psychologist by video), and adults seeking help for themselves.
 
 Related: [PRODUCT.md](PRODUCT.md) (who/why) · [DESIGN.md](DESIGN.md) (visual system) ·
 [HOTSPOT_CONTENT_MAP.md](HOTSPOT_CONTENT_MAP.md) (which hotspot opens which content).
@@ -43,20 +49,62 @@ separate site — it is a presentation layer mounted over the same pages.
 | URL | Room | Page title | Content source | Status |
 |---|---|---|---|---|
 | `/` | Exterior turntable | Therapy House — Help that doesn't feel like help | `rooms.welcome`, `philosophy` | ✅ |
-| `/services/` | Consulting Room | Services & Fees | `services` | ✅ |
+| `/therapy/` | Consulting Room | Therapy (the hub for every therapy page; `/services/` forwards here) | `services`, `src/content/services/` | ✅ |
 | `/assessments/` | Assessment Room | Assessments | `assessments` | ✅ |
 | `/group-therapy/` | Group Room | Group Therapy & Programs | `groups` | ✅ |
 | `/team/` | Team Parlour | Our Team | `team` | ✅ |
-| `/team/<slug>/` | — (carousel card) | Individual practitioner ×12 | `team.members[]` | ✏️ |
+| `/team/<slug>/` | — (carousel card) | Individual practitioner ×12 (list awaiting the clinic's confirmation, see `/team/` below) | `src/content/team/` | ✏️ ❓ |
 | `/library/` | Library | Library — articles, books, videos | `library` | ✅ |
-| `/library/<slug>/` | — (blog hotspot) | Individual article ×25 | `src/content/articles/` | ✅ |
+| `/library/<slug>/` | — (blog hotspot) | Individual article ×25 (issue #39) | `src/content/articles/` | ✅ |
 | `/contact/` | Reception | Contact & Booking | `contact` | ✅ |
 | `/work-with-us/` | Work With Us | Work With Us | `workWithUs` | ✏️ |
 | `/philosophy/` | — (modal today) | Our Philosophy | `philosophy` | ✅ |
-| `/privacy-policy/` | — | Privacy Policy | WordPress scrape | ⚖️ |
+| `/privacy-policy/` | — | Privacy Policy (built in #42, linked in the footer) | `src/content/pages/privacy-policy.md` | ⚖️ ❓ |
 | `/feedback/` | — | Feedback | WordPress scrape | ❓ |
 
-**Totals:** 11 content pages + 12 practitioner pages + up to 23 articles.
+**Totals:** 11 content pages + 12 practitioner pages + 25 articles, plus the
+SEO launch pages below.
+
+### SEO launch pages (issues #5 to #30)
+
+Added for the SEO launch (GitHub milestone "SEO launch"). Every one of these is
+a **plain page, not a room**: no house door, no hero animation, the answer
+first. Therapy and assessment pages are Markdown files in `src/content/services/`
+(the file name is the address). "Status on main" is what had been merged on
+11 October 2026, when this file was last updated; issues marked needs-info are built on the Preview
+but wait on facts from the clinic before they go live (drafts and unconfirmed
+fees never reach the production build).
+
+| URL | Page | Issue | Status on main |
+|---|---|---|---|
+| `/adults/` | Adult therapy hub (includes ADHD therapy for adults) | #5 | ✅ built; waiting on the clinic (needs-info) |
+| `/children/` | Child and adolescent psychology hub (includes ADHD therapy for children) | #6 | ✅ built; waiting on the clinic (needs-info) |
+| `/therapy/trauma/` | Trauma and EMDR | #7 | not yet merged |
+| `/therapy/anxiety/` | Anxiety and OCD | #8 | not yet merged |
+| `/therapy/depression/` | Depression | #9 | not yet merged |
+| `/therapy/grief/` | Grief | #10 | not yet merged |
+| `/therapy/couples/` | Couples and relationship therapy (replaces the Current Site's `/relationship/`) | #11 | not yet merged |
+| `/therapy/approaches/` | How we work: therapy approaches | #12 | not yet merged |
+| `/ndis/` | NDIS psychology | #13 | not yet merged |
+| `/group-therapy/circle-of-security-parenting-program/` | Circle of Security parenting program, at its existing address | #14 | not yet merged |
+| `/group-therapy/` | Group therapy page, reworded for searches (existing page) | #15 | not yet merged |
+| `/therapy/family/` | Family therapy | #16 | not yet merged |
+| `/assessments/adult-adhd/` | Adult ADHD assessment | #17 | ✅ built; waiting on the clinic (needs-info) |
+| `/assessments/adult-autism/` | Adult autism assessment | #18 | ✅ built; waiting on the clinic (needs-info) |
+| `/assessments/child-adhd/` | Child ADHD assessment | #19 | ✅ built; waiting on the clinic (needs-info) |
+| `/assessments/child-autism/` | Child autism assessment | #20 | ✅ built; waiting on the clinic (needs-info) |
+| `/assessments/learning/` | Learning assessment (dyslexia, dysgraphia, dyscalculia) | #21 | ✅ built; waiting on the clinic (needs-info) |
+| `/assessments/cognitive/` | Cognitive and giftedness assessment | #22 | not yet merged |
+| `/telehealth/` | Telehealth (the Telehealth Room): seeing a psychologist by video | #25 | ✅ built; waiting on the clinic (needs-info) |
+| `/telehealth/toowoomba/` | Town Page: Toowoomba | #26 | not yet merged |
+| `/telehealth/townsville/` | Town Page: Townsville | #27 | not yet merged |
+| `/telehealth/cairns/` | Town Page: Cairns | #28 | not yet merged |
+| `/telehealth/rockhampton/` | Town Page: Rockhampton | #29 | not yet merged |
+| `/fees/` | Fees and Medicare rebates | #30 | ✅ built; waiting on the clinic (needs-info) |
+
+Issue #23 is the pull request that built the services collection, and #24 is a
+build bug, so neither adds a page. A Town Page never says or implies the clinic
+has an office in that town.
 
 ---
 
@@ -64,7 +112,7 @@ separate site — it is a presentation layer mounted over the same pages.
 
 Present on every page.
 
-**Header** — Therapy House mark, primary nav (Services, Assessments, Group
+**Header** — Therapy House mark, primary nav (Therapy, Assessments, Group
 Therapy, Team, Library, Contact), and a "Step inside the house" link.
 
 **Footer** — contact block, booking link, address with map link, privacy policy,
@@ -106,7 +154,13 @@ Source: `rooms.welcome.intro`, `philosophy`, `team.members`, `contact`
 
 ---
 
-### `/services/` — Services & Fees
+### `/therapy/` — Therapy (was `/services/`, Services & Fees)
+
+Since issue #4 the Services floor is the Therapy hub at `/therapy/`, and
+`/services/` forwards there. It lists every therapy page from
+`src/content/services/`. The fee table moved to `/fees/` (#30), and `/therapy/`
+now points there. The fee and rebate detail below describes what `/fees/` carries.
+
 
 | Section | Content | Status |
 |---|---|---|
@@ -190,6 +244,23 @@ Psychologist) · Jazmin Squire (Psychologist) · Laura Storey (Counsellor) ·
 Genevieve Hussey (Provisional Psychologist) · Natasha (Client Support &
 Marketing) · Josie (Administrative Support) · Reea & Samson (therapy dogs).
 
+❓ **This list is awaiting the clinic's confirmation (register row R-30, launch
+runbook issue #45).** It was written against an older roster and does not
+match the Current Site's staff pages:
+
+- On the Current Site but not in the Rebuild: **Ace** (`/staff-member/ace/`),
+  **An Yang**, Provisional Psychologist
+  (`/staff-member/an-yang-provisional-psychologist/`), and **Brooke**, Client
+  Support & Marketing (`/staff-member/brooke-client-support-marketing/`).
+- In the Rebuild but no longer on the Current Site's staff list: **Josie** and
+  **Reea**.
+- Natasha's Current Site address is `/staff-member/natasha-senior-client-support/`
+  (her title there is Senior Client Support), not the
+  `natasha-client-support-marketing` this file used to give.
+
+Until the clinic confirms who is current, no one is added or removed; the
+practitioner pages and every "who you would see" list stay as they are.
+
 ❓ **Two gaps that directly block the credibility goal:**
 
 1. No AHPRA registration numbers for any practitioner. These are public,
@@ -212,10 +283,11 @@ differentiator in Brisbane and nothing else on the site mentions it.
 
 ### `/team/<slug>/` — Individual practitioner pages
 
-One per person (12 pages). Photo, full name, role, credentials, AHPRA number ❓,
+One per person (12 pages today; the count follows the clinic's answer on the
+roster above). Photo, full name, role, credentials, AHPRA number ❓,
 languages, bio ✏️, who they work with ✏️, availability ✅, book/call CTAs ✅.
 
-These replace the 12 existing `/staff-member/…/` WordPress URLs and inherit their
+These replace the 14 existing `/staff-member/…/` WordPress URLs and inherit their
 search ranking. Person-level JSON-LD goes here.
 
 ---
@@ -224,7 +296,7 @@ search ranking. Person-level JSON-LD goes here.
 
 | Section | Content | Status |
 |---|---|---|
-| Articles | 23 posts — title, date, excerpt | ✅ (bodies ❓) |
+| Articles | 25 posts, each with its own page at `/library/<slug>/` (issue #39) | ✅ |
 | Books | *The Little Koala* (children's story, fear/separation anxiety, illustrated by Nafiseh Ebrahiminejad); *What Is Going On In My Head* (68pp, 28×21cm, lay-flat, $120, for therapists, CBT/ACT across 3 phases) | ✅ covers, interior spreads, Square checkout and email-to-order all recovered |
 | Videos | 9 published: a note on happiness · welcome from Dr Amelia · Lockdown Challenge ×3 · magic in stories ×2 · 2 Persian (bilingual children, English-learning) | ✅ real YouTube ids, thumbnails and embeds |
 | Publications | Dr Amelia Shay — book chapters, journal articles, conference presentations, Persian-language works | ❓ description only, no actual list |
@@ -258,42 +330,57 @@ at the top of `src/data/library-shelf.js`.
 
 ### `/library/<slug>/` — Articles
 
-25 posts, migrated in issue #39 with their published wording to
-`src/content/articles/<slug>.md` (one file each, `BlogPosting` structured data,
-in-body images in `public/assets/library/`). The house's library room still
-reads the short list in `content-data.js`, which now links to these pages.
+**25 posts** on the Current Site (its sitemap lists 25; this file used to say
+23 and missed the two newest). Issue #39 migrated every one into
+`src/content/articles/` with its published text unchanged, its original date,
+the author where the Current Site names one, `BlogPosting` structured data, and
+in-body images in `public/assets/library/`. The house's library room still
+reads the short list in `content-data.js`, which now links to these pages. The slug is the last part of
+the Current Site address, and every old address forwards to the new one (see
+`docs/redirects.md`).
 
-| # | Date | Title | New slug |
-|---|---|---|---|
-| 0a | 2026-10-07 | Mindfulness and Journalling for Your Mental Wellbeing | `mindfulness-and-journalling` |
-| 0b | 2026-07-30 | Play Therapy: Therapy Made for Children, With Children's Minds in Mind | `play-therapy-therapy-made-for-children-with-childrens-minds-in-mind` |
-| 1 | 2025-10-14 | The Lasting Value of Long-Term Psychodynamic Therapy | `long-term-psychodynamic-therapy` |
-| 2 | 2025-10-01 | Helping Kids Build Healthy Screen Time Habits | `screen-time` |
-| 3 | 2025-08-05 | Practicing Self-Compassion to Manage Uncomfortable Emotions | `practicing-self-compassion` |
-| 4 | 2025-06-10 | How To Have A Loving Relationship With Your Body | `how-to-have-a-loving-relationship-with-your-body` |
-| 5 | 2025-05-27 | 12 Practical Tips to Manage Depression | `practical-tips-to-manage-depression` |
-| 6 | 2025-05-22 | Holding Two Truths: Emotional Duality in Relationships | `emotional-duality-in-relationships` |
-| 7 | 2025-04-01 | Nurturing Healthy Self-Esteem in Children | `nurturing-healthy-self-esteem` |
-| 8 | 2025-01-28 | Why We Procrastinate | `procrastination` |
-| 9 | 2024-12-03 | Understanding and Supporting School Readiness | `school-readiness` |
-| 10 | 2024-11-11 | Conflict | `conflict` |
-| 11 | 2024-05-21 | Self Care | `self-care` |
-| 12 | 2024-05-08 | Sense of Self | `sense-of-self` |
-| 13 | 2024-04-02 | The Autonomic Nervous System and Mental Health | `autonomic-nervous-system` |
-| 14 | 2024-03-12 | What is Depression? | `what-is-depression` |
-| 15 | 2024-02-13 | How Involved Should Parents Be In Their Child's Therapy? | `parent-involvement-in-child-therapy` |
-| 16 | 2024-01-22 | What Is Therapy? | `what-actually-is-therapy` |
-| 17 | 2023-08-30 | Are You Learning At Your Full Potential? | `is-your-child-learning-to-the-best-of-their-capacity` |
-| 18 | 2023-06-28 | Do You Really Know What Anxiety Is? | `do-you-really-know-what-anxiety-is` |
-| 19 | 2023-05-05 | New Cancellation Policy | `new-cancellation-policy` |
-| 20 | 2023-05-05 | Therapy is a Commitment | `therapy-house-update` |
-| 21 | 2023-05-05 | What is ADHD? | `what-is-adhd` |
-| 22 | 2023-03-20 | Different Parenting Approaches and How Successful They Are | `parenting-styles-parenting-tips` |
-| 23 | 2023-01-10 | Emotion Regulation Skills, Tips and Strategy | `emotion-regulation-skills-strategy` |
+| # | Date | Title | Current Site address | New slug |
+|---|---|---|---|---|
+| 1 | 2026-10-07 | Mindfulness and Journalling for Your Mental Wellbeing | `/blog/mindfulness-and-journalling/` | `mindfulness-and-journalling` |
+| 2 | 2026-07-30 | Play Therapy: Therapy Made for Children, With Children’s Minds in Mind | `/therapy/play-therapy-therapy-made-for-children-with-childrens-minds-in-mind/` | `play-therapy-therapy-made-for-children-with-childrens-minds-in-mind` |
+| 3 | 2025-10-14 | The Lasting Value of Long-Term Psychodynamic Therapy: Who It Helps and Why It Works | `/therapy/long-term-psychodynamic-therapy/` | `long-term-psychodynamic-therapy` |
+| 4 | 2025-10-01 | Helping Kids Build Healthy Screen Time Habits: A Parent’s Guide | `/child-psychologists/screen-time/` | `screen-time` |
+| 5 | 2025-08-05 | Practicing Self-Compassion to Manage Uncomfortable Emotions | `/therapy/practicing-self-compassion/` | `practicing-self-compassion` |
+| 6 | 2025-06-10 | How To Have A Loving Relationship With Your Body | `/therapy/how-to-have-a-loving-relationship-with-your-body/` | `how-to-have-a-loving-relationship-with-your-body` |
+| 7 | 2025-05-27 | 12 Practical Tips to Manage Depression from Behavioural Therapy Experts | `/therapy/practical-tips-to-manage-depression/` | `practical-tips-to-manage-depression` |
+| 8 | 2025-05-22 | Holding Two Truths: The Power of Emotional Duality in Relationships | `/relationship/emotional-duality-in-relationships/` | `emotional-duality-in-relationships` |
+| 9 | 2025-04-01 | Nurturing Healthy Self-Esteem in Children | `/child-psychologists/nurturing-healthy-self-esteem/` | `nurturing-healthy-self-esteem` |
+| 10 | 2025-01-28 | Why We Procrastinate: Understanding the Psychology Behind It | `/therapy/procrastination/` | `procrastination` |
+| 11 | 2024-12-03 | Understanding and Supporting School Readiness  | `/therapy/school-readiness/` | `school-readiness` |
+| 12 | 2024-11-11 | Conflict | `/therapy/conflict/` | `conflict` |
+| 13 | 2024-05-21 | Self Care | `/therapy/self-care/` | `self-care` |
+| 14 | 2024-05-08 | Sense of Self | `/child-psychologists/sense-of-self/` | `sense-of-self` |
+| 15 | 2024-04-02 | The Autonomic Nervous System and Mental Health: Strategies to Ease Anxiety, Depression and Trauma Response | `/therapy/autonomic-nervous-system/` | `autonomic-nervous-system` |
+| 16 | 2024-03-12 | What is Depression? | `/therapy/what-is-depression/` | `what-is-depression` |
+| 17 | 2024-02-13 | How Involved Should Parents Be In Their Child’s Therapy? | `/therapy/parent-involvement-in-child-therapy/` | `parent-involvement-in-child-therapy` |
+| 18 | 2024-01-22 | What Is Therapy? | `/therapy/what-actually-is-therapy/` | `what-actually-is-therapy` |
+| 19 | 2023-08-30 | Are You Learning At Your Full Potential? | `/assessments/is-your-child-learning-to-the-best-of-their-capacity/` | `is-your-child-learning-to-the-best-of-their-capacity` |
+| 20 | 2023-06-28 | Do You Really Know What Anxiety Is? | `/workshops/self-regulation/do-you-really-know-what-anxiety-is/` | `do-you-really-know-what-anxiety-is` |
+| 21 | 2023-05-05 | New Cancellation Policy | `/news/new-cancellation-policy/` | `new-cancellation-policy` |
+| 22 | 2023-05-05 | Therapy is a Commitment | `/news/therapy-house-update/` | `therapy-house-update` |
+| 23 | 2023-05-05 | What is ADHD? | `/assessments/what-is-adhd/` | `what-is-adhd` |
+| 24 | 2023-03-20 | Different Parenting Approaches and How Successful They Are | `/workshops/circle-of-security-parenting-program/parenting-styles-parenting-tips/` | `parenting-styles-parenting-tips` |
+| 25 | 2023-01-10 | Emotion Regulation Skills, Tips and Strategy | `/workshops/self-regulation/emotion-regulation-skills-strategy/` | `emotion-regulation-skills-strategy` |
+
+The Current Site also answers at `/what-is-adhd/`, a second address for #23;
+it forwards too.
 
 **Clinic to curate:** tick which of these 25 still represent the clinic. Retired
-ones get a 301 to `/library/`, never a 404. Note that #19 and #21 read as
+ones get a 301 to `/library/`, never a 404. Note that #21 and #22 read as
 operational notices rather than articles and may belong elsewhere — or nowhere.
+
+**New explainer articles (issue #40, merged as drafts).** Four articles written for
+searches the clinic does not answer today: how to get diagnosed with ADHD in
+Australia, ADHD signs in adult women, ADHD versus autism, and CBT for separation
+anxiety in children. They use only facts from Australian government and
+peak-body sources, cited at the end of each. They stay `draft: true` (visible on
+the Preview, never built for production) until a clinician reviews one and is
+named as its author ❓.
 
 ---
 
@@ -336,7 +423,13 @@ can be linked, shared and indexed.
 
 ### `/privacy-policy/` ⚖️
 
-Carry over from WordPress verbatim. Do not rewrite or summarise.
+Built in issue #42: the Current Site policy word for word, linked in the
+footer of every page, with the date it was last changed on the Current Site
+(23 October 2023). Do not rewrite or summarise it.
+
+❓ The clinic should confirm the policy is still current. It cites the APS Code
+of Ethics (2007), links an old OAIC complaints address, and does not mention
+the website itself (Google Analytics, online booking).
 
 ---
 
@@ -351,9 +444,15 @@ Also in this bucket: `/external-workshop-expression-of-interest/` and
 
 ---
 
-## Redirect map — all 55 existing URLs
+## Redirect map — Current Site addresses
 
-Every one of these needs a 301 on launch day.
+Every one of these needs a 301 on launch day. **This section is now a summary.**
+The source of truth is `docs/redirects.md`, which issue #41 turns into the
+Cloudflare `public/_redirects` file and checks with a test against every
+Current Site URL in the crawl. Where the two disagree, `docs/redirects.md`
+wins. Pages added for the SEO launch change some targets below; for example
+`/relationship/` now goes to `/therapy/couples/` (#11) rather than
+`/library/`, and the Circle of Security page keeps its own address (#14).
 
 ### Pages (20)
 
@@ -361,10 +460,10 @@ Every one of these needs a 301 on launch day.
 |---|---|
 | `/` | `/` |
 | `/about/` | `/team/` |
-| `/services/` | `/services/` |
+| `/services/` | `/therapy/` |
 | `/assessments/` | `/assessments/` |
 | `/group-therapy/` | `/group-therapy/` |
-| `/group-therapy/circle-of-security-parenting-program/` | `/group-therapy/#circle-of-security` |
+| `/group-therapy/circle-of-security-parenting-program/` | stays at its own address (#14) |
 | `/group-therapy/self-regulation/` | `/group-therapy/` |
 | `/external-workshop-expression-of-interest/` | `/group-therapy/#workshops` |
 | `/contact/` | `/contact/` |
@@ -374,30 +473,36 @@ Every one of these needs a 301 on launch day.
 | `/videos/` | `/library/#videos` |
 | `/publications/` | `/library/#publications` |
 | `/media/` | `/library/#media` |
-| `/relationship/` | `/library/` |
+| `/relationship/` | `/therapy/couples/` (#11) |
 | `/privacy-policy/` | `/privacy-policy/` |
 | `/feedback/` | `/feedback/` |
 | `/workshops-feedback/` | `/feedback/` |
 | `/sitemap/` | `/sitemap.xml` |
 
-### Staff (12)
+### Staff (14 on the Current Site)
 
 `/staff-member/<old-slug>/` → `/team/<new-slug>/`:
 
 dr-amelia-shay · dr-kaya-beinke · letitia-mcvey · genevieve-hussey ·
 jazmin-squire · rani-banks (unchanged) · `sahar-h-fattahi-general-psychologist` →
 `sahar-fattahi` · `laura-storey-counsellor` → `laura-storey` ·
-`natasha-client-support-marketing` → `natasha` · `josie-administrative-support` →
-`josie` · `reea-therapy-dog` → `reea` · `samson-therapy-dog` → `samson`.
+`natasha-senior-client-support` → `natasha` · `samson-therapy-dog` → `samson`.
+
+❓ `ace`, `an-yang-provisional-psychologist` and
+`brooke-client-support-marketing` have no Rebuild page yet. Where they go
+depends on the clinic's answer about the team list (R-30); until then they
+should forward to `/team/`. `josie-administrative-support` and `reea-therapy-dog` are
+no longer on the Current Site's staff sitemap, so they need a redirect only if
+an old link to them still exists.
 
 ### Posts (25)
 
 All flatten to `/library/<slug>/` using the slugs in the article table above.
-The old paths span seven different category prefixes (`/blog/`, `/therapy/`,
+The old paths span seven different category prefixes (`/therapy/`,
 `/child-psychologists/`, `/assessments/`, `/news/`, `/workshops/`,
-`/relationship/`); each has a line in `docs/redirects.md`; consolidating them is a deliberate choice for a cleaner IA,
-paid for with 301s. Flag if you would rather preserve the keyword-rich old paths
-exactly as they are.
+`/relationship/`, `/blog/`); consolidating them is a deliberate choice for a
+cleaner structure, paid for with 301s. `/what-is-adhd/` is a second address for
+the ADHD post and forwards too.
 
 ---
 
@@ -405,14 +510,18 @@ exactly as they are.
 
 Ranked by how much each one blocks the site's actual goal.
 
-1. **AHPRA registration numbers** for all practitioners — cheapest credibility win available.
-2. **Real practitioner bios** — several are currently placeholder sentences.
-3. **Testimonials / reviews / proof** — PRODUCT.md records that none exist yet. Drop files into `.impeccable/assets/proof/`.
-4. **Media & publication citations** — outlet, date and link for the 4 media items, plus the actual publication list.
-5. **Fee review date**, and resolve the assessment-price conflict between `/services/` and `/assessments/`.
-6. **Group program intake dates** — when does the next one run.
-7. **Opening hours.**
-8. **Blog curation** — which of the 25 articles stay, and whether the 2023 cancellation fees in `new-cancellation-policy` are still current.
-9. **Video URLs** — where the 4 video topics actually live.
-10. **Book purchase links and cover images.**
-11. **Acknowledgement of country** — whether the clinic wants one.
+1. **The current team list** — confirm whether Ace, An Yang and Brooke should be on the site, and whether Josie and Reea are still current (R-30). This blocks launch.
+2. **AHPRA registration numbers** for all practitioners — cheapest credibility win available.
+3. **Real practitioner bios** — several are currently placeholder sentences.
+4. **Proof** — testimonials about clinical care cannot be used (National Law section 133). Proof is facts: AHPRA numbers, the Medicare Rebate statement, media and publications.
+5. **Media & publication citations** — outlet, date and link for the 4 media items, plus the actual publication list.
+6. **Fee review date**, and resolve the assessment-price conflict between `/therapy/` (the old `/services/`) and `/assessments/`.
+7. **Group program intake dates** — when does the next one run.
+8. **Opening hours.**
+9. **Blog curation** — which of the 25 articles stay, and whether the 2023 cancellation fees in `new-cancellation-policy` are still current.
+10. **Video URLs** — where the 4 video topics actually live.
+11. **Book purchase links and cover images.**
+12. **Acknowledgement of country** — whether the clinic wants one.
+13. **Privacy policy** — confirm the migrated policy is still current (R-26).
+14. **Library authors** — which clinician reviews and puts their name to each of the four new explainer articles (R-62 to R-64).
+15. **Fees, wait times and practitioners for the SEO launch pages** — each needs-info issue from #5 to #30 lists exactly what it is waiting on.
