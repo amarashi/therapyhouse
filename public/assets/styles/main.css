@@ -2504,6 +2504,14 @@
       }
     }
 
+    /* Reduced motion: the door cuts straight to the room (entrance-video.js),
+       so the interior arrives with a short fade instead of the long one. */
+    @media (prefers-reduced-motion: reduce) {
+      .inside-view {
+        transition-duration: 200ms;
+      }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       .inside-parallax__layer,
       .inside-firelight-layer,

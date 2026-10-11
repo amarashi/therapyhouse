@@ -81,7 +81,7 @@ const facts = houseFactsJson(
   <script is:inline define:vars={{ assetBase }}>window.__ASSET_BASE__ = assetBase;</script>
   <script is:inline type="application/json" id={HOUSE_FACTS_ID} set:html={facts}></script>
   <title>Explore the House | Therapy House, The Gap, Brisbane</title>
-  <link rel="stylesheet" href={withBase("/assets/styles/main.css?v=20260823-room-doors")}>
+  <link rel="stylesheet" href={withBase("/assets/styles/main.css?v=20261011-reduced-door")}>
   <script type="application/ld+json" set:html={JSON.stringify(businessSchema)} />
   <Analytics />
 </head>
@@ -255,7 +255,7 @@ const facts = houseFactsJson(
 
   {/* Development only: the tuning panel and its scripts never reach the build. */}
   {import.meta.env.DEV && <DebugPanel />}
-  <script type="module" src={withBase("/assets/scripts/app.js?v=20261011-house-facts")}></script>
+  <script type="module" src={withBase("/assets/scripts/app.js?v=20261011-reduced-door")}></script>
 </body>
 </html>
 

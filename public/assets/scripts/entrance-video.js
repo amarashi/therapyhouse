@@ -1,5 +1,24 @@
-export function createEntranceVideoController({ stage, doorHotspot, doorVideo, turntable, insideScene, onEnterInside }) {
+export function createEntranceVideoController({
+  stage,
+  doorHotspot,
+  doorVideo,
+  turntable,
+  insideScene,
+  onEnterInside,
+  reducedMotionQuery
+}) {
   let playing = false;
+
+  /*
+   * With `prefers-reduced-motion: reduce` the door opens straight onto the
+   * room: no swing round to the door, no door-opening video, only the short
+   * fade the interior has under reduced motion (main.css). PRODUCT.md
+   * principle 2: ambient things stay skippable. Read at click time, so a
+   * setting changed during the visit is respected (issue #70).
+   */
+  function motionReduced() {
+    return reducedMotionQuery?.matches === true;
+  }
 
   /*
    * Which room the front door opens onto. The turntable stamps it on the button
@@ -44,6 +63,11 @@ export function createEntranceVideoController({ stage, doorHotspot, doorVideo, t
   function init() {
     doorHotspot.addEventListener("click", async () => {
       if (playing || insideScene.isActive) return;
+
+      if (motionReduced()) {
+        enterInsideView();
+        return;
+      }
 
       playing = true;
       turntable.lockInteraction();
