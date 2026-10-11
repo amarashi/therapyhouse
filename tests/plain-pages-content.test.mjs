@@ -378,10 +378,18 @@ const assessmentPages = [
       "Adult ADHD assessment in The Gap, Brisbane: the steps, who assesses you, what to bring, how long the report takes, cost and what Medicare covers.",
     phrase: "ADHD assessment",
   },
+  {
+    file: "adult-autism",
+    title: "Adult Autism Assessment Brisbane | Therapy House",
+    h1: "Adult autism assessment",
+    description:
+      "Adult autism assessment in The Gap, Brisbane: the steps, who assesses you, what to bring, report timing, cost and what Medicare covers.",
+    phrase: "autism assessment",
+  },
 ];
 
 test("adult assessment pages publish no fee until the clinic gives one", async () => {
-  for (const file of ["adult-adhd"]) {
+  for (const file of ["adult-adhd", "adult-autism"]) {
     const text = await readService(file);
     assert.match(text, /^feeStatus: quote$/m, `${file} must say call for a quote`);
     assert.doesNotMatch(text.split(/^---$/m)[1], /^fees:/m, `${file} must not carry fee rows`);
