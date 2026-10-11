@@ -529,6 +529,15 @@ const SERVICE_PAGES = [
     // The issue's description says "NDIS psychology".
     descWords: ["ndis", "psycholog"],
   },
+  {
+    id: "circle-of-security",
+    title: "Circle of Security Parenting Program Brisbane | The Gap",
+    h1: "Circle of Security parenting program",
+    description:
+      "The Circle of Security parenting program in The Gap, Brisbane: what it is, next dates, cost, who runs it and whether it is offered by video.",
+    phrase: "circle of security parenting program",
+    h1Word: "circle of security",
+  },
 ];
 
 test("approaches: every approach has the anchor the condition pages link to", async () => {
@@ -567,3 +576,12 @@ for (const page of SERVICE_PAGES) {
     assert.ok(!/^# /m.test(text.split(/^---$/m).slice(2).join("---")), `${page.id} body has its own H1`);
   });
 }
+
+test("circle-of-security: keeps its Current Site address and the fees /group-therapy/ publishes", async () => {
+  const cos = (await readService("circle-of-security")).replace(/\r\n/g, "\n");
+  assert.match(cos, /^path: \/group-therapy\/circle-of-security-parenting-program\/$/m);
+  const groups = await readPage("group-therapy");
+  for (const amount of cos.split(/^---$/m)[1].match(/\$[\d,]+/g) ?? []) {
+    assert.ok(groups.includes(amount), `circle-of-security.md shows ${amount}, which group-therapy.md does not publish`);
+  }
+});
