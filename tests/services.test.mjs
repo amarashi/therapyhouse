@@ -189,7 +189,7 @@ test("a hub's structured data lists the pages it links to", () => {
 /* ---- Links written in Markdown bodies (rebased by src/lib/rehype-base-links.js) ---- */
 
 const frontmatter = (text) => text.replace(/\r\n/g, "\n").split(/^---$/m)[1] ?? "";
-const field = (front, name) => front.match(new RegExp(`^${name}:\s*(.+)$`, "m"))?.[1].trim().replace(/^["']|["']$/g, "");
+const field = (front, name) => front.match(new RegExp(`^${name}:\\s*(.+)$`, "m"))?.[1].trim().replace(/^["']|["']$/g, "");
 
 /** Every address the site builds, read from the file system. */
 async function knownPaths() {
@@ -213,6 +213,15 @@ async function knownPaths() {
     services[path] = { draft: /^draft: true$/m.test(front), id };
     paths.add(path);
   }
+  /* Library articles (issue #39) live at /library/<file>/. Recorded like a
+     service page, so a published page cannot link to a draft article either. */
+  const articlesDir = new URL("../src/content/articles/", import.meta.url);
+  for (const file of (await readdir(articlesDir).catch(() => [])).filter((f) => f.endsWith(".md"))) {
+    const front = frontmatter(await readFile(new URL(file, articlesDir), "utf8"));
+    const path = `/library/${file.slice(0, -3)}/`;
+    services[path] = { draft: /^draft: true$/m.test(front), id: file.slice(0, -3) };
+    paths.add(path);
+  }
   return { paths, services };
 }
 
@@ -231,10 +240,6 @@ const PLANNED = {
   "/ndis/": 13,
   "/group-therapy/circle-of-security-parenting-program/": 14,
   "/therapy/family/": 16,
-  "/assessments/adult-adhd/": 17,
-  "/assessments/adult-autism/": 18,
-  "/assessments/learning/": 21,
-  "/assessments/cognitive/": 22,
   "/telehealth/": 25,
 };
 
