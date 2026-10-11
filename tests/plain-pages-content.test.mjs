@@ -370,7 +370,23 @@ const assessmentPages = [
       "Autism assessment for children and teens in The Gap, Brisbane: the process, what to bring, report timing and cost from $1,000.",
     phrase: "Autism assessment",
   },
+  {
+    file: "adult-adhd",
+    title: "Adult ADHD Assessment Brisbane | Therapy House, The Gap",
+    h1: "Adult ADHD assessment and diagnosis",
+    description:
+      "Adult ADHD assessment in The Gap, Brisbane: the steps, who assesses you, what to bring, how long the report takes, cost and what Medicare covers.",
+    phrase: "ADHD assessment",
+  },
 ];
+
+test("adult assessment pages publish no fee until the clinic gives one", async () => {
+  for (const file of ["adult-adhd"]) {
+    const text = await readService(file);
+    assert.match(text, /^feeStatus: quote$/m, `${file} must say call for a quote`);
+    assert.doesNotMatch(text.split(/^---$/m)[1], /^fees:/m, `${file} must not carry fee rows`);
+  }
+});
 
 for (const page of assessmentPages) {
   test(`${page.file}: title, H1 and description are the ones the issue specifies`, async () => {
