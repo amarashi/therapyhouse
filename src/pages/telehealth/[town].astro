@@ -1,0 +1,147 @@
+---
+/**
+ * A Town Page (issues #26 to #29, R-57): /telehealth/<town>/.
+ *
+ * Built only for towns marked `kind: page` in src/content/towns/, and only
+ * when the town has at least three sourced facts (assertTownPage). Each page's
+ * prose is written for that town in its own Markdown file; the parts rendered
+ * here (the Medicare rebate, the clinicians line, the sources) are kept short
+ * on purpose, because the doorway rule allows no more than a third of a Town
+ * Page's text to be shared with another (tests/towns.test.mjs).
+ */
+import { getCollection, render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import PlainLayout from '../../layouts/PlainLayout.astro';
+import { withBase } from '../../lib/base.js';
+import { builtPaths } from '../../lib/links.js';
+import { businessId, includeInBuild, isProductionSite } from '../../lib/services.js';
+import { assertTownPage } from '../../lib/towns.js';
+import { site } from '../../data/site.js';
+import { assertRebatesCurrent, formatAsAt, formatRebate, medicare } from '../../data/medicare.js';
+
+export async function getStaticPaths() {
+  const production = isProductionSite(import.meta.env.SITE);
+  const towns = await getCollection(
+    'towns',
+    (entry) => entry.data.kind === 'page' && includeInBuild(entry.data, production)
+  );
+  return towns.map((entry) => ({ params: { town: entry.id }, props: { entry } }));
+}
+
+interface Props {
+  entry: CollectionEntry<'towns'>;
+}
+
+const { entry } = Astro.props;
+const data = entry.data;
+assertTownPage(entry.id, data);
+assertRebatesCurrent(medicare);
+
+const production = isProductionSite(Astro.site);
+const services = await getCollection('services', (e) => includeInBuild(e.data, production));
+const built = builtPaths(Object.keys(import.meta.glob('/src/pages/**/*.astro')), services);
+const couplesHref = built.has('/therapy/couples/') ? withBase('/therapy/couples/') : null;
+
+const { Content } = await render(entry);
+
+const [psychologist, clinical] = medicare.rebates;
+
+const url = new URL(Astro.url.pathname, Astro.site ?? site.origin).href;
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  '@id': `${url}#service`,
+  name: data.h1,
+  description: data.description,
+  url,
+  serviceType: 'Telehealth psychology',
+  provider: { '@id': businessId(site.origin) },
+  areaServed: {
+    '@type': 'City',
+    name: data.name,
+    containedInPlace: { '@type': 'State', name: 'Queensland' },
+  },
+};
+---
+
+<PlainLayout title={data.h1!} documentTitle={data.title} description={data.description!}>
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} slot="head" />
+
+  <div class="wrap page town-page">
+    <header class="town-page__head">
+      {data.draft && (
+        <p class="town-page__draft">Draft for review. This page is not on the clinic's website.</p>
+      )}
+      <h1>{data.h1}</h1>
+      <p class="lede">{data.lede}</p>
+    </header>
+
+    <div class="prose--flush prose stack" data-town-body>
+      <Content />
+    </div>
+
+    <section aria-labelledby="medicare" data-town-body>
+      <h2 id="medicare">Medicare rebate</h2>
+      <p>
+        Per video session of 50 minutes or more, as at {formatAsAt(medicare.asAt)}:{' '}
+        {formatRebate(psychologist.rebate)} with a psychologist, {formatRebate(clinical.rebate)} with
+        a clinical psychologist.{' '}
+        <a href={withBase('/fees/')}>Fees and Medicare rebates</a>
+        {couplesHref && <>{' · '}<a href={couplesHref}>Couples therapy</a></>}
+      </p>
+    </section>
+
+    <section aria-labelledby="clinicians" data-town-body>
+      <h2 id="clinicians">The clinicians</h2>
+      <p>
+        <a href={withBase('/team/')}>Meet the team</a>, or read{' '}
+        <a href={withBase('/telehealth/')}>how video sessions work</a>.
+      </p>
+    </section>
+
+    <section aria-labelledby="sources" data-town-body>
+      <h2 id="sources">Where these facts come from</h2>
+      <ul class="town-page__sources">
+        {data.facts.map((fact) => (
+          <li>{fact.text} <a href={fact.sourceUrl}>{fact.sourceName}</a></li>
+        ))}
+      </ul>
+    </section>
+  </div>
+</PlainLayout>
+
+<style>
+  .page > * + * {
+    margin-top: var(--space-section);
+  }
+
+  .page h2 {
+    margin-top: 0;
+  }
+
+  .town-page__head {
+    padding-top: var(--space-2xl);
+    max-width: var(--content-max);
+  }
+
+  .town-page__draft {
+    display: inline-block;
+    background: var(--surface-sunk);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    padding: var(--space-xs) var(--space-md);
+    font-size: var(--text-secondary);
+    font-weight: 700;
+    color: var(--heading);
+  }
+
+  .town-page__sources {
+    max-width: var(--content-max);
+    padding-left: 1.2em;
+    font-size: var(--text-secondary);
+  }
+
+  .town-page__sources li + li {
+    margin-top: var(--space-sm);
+  }
+</style>
