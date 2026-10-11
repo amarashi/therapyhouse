@@ -1,0 +1,25 @@
+---
+/**
+ * Every assessment page in `src/content/services/`. The layout does the work;
+ * this file only decides which entries become pages under /assessments/.
+ * `/assessments/` itself is still `src/pages/assessments.astro`.
+ */
+import { getCollection } from 'astro:content';
+import ServicePage from '../../layouts/ServicePage.astro';
+import { includeInBuild, isProductionSite } from '../../lib/services.js';
+
+export async function getStaticPaths() {
+  /* `Astro.site` is not in scope here, so the configured site is read the way
+     Vite exposes it to the rest of the build. */
+  const production = isProductionSite(import.meta.env.SITE);
+  const entries = await getCollection(
+    'services',
+    (entry) => entry.data.kind === 'assessment' && includeInBuild(entry.data, production)
+  );
+  return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+---
+
+<ServicePage entry={entry} />
