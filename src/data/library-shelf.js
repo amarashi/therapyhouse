@@ -12,9 +12,18 @@
  * before any script runs) and the WebGL renderer (which reads the geometry and
  * palette fields). One record, two consumers — so a volume can never appear on
  * the shelf without also appearing in the list a visitor gets with JS off.
+ *
+ * The words — titles, notes, decks, facts, the buy link, spread captions — are
+ * in library-shelf.json, which clinic staff edit in Pages CMS (issue #94). The
+ * shapes, colours and seeds stay here, and the two are joined by `id`. The
+ * shelf follows the order of the JSON; a volume there with no shape here
+ * throws, because a new book needs its size and colours chosen by hand. The
+ * JSON is read with a JSON module import so that both Vite and `node --test`
+ * load it the same way.
  */
 
 import { withBase } from '../lib/base.js';
+import shelfText from './library-shelf.json' with { type: 'json' };
 
 /* Four videos on the live site are Dr Amelia's Persian-language personal
  * channel content — three on dating and one on women and sexuality. They are
@@ -45,7 +54,69 @@ const videoPalette = {
   fill: '#d8e3e7',
 };
 
-const video = ({ id, title, titleLang, gloss, note, deck, series, seed }) => ({
+/* The shape of each book, by id. `cover` and each spread `id` in the JSON
+   name a file in /assets/library/books/. */
+const bookShapes = {
+  'little-koala': {
+    cover: 'koala-cover',
+    color: '#f2b62c',
+    foil: '#8a5a12',
+    palette: { wall: '#e2d0a8', floor: '#c8b083', light: '#ffe4ad', fill: '#e0e4dc' },
+    width: 1.3,
+    height: 1.24,
+    depth: 0.14,
+    seed: 11,
+  },
+  'what-is-going-on-in-my-head': {
+    cover: 'head-cover',
+    color: '#1f4f8a',
+    foil: '#e0b463',
+    palette: { wall: '#d6d2bd', floor: '#bdb295', light: '#ffe8c4', fill: '#d3dfe6' },
+    width: 1.46,
+    height: 1.15,
+    depth: 0.2,
+    seed: 23,
+  },
+};
+
+/* Videos all share one case; only the seed differs. The id is the YouTube id. */
+const videoSeeds = {
+  '-MQe65WaRYk': 31,
+  '5oZEYLYYVv0': 37,
+  _W046Li7XAs: 41,
+  nKIlFyBCYIM: 43,
+  jtFkqdkSwMw: 47,
+  'RiT7kP-nL_A': 53,
+  '-xwW34R1FhA': 59,
+  kU9D2yGPivU: 61,
+  opuPbYFSiQ0: 67,
+};
+
+const bookImage = (name) => withBase(`/assets/library/books/${name}.webp`);
+
+const book = (text, shape) => ({
+  id: text.id,
+  kind: 'book',
+  title: text.title,
+  note: text.note,
+  deck: text.deck,
+  audience: text.audience,
+  facts: text.facts,
+  action: text.action,
+  cover: bookImage(shape.cover),
+  /* Real interior spreads: illustration on the verso, story on the recto.
+     The koala has four of them, which is exactly the reference's four-leaf book. */
+  spreads: (text.spreads ?? []).map(({ id, label }) => ({ image: bookImage(id), label })),
+  color: shape.color,
+  foil: shape.foil,
+  palette: shape.palette,
+  width: shape.width,
+  height: shape.height,
+  depth: shape.depth,
+  seed: shape.seed,
+});
+
+const video = ({ id, title, titleLang, gloss, note, deck, series }, seed) => ({
   id,
   kind: 'video',
   title,
@@ -65,148 +136,11 @@ const video = ({ id, title, titleLang, gloss, note, deck, series, seed }) => ({
   ...VIDEO_CASE,
 });
 
-export const volumes = [
-  {
-    id: 'little-koala',
-    kind: 'book',
-    title: 'The Little Koala',
-    note: 'A koala who cannot say goodbye in the mornings.',
-    deck:
-      'The story of a little koala who does not want to leave his mother. He explores his own fears, meets a friend who has felt them too, and learns to name them and get past them.',
-    audience: 'For children — a bedtime story, or one for a kindergarten shelf',
-    facts: [
-      { term: 'Written by', value: 'Dr Amelia Shay' },
-      { term: 'Illustrated by', value: 'Nafiseh Ebrahiminejad' },
-      { term: 'Helps with', value: 'Separation anxiety, fear of sleeping alone, fear of the dark' },
-      { term: 'Last page', value: 'Short tips for parents and educators on using the story' },
-    ],
-    action: {
-      label: 'Buy with card',
-      href: 'https://checkout.square.site/buy/HKWVROXO2C2SCQXGZVVWEBL2?src=embed',
-    },
-    cover: withBase('/assets/library/books/koala-cover.webp'),
-    /* Real interior spreads: illustration on the verso, story on the recto.
-       Four of them, which is exactly the reference's four-leaf book. */
-    spreads: [
-      { image: withBase('/assets/library/books/koala-spread-1.webp'), label: 'The koala who would not go' },
-      { image: withBase('/assets/library/books/koala-spread-2.webp'), label: 'Asking his mother' },
-      { image: withBase('/assets/library/books/koala-spread-3.webp'), label: 'The queasy feeling' },
-      { image: withBase('/assets/library/books/koala-spread-4.webp'), label: 'Listening for sounds' },
-    ],
-    color: '#f2b62c',
-    foil: '#8a5a12',
-    palette: { wall: '#e2d0a8', floor: '#c8b083', light: '#ffe4ad', fill: '#e0e4dc' },
-    width: 1.3,
-    height: 1.24,
-    depth: 0.14,
-    seed: 11,
-  },
-  {
-    id: 'what-is-going-on-in-my-head',
-    kind: 'book',
-    title: 'What Is Going On In My Head',
-    note: 'A working book for the therapist and the child to fill in together.',
-    deck:
-      'Written for therapists who work with children. The book guides the clinician through CBT and ACT techniques so a child can name their own emotions and the thoughts underneath them, a chapter at a time, with practice to take home.',
-    audience: 'For clinicians who work with children',
-    facts: [
-      { term: 'Extent', value: '68 pages, six chapters' },
-      { term: 'Structure', value: 'Three phases — insight, therapy, maintenance' },
-      { term: 'Size', value: '28 × 21 cm' },
-      { term: 'Paper', value: 'Premium heavy stock, lay-flat binding' },
-      { term: 'Price', value: '$120' },
-    ],
-    action: {
-      label: 'Email to order',
-      href: 'mailto:admin@therapyhouse.com.au?subject=Order%3A%20What%20Is%20Going%20On%20In%20My%20Head',
-    },
-    cover: withBase('/assets/library/books/head-cover.webp'),
-    spreads: [
-      { image: withBase('/assets/library/books/head-spread-1.webp'), label: 'The Woop Woop in my head' },
-      { image: withBase('/assets/library/books/head-spread-2.webp'), label: 'What is your body doing?' },
-    ],
-    color: '#1f4f8a',
-    foil: '#e0b463',
-    palette: { wall: '#d6d2bd', floor: '#bdb295', light: '#ffe8c4', fill: '#d3dfe6' },
-    width: 1.46,
-    height: 1.15,
-    depth: 0.2,
-    seed: 23,
-  },
-
-  video({
-    id: '-MQe65WaRYk',
-    title: 'A note on happiness',
-    note: 'Dr Amelia, on what happiness is and is not.',
-    deck: 'A short talk on happiness — what it actually is, and why chasing it as a constant state is the wrong thing to ask of yourself or of a child.',
-    seed: 31,
-  }),
-  video({
-    id: '5oZEYLYYVv0',
-    title: 'A welcome message from Dr Amelia',
-    note: 'The approaches used here, and who they are for.',
-    deck: 'An introduction to Therapy House from Dr Amelia Shay: the approaches the clinic works with, and how a first visit tends to go.',
-    seed: 37,
-  }),
-  video({
-    id: '_W046Li7XAs',
-    title: 'The Lockdown Challenge',
-    series: 'The Lockdown Challenge · 1 of 3',
-    note: 'A daily challenge for children stuck at home.',
-    deck: "From the Kooky Clinic's daily lockdown challenge — small things for children to do at home when the days have stopped being ordinary.",
-    seed: 41,
-  }),
-  video({
-    id: 'nKIlFyBCYIM',
-    title: 'The Lockdown Challenge 2',
-    series: 'The Lockdown Challenge · 2 of 3',
-    note: 'The second in the series.',
-    deck: 'The second daily challenge in the series, for children at home.',
-    seed: 43,
-  }),
-  video({
-    id: 'jtFkqdkSwMw',
-    title: 'The Lockdown Challenge 3',
-    series: 'The Lockdown Challenge · 3 of 3',
-    note: 'The third in the series.',
-    deck: 'The third daily challenge in the series, for children at home.',
-    seed: 47,
-  }),
-  video({
-    id: 'RiT7kP-nL_A',
-    title: 'There is a magic in stories',
-    series: 'There is a magic in stories · 1 of 2',
-    note: 'Why reading together does more than teach words.',
-    deck: "On shared reading — the thing Dr Amelia's own research keeps landing on as the single most useful thing a parent can do with a child.",
-    seed: 53,
-  }),
-  video({
-    id: '-xwW34R1FhA',
-    title: 'There is a magic in stories, part two',
-    series: 'There is a magic in stories · 2 of 2',
-    note: 'More on reading with your child.',
-    deck: 'The second part, on how to read with a child rather than at them.',
-    seed: 59,
-  }),
-  video({
-    id: 'kU9D2yGPivU',
-    title: 'یادگیری زبان برای کودکان دوزبانه',
-    titleLang: 'fa',
-    gloss: 'Language learning for bilingual children',
-    note: 'In Persian — raising a child in two languages.',
-    deck: 'In Persian. How children learn two languages at once, and what parents can stop worrying about.',
-    seed: 61,
-  }),
-  video({
-    id: 'opuPbYFSiQ0',
-    title: 'اشتباهات رایج افراد در صحبت کردن انگلیسی',
-    titleLang: 'fa',
-    gloss: 'Common mistakes people make speaking English',
-    note: 'In Persian — speaking English more confidently.',
-    deck: 'In Persian. The mistakes Persian speakers most often make in English, and how to hear them in your own speech.',
-    seed: 67,
-  }),
-];
+export const volumes = shelfText.volumes.map((text) => {
+  if (bookShapes[text.id]) return book(text, bookShapes[text.id]);
+  if (videoSeeds[text.id] !== undefined) return video(text, videoSeeds[text.id]);
+  throw new Error(`library-shelf.json lists "${text.id}", which has no shape in library-shelf.js`);
+});
 
 export const books = volumes.filter((volume) => volume.kind === 'book');
 export const videos = volumes.filter((volume) => volume.kind === 'video');

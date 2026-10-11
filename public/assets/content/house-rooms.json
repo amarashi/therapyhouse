@@ -1,0 +1,428 @@
+{
+  "rooms": [
+    {
+      "id": "exterior",
+      "title": "Exterior",
+      "label": "Therapy House exterior",
+      "description": "The rotating house scene that acts as the main site map.",
+      "summary": "The rotating Therapy House exterior is the top-level navigation surface for the expanded site.",
+      "signs": [
+        {
+          "id": "main-door",
+          "label": "Main Door",
+          "ariaLabel": "Enter the Therapy House welcome room"
+        },
+        {
+          "id": "services-window",
+          "label": "Services",
+          "ariaLabel": "Open the Therapy House services consulting room"
+        },
+        {
+          "id": "group-window",
+          "label": "Group Therapy",
+          "ariaLabel": "Open the Therapy House group therapy room"
+        },
+        {
+          "id": "blogs-sign",
+          "label": "Library",
+          "ariaLabel": "Open the Therapy House library and resources room"
+        },
+        {
+          "id": "team-sign",
+          "label": "Team",
+          "ariaLabel": "Open the Therapy House team parlour"
+        },
+        {
+          "id": "mailbox",
+          "label": "Contact",
+          "ariaLabel": "Open Therapy House contact and reception details"
+        },
+        {
+          "id": "staff-side-door",
+          "label": "Work With Us",
+          "ariaLabel": "Open the Therapy House work with us room"
+        }
+      ]
+    },
+    {
+      "id": "welcome",
+      "title": "Welcome Room",
+      "label": "Welcome",
+      "exteriorEntry": "Main door",
+      "summary": "A warm entry point for the main Therapy House story, philosophy, team and contact paths.",
+      "intro": [
+        "Therapy House is a place for all children, and anyone who has once been a child.",
+        "Therapy House is a boutique psychology clinic for people of all ages.",
+        "Located in a leafy suburb of Brisbane, the space is purposefully and elegantly designed to make people feel at home."
+      ],
+      "images": [
+        {
+          "id": "inside-layer-1",
+          "alt": "Layered illustration of the warm Therapy House clinic interior"
+        },
+        {
+          "id": "inside-layer-2",
+          "alt": "Middle layer of the Therapy House counselling room scene"
+        },
+        {
+          "id": "inside-layer-3",
+          "alt": "Foreground layer of the welcoming Therapy House interior"
+        }
+      ],
+      "signs": [
+        {
+          "id": "about",
+          "label": "About Us",
+          "ariaLabel": "Meet the Therapy House team"
+        },
+        {
+          "id": "philosophy",
+          "label": "Our Philosophy",
+          "ariaLabel": "Read the Therapy House philosophy"
+        },
+        {
+          "id": "contact",
+          "label": "Contact Us",
+          "ariaLabel": "Contact Therapy House in The Gap"
+        },
+        {
+          "id": "back",
+          "label": "Back",
+          "ariaLabel": "Return to the Therapy House exterior"
+        }
+      ]
+    },
+    {
+      "id": "team",
+      "title": "Team Parlour",
+      "label": "Team",
+      "exteriorEntry": "Team garden sign",
+      "summary": "Staff profiles, availability notes and team biographies in a carousel-friendly structure.",
+      "images": [
+        {
+          "id": "team-parlour",
+          "alt": "Storybook team parlour inside Therapy House"
+        }
+      ],
+      "signs": [
+        {
+          "id": "team-carousel",
+          "label": "Meet The Team"
+        },
+        {
+          "id": "availability",
+          "label": "Availability"
+        },
+        {
+          "id": "therapy-dogs",
+          "label": "Therapy Dogs"
+        },
+        {
+          "id": "back",
+          "label": "Back"
+        }
+      ]
+    },
+    {
+      "id": "services",
+      "title": "Consulting Room",
+      "label": "Services",
+      "exteriorEntry": "Right services window",
+      "summary": "Core therapy services, therapy models, fees, rebates, assessment fees and practical appointment information.",
+      "images": [
+        {
+          "id": "consulting-room",
+          "alt": "Warm consulting room inside Therapy House"
+        }
+      ],
+      "signs": [
+        {
+          "id": "service-list",
+          "label": "Services"
+        },
+        {
+          "id": "therapy-models",
+          "label": "Therapy Models"
+        },
+        {
+          "id": "fees",
+          "label": "Fees"
+        },
+        {
+          "id": "rebates",
+          "label": "Rebates"
+        },
+        {
+          "id": "reports",
+          "label": "Reports"
+        },
+        {
+          "id": "assessment-room",
+          "label": "Assessments"
+        },
+        {
+          "id": "back",
+          "label": "Back"
+        }
+      ]
+    },
+    {
+      "id": "assessments",
+      "title": "Assessment Room",
+      "label": "Assessments",
+      "exteriorEntry": "Smaller side door",
+      "summary": "Assessment process, required documentation, assessment packages and FAQ content.",
+      "images": [
+        {
+          "id": "assessment-room",
+          "alt": "Child-friendly assessment room inside Therapy House"
+        }
+      ],
+      "signs": [
+        {
+          "id": "assessment-process",
+          "label": "Process"
+        },
+        {
+          "id": "assessment-documents",
+          "label": "Documents"
+        },
+        {
+          "id": "psychoeducational-assessment",
+          "label": "Psycho-educational"
+        },
+        {
+          "id": "cognitive-assessment",
+          "label": "Cognitive"
+        },
+        {
+          "id": "adhd-assessment",
+          "label": "ADHD"
+        },
+        {
+          "id": "autism-assessment",
+          "label": "Autism"
+        },
+        {
+          "id": "school-observations",
+          "label": "School Observations"
+        },
+        {
+          "id": "assessment-faq",
+          "label": "FAQ"
+        },
+        {
+          "id": "back",
+          "label": "Back"
+        }
+      ]
+    },
+    {
+      "id": "groups",
+      "title": "Group Room",
+      "label": "Group Therapy",
+      "exteriorEntry": "Upper group therapy window/sign",
+      "summary": "Group therapy programs, Circle of Security Parenting and workshop/seminar expression-of-interest content.",
+      "images": [
+        {
+          "id": "group-room",
+          "alt": "Group therapy room inside Therapy House"
+        }
+      ],
+      "signs": [
+        {
+          "id": "group-overview",
+          "label": "Group Therapy"
+        },
+        {
+          "id": "emotion-regulation",
+          "label": "Emotion Regulation"
+        },
+        {
+          "id": "hunter-remote",
+          "label": "Hunter's Remote"
+        },
+        {
+          "id": "social-relationships",
+          "label": "Social Relationships"
+        },
+        {
+          "id": "lego-club",
+          "label": "Lego Club"
+        },
+        {
+          "id": "circle-security",
+          "label": "Circle Of Security"
+        },
+        {
+          "id": "workshops",
+          "label": "Workshops"
+        },
+        {
+          "id": "back",
+          "label": "Back"
+        }
+      ]
+    },
+    {
+      "id": "library",
+      "title": "Library",
+      "label": "Library",
+      "exteriorEntry": "Left blogs sign / tower window",
+      "summary": "Resource hub for blogs, products, videos, publications and media appearances.",
+      "images": [
+        {
+          "id": "library-room",
+          "alt": "Cosy Therapy House library and resource room"
+        }
+      ],
+      "signs": [
+        {
+          "id": "blogs",
+          "label": "Blogs"
+        },
+        {
+          "id": "products",
+          "label": "Books"
+        },
+        {
+          "id": "videos",
+          "label": "Videos"
+        },
+        {
+          "id": "publications",
+          "label": "Publications"
+        },
+        {
+          "id": "media",
+          "label": "Media"
+        },
+        {
+          "id": "attic",
+          "label": "Our Philosophy"
+        },
+        {
+          "id": "back",
+          "label": "Back"
+        }
+      ]
+    },
+    {
+      "id": "philosophy",
+      "title": "Attic Reading Room",
+      "label": "Our Philosophy",
+      "exteriorEntry": "Up the library ladder",
+      "summary": "The attic over the library, where the five principles the clinic works to are hung on the objects in the room.",
+      "images": [
+        {
+          "id": "library-attic-room",
+          "alt": "The Therapy House attic reading room, with bookshelves, a round window and a table with an open book"
+        }
+      ],
+      "signs": [
+        {
+          "id": "philosophy-overview",
+          "label": "Our Philosophy"
+        },
+        {
+          "id": "holistic-care",
+          "label": "Holistic Care"
+        },
+        {
+          "id": "inclusive-environment",
+          "label": "Inclusive Environment"
+        },
+        {
+          "id": "sanctuary",
+          "label": "Sanctuary For Wellness"
+        },
+        {
+          "id": "meaningful-connections",
+          "label": "Meaningful Connections"
+        },
+        {
+          "id": "authenticity",
+          "label": "Authenticity"
+        },
+        {
+          "id": "back",
+          "label": "Back"
+        }
+      ]
+    },
+    {
+      "id": "contact",
+      "title": "Reception",
+      "label": "Contact",
+      "exteriorEntry": "Mailbox",
+      "summary": "Practical contact, booking, parking and location information.",
+      "images": [
+        {
+          "id": "reception-room",
+          "alt": "Therapy House reception room"
+        }
+      ],
+      "signs": [
+        {
+          "id": "book-online",
+          "label": "Book Online"
+        },
+        {
+          "id": "phone",
+          "label": "Phone"
+        },
+        {
+          "id": "email",
+          "label": "Email"
+        },
+        {
+          "id": "address",
+          "label": "Address"
+        },
+        {
+          "id": "parking",
+          "label": "Parking"
+        },
+        {
+          "id": "back",
+          "label": "Back"
+        }
+      ]
+    },
+    {
+      "id": "work-with-us",
+      "title": "Work With Us",
+      "label": "Work With Us",
+      "exteriorEntry": "Side door / staff noticeboard",
+      "summary": "Clinic culture, values and work-with-us enquiry content.",
+      "images": [
+        {
+          "id": "work-with-us-room",
+          "alt": "Therapy House staff room and work with us noticeboard"
+        }
+      ],
+      "signs": [
+        {
+          "id": "opportunities",
+          "label": "Opportunities"
+        },
+        {
+          "id": "clinic-culture",
+          "label": "Clinic Culture"
+        },
+        {
+          "id": "values",
+          "label": "Values"
+        },
+        {
+          "id": "enquire",
+          "label": "Enquire"
+        },
+        {
+          "id": "back",
+          "label": "Back"
+        }
+      ]
+    }
+  ]
+}
