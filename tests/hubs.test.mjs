@@ -87,3 +87,14 @@ test("the hubs and the footer read the collection and drop drafts in production"
     assert.match(source, /isProductionSite\(Astro\.site\)/, `${path} should decide production from Astro.site`);
   }
 });
+
+test("the home page, the /therapy/ hub and the footer link the audience hubs from the collection", async () => {
+  for (const path of ["src/pages/index.astro", "src/pages/therapy/index.astro", "src/layouts/PlainLayout.astro"]) {
+    const source = await read(path);
+    assert.match(source, /hubLinks\(/, `${path} should link the audience hubs with hubLinks`);
+    assert.match(source, /includeInBuild\(/, `${path} should keep draft hubs off production`);
+  }
+  const route = await read("src/pages/[hub].astro");
+  assert.match(route, /kind === 'hub'/);
+  assert.match(route, /includeInBuild\(/);
+});

@@ -13,10 +13,13 @@ import { getCollection, getEntries, render } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
 import PlainLayout from './PlainLayout.astro';
 import PersonCard from '../components/PersonCard.astro';
+import ServiceList from '../components/ServiceList.astro';
 import { withBase } from '../lib/base.js';
 import { site } from '../data/site.js';
 import {
   assertFeesPublishable,
+  hubMembers,
+  includeInBuild,
   isProductionSite,
   missingIds,
   serviceSchema,
@@ -41,11 +44,18 @@ if (unknown.length) {
 }
 const clinicians = await getEntries(data.clinicians);
 
-/* Related pages are links, so a draft is only linked from where it is visible,
-   and a hub has no address of its own until issue #4 gives it one. */
+/* Related pages are links, so a draft is only linked from where it is visible. */
 const related = (await getEntries(data.related)).filter(
-  (other) => other && !(other.data.draft && production) && other.data.kind !== 'hub'
+  (other) => other && !(other.data.draft && production)
 );
+
+/* An audience hub lists every page that shares its audience, read from the
+   collection so a new page is linked from its hub without anyone editing the
+   hub. Drafts are dropped in production, like everywhere else. */
+const isHub = data.kind === 'hub';
+const memberGroups = isHub
+  ? hubMembers(entry, await getCollection('services', (other) => includeInBuild(other.data, production)))
+  : [];
 
 const { Content } = await render(entry);
 
@@ -53,7 +63,10 @@ const { Content } = await render(entry);
    reference to it must too, or the two ids would differ on the preview. */
 const origin = site.origin;
 const url = new URL(Astro.url.pathname, Astro.site ?? site.origin).href;
-const schema = serviceSchema(data, { url, origin });
+const items = memberGroups
+  .flatMap((group) => group.links)
+  .map((link) => ({ name: link.label, url: new URL(withBase(link.href), Astro.site ?? site.origin).href }));
+const schema = serviceSchema(data, { url, origin, items });
 
 const formatLabels = {
   'in-room': 'In person at the clinic in The Gap',
@@ -80,6 +93,13 @@ const reviewedLabel = data.lastReviewed
     <div class="prose--flush prose stack">
       <Content />
     </div>
+
+    {memberGroups.map((group) => (
+      <section aria-labelledby={`pages-${group.key}`}>
+        <h2 id={`pages-${group.key}`}>{group.label === 'Therapy' ? 'Therapy pages' : 'Assessment pages'}</h2>
+        <ServiceList links={group.links} />
+      </section>
+    ))}
 
     {clinicians.length > 0 && (
       <section aria-labelledby="who">
@@ -108,6 +128,7 @@ const reviewedLabel = data.lastReviewed
       </section>
     )}
 
+    {!(isHub && !data.fees?.length) && (
     <section aria-labelledby="fees">
       <h2 id="fees">What it costs</h2>
       {data.feeStatus === 'quote' || !data.fees?.length ? (
@@ -148,6 +169,7 @@ const reviewedLabel = data.lastReviewed
         <a class="standalone-link" href={withBase('/fees/')}>All fees and Medicare rebates</a>
       </p>
     </section>
+    )}
 
     {data.medicare && data.medicare.length > 0 && (
       <section aria-labelledby="medicare">

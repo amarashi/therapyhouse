@@ -5,6 +5,8 @@ import { readdir, readFile } from "node:fs/promises";
 import {
   assertFeesPublishable,
   businessId,
+  hubLinks,
+  hubMembers,
   includeInBuild,
   isProductionSite,
   missingIds,
@@ -46,8 +48,9 @@ test("unconfirmed fees stop a production build and nothing else", () => {
 test("a service lives at the address its kind gives it", () => {
   assert.equal(servicePath("therapy", "trauma"), "/therapy/trauma/");
   assert.equal(servicePath("assessment", "adult-adhd"), "/assessments/adult-adhd/");
-  // Hubs get their own routes in issue #4; until then a link to one is a bug.
-  assert.throws(() => servicePath("hub", "adults"));
+  // Audience hubs sit at the site root (issues #5, #6).
+  assert.equal(servicePath("hub", "adults"), "/adults/");
+  assert.throws(() => servicePath("article", "x"));
 });
 
 test("missing clinician ids are reported by name", () => {
@@ -134,3 +137,124 @@ test("the fixtures are drafts, so they can never reach the clinic's domain", asy
     assert.match(text, /^draft: true$/m, `${file} must stay a draft`);
   }
 });
+
+/* ---- Audience hubs (issues #5, #6) ---- */
+
+const svc = (id, data) => ({
+  id,
+  data: { h1: id, description: `About ${id}.`, kind: "therapy", audiences: ["adult"], ...data },
+});
+
+test("a hub lists the pages that share its audience, therapy before assessments", () => {
+  const hub = svc("adults", { kind: "hub", audiences: ["adult", "telehealth"] });
+  const groups = hubMembers(hub, [
+    hub,
+    svc("trauma"),
+    svc("anxiety", { audiences: ["adult", "local-family"] }),
+    svc("adult-adhd", { kind: "assessment" }),
+    svc("child-adhd", { kind: "assessment", audiences: ["local-family"] }),
+    // Shares only `telehealth`, which says how, not who: not listed.
+    svc("telehealth-only", { audiences: ["telehealth"] }),
+    svc("children", { kind: "hub", audiences: ["local-family", "adult"] }),
+  ]);
+  assert.deepEqual(groups.map((g) => g.key), ["therapy", "assessments"]);
+  assert.deepEqual(groups[0].links.map((l) => l.id), ["anxiety", "trauma"]);
+  assert.deepEqual(groups[1].links.map((l) => l.href), ["/assessments/adult-adhd/"]);
+});
+
+test("a hub with nothing to list has no empty headings", () => {
+  const hub = svc("adults", { kind: "hub" });
+  assert.deepEqual(hubMembers(hub, [hub]), []);
+});
+
+test("hub links are the hubs only, at the site root", () => {
+  const links = hubLinks([svc("trauma"), svc("children", { kind: "hub" }), svc("adults", { kind: "hub" })]);
+  assert.deepEqual(links.map((l) => l.href), ["/adults/", "/children/"]);
+});
+
+test("a hub's structured data lists the pages it links to", () => {
+  const origin = "https://www.therapyhouse.com.au";
+  const schema = serviceSchema(
+    { kind: "hub", h1: "Therapy for adults", description: "d", formats: ["in-room", "video"] },
+    { url: `${origin}/adults/`, origin, items: [{ name: "Trauma", url: `${origin}/therapy/trauma/` }] }
+  );
+  const list = schema["@graph"].find((n) => n["@type"] === "ItemList");
+  assert.ok(list, "no ItemList node");
+  assert.deepEqual(list.itemListElement, [
+    { "@type": "ListItem", position: 1, name: "Trauma", url: `${origin}/therapy/trauma/` },
+  ]);
+  assert.equal(schema["@graph"][0]["@type"], "Service");
+});
+
+/* ---- Links written in Markdown bodies (rebased by src/lib/rehype-base-links.js) ---- */
+
+const frontmatter = (text) => text.replace(/\r\n/g, "\n").split(/^---$/m)[1] ?? "";
+const field = (front, name) => front.match(new RegExp(`^${name}:\s*(.+)$`, "m"))?.[1].trim().replace(/^["']|["']$/g, "");
+
+/** Every address the site builds, read from the file system. */
+async function knownPaths() {
+  const pagesDir = new URL("../src/pages/", import.meta.url);
+  const paths = new Set(["/"]);
+  for (const entry of await readdir(pagesDir, { withFileTypes: true })) {
+    if (entry.isFile() && entry.name.endsWith(".astro") && !entry.name.startsWith("[")) {
+      const name = entry.name.slice(0, -6);
+      if (name !== "index" && name !== "404") paths.add(`/${name}/`);
+    }
+    if (entry.isDirectory()) {
+      const inner = await readdir(new URL(`${entry.name}/`, pagesDir));
+      if (inner.includes("index.astro")) paths.add(`/${entry.name}/`);
+    }
+  }
+  const services = {};
+  for (const file of (await readdir(servicesDir)).filter((f) => f.endsWith(".md"))) {
+    const front = frontmatter(await readFile(new URL(file, servicesDir), "utf8"));
+    const id = file.slice(0, -3);
+    const path = servicePath(field(front, "kind"), id);
+    services[path] = { draft: /^draft: true$/m.test(front), id };
+    paths.add(path);
+  }
+  return { paths, services };
+}
+
+/**
+ * Pages an open issue is building, with its number. A draft may link to one
+ * before it lands, because a draft only shows on the Preview and both arrive
+ * before launch; a published page may not, because the link would 404 on the
+ * clinic's domain. Delete a line when its page is built.
+ */
+const PLANNED = {
+  "/children/": 6,
+  "/therapy/trauma/": 7,
+  "/therapy/anxiety/": 8,
+  "/therapy/depression/": 9,
+  "/therapy/grief/": 10,
+  "/therapy/couples/": 11,
+  "/therapy/approaches/": 12,
+  "/ndis/": 13,
+  "/group-therapy/circle-of-security-parenting-program/": 14,
+  "/therapy/family/": 16,
+  "/assessments/adult-adhd/": 17,
+  "/assessments/adult-autism/": 18,
+  "/assessments/learning/": 21,
+  "/assessments/cognitive/": 22,
+  "/telehealth/": 25,
+  "/fees/": 30,
+};
+
+test("every link in a service page's body leads to a page the site builds", async () => {
+  const { paths, services } = await knownPaths();
+  for (const file of (await readdir(servicesDir)).filter((f) => f.endsWith(".md"))) {
+    const text = (await readFile(new URL(file, servicesDir), "utf8")).replace(/\r\n/g, "\n");
+    const body = text.split(/^---$/m).slice(2).join("---");
+    const isDraft = /^draft: true$/m.test(frontmatter(text));
+    for (const [, href] of body.matchAll(/\]\((\/[^)\s#]*)(?:#[^)]*)?\)/g)) {
+      const planned = isDraft && PLANNED[href];
+      assert.ok(paths.has(href) || planned, `${file} links to ${href}, which the site does not build`);
+      // A published page linking to a draft would be a broken link in production.
+      if (!isDraft) {
+        assert.ok(!services[href]?.draft, `${file} is published but links to the draft ${href}`);
+      }
+    }
+  }
+});
+

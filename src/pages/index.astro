@@ -7,6 +7,7 @@ import PersonPortrait from '../components/PersonPortrait.astro';
 import LocationMap from '../components/LocationMap.astro';
 import { contact, callsToAction, isAcceptingNewClients, nearbySuburbs } from '../data/site.js';
 import { listOf } from '../lib/seo.js';
+import { hubLinks, includeInBuild, isProductionSite } from '../lib/services.js';
 // PROTOTYPE — throwaway, remove with WelcomeHeroPrototype.astro.
 import WelcomeHeroPrototype from '../components/WelcomeHeroPrototype.astro';
 
@@ -25,6 +26,13 @@ const { Content } = await render(page);
 const { title, description, routes, practicalNotes } = page.data;
 
 const philosophy = await getEntry('pages', 'philosophy');
+
+/* The audience hubs, under the three rooms: the same routes cut by age rather
+   than by service. Read from the collection, so a hub that is still a draft is
+   never linked from the production home page. */
+const audienceHubs = hubLinks(
+  await getCollection('services', (entry) => includeInBuild(entry.data, isProductionSite(Astro.site)))
+);
 
 const everyone = (await getCollection('team')).sort((a, b) => a.data.order - b.data.order);
 const practitioners = everyone.filter((p) => p.data.kind === 'practitioner');
@@ -119,6 +127,17 @@ const faces = [
         ))}
       </ul>
 
+      {audienceHubs.length > 0 && (
+        <p class="rooms__by-age">
+          Or start from who the help is for:{' '}
+          {audienceHubs.map((hub, index) => (
+            <>
+              {index > 0 && ' · '}
+              <a class="standalone-link" href={withBase(hub.href)}>{hub.label}</a>
+            </>
+          ))}
+        </p>
+      )}
     </section>
 
     {practitioners.length > 0 && (
@@ -402,6 +421,11 @@ const faces = [
      between the outer two — left, right, left — which gives the block its
      movement without ever shifting the text. The whole thing is centred on the
      page rather than hugging the left edge. */
+
+  .rooms__by-age {
+    margin: var(--space-xl) 0 0;
+    max-width: var(--content-max);
+  }
 
   .rooms-section .section-head {
     text-align: center;
