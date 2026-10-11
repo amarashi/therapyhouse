@@ -585,3 +585,24 @@ test("circle-of-security: keeps its Current Site address and the fees /group-the
     assert.ok(groups.includes(amount), `circle-of-security.md shows ${amount}, which group-therapy.md does not publish`);
   }
 });
+
+test("group-therapy: title, H1 and description are the ones issue #15 specifies", async () => {
+  const text = (await readPage("group-therapy")).replace(/\r\n/g, "\n");
+  assert.equal(frontValue(text, "title"), "Group therapy and programs");
+  assert.equal(frontValue(text, "documentTitle"), "Group Therapy Brisbane | Kids' Emotion Regulation Groups");
+  assert.equal(
+    frontValue(text, "description"),
+    "Group programs in The Gap, Brisbane for children's emotion regulation and parenting, including Circle of Security. Dates, ages and costs."
+  );
+  // The target phrase opens the body.
+  const body = text.split(/^---$/m).slice(2).join("---").trim();
+  assert.match(body.split(/\n\s*\n/)[0].replace(/\s+/g, " "), /group therapy in The Gap, Brisbane/);
+});
+
+test("group-therapy: links the Circle of Security page and the children's hub only where they are built", async () => {
+  const source = await readFile(fileURLToPath(new URL("../src/pages/group-therapy.astro", import.meta.url)), "utf8");
+  assert.match(source, /builtService\('circle-of-security'\)/);
+  assert.match(source, /builtService\('children'\)/);
+  assert.match(source, /includeInBuild\(/);
+  assert.match(source, /serviceSchema\(/);
+});

@@ -1,7 +1,10 @@
 ---
-title: Group Therapy & Programs
-documentTitle: "Children's Group Programs & Parenting | The Gap, Brisbane"
-description: Group programs at Therapy House in The Gap, Brisbane — emotion regulation, social skills, Lego Club and Circle of Security parenting.
+title: Group therapy and programs
+# Issue #15: worded for "group therapy brisbane" and "therapy for emotional
+# regulation". Each program names its ages, and "emotion regulation" only
+# where the clinic's own description of the program says so.
+documentTitle: "Group Therapy Brisbane | Kids' Emotion Regulation Groups"
+description: "Group programs in The Gap, Brisbane for children's emotion regulation and parenting, including Circle of Security. Dates, ages and costs."
 lede: Group therapy is an effective and affordable way to seek help.
 sourceUrl: https://www.therapyhouse.com.au/group-therapy/
 programs:
@@ -10,7 +13,7 @@ programs:
     description: Helps children identify emotions, body signals, triggers and ways to regulate thoughts, emotions and behaviours.
   - title: Hunter and His Amazing Remote Control
     audience: Children aged 6–10
-    description: Uses a brain remote control metaphor to teach attention, problem-solving and regulation skills across eight sessions.
+    description: Uses a brain remote control metaphor to teach attention, problem-solving and regulation skills across eight sessions. These skills support emotion regulation, and the group gives children a place to practise them with others.
   - title: Navigating Social Relationships
     audience: Young people aged 12–15
     description: Eight-week program based on the PEERS framework, focusing on friendships, conversation skills, rejection, humour, electronic communication and conflict management.
@@ -34,8 +37,10 @@ workshopTopics:
   - Perinatal mental health
 ---
 
-In a group setting people can feel supported by others with similar problems
-and learn structured skills. Groups are matched by age, and consistent
+Therapy House runs group therapy in The Gap, Brisbane for children and young
+people aged 6 to 15, and a parenting program for parents. In a group setting
+people can feel supported by others with similar problems and learn structured
+skills. Groups are matched by age, and consistent
 attendance is encouraged so the social connection has a chance to build.
 
 Programs run in intakes rather than continuously. Call reception to find out
