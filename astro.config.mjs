@@ -84,9 +84,6 @@ export default defineConfig({
     guardBase,
     /* dist/_headers for Cloudflare: security and cache headers (issue #44). */
     securityHeaders(),
-    /* dist/_redirects for Cloudflare: every Current Site address, generated
-       from docs/redirects.md (issue #41). */
-    redirectsFileIntegration(),
     /* sitemap-index.xml at the site root, named in robots.txt. Drafts, the
        404 page and redirect stubs are left out (src/lib/sitemap.js). */
     sitemap({
@@ -98,6 +95,10 @@ export default defineConfig({
         ],
       }),
     }),
+    /* dist/_redirects for Cloudflare: every Current Site address, generated
+       from docs/redirects.md (issue #41). Last, so it checks every target
+       against the finished build, sitemap included (issue #90). */
+    redirectsFileIntegration(),
   ],
   output: 'static',
   /* Opt-in only: the rail's links carry `data-astro-prefetch`, so hovering a

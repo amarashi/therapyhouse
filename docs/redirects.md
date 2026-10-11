@@ -4,9 +4,9 @@ Addresses the Rebuild itself has moved. These are inputs to the launch redirect
 map (gap register R-24), which also has to forward every Current Site address.
 On GitHub Pages, Astro's `redirects` setting in `astro.config.mjs` writes a page
 that forwards the visitor. On Cloudflare every line below becomes a real 301
-(permanent) redirect: the build writes `_redirects` from this table
-(`src/integrations/redirects-file.js`, issue #41), so edit this table, never
-that file.
+(permanent) redirect, or a 302 while its target is a draft (see below): the
+build writes `_redirects` from this table (`src/integrations/redirects-file.js`,
+issue #41), so edit this table, never that file.
 
 Rules for a line: both sides are site paths; at most one `*`, which matches the
 rest of the path; a `#fragment` is allowed in the target. A target must not
@@ -17,11 +17,26 @@ the Business Profile link `/?utm_source=google&utm_medium=organic&utm_campaign=g
 and the sbs.com.au and theconversation.com backlinks all point at `/`, which is
 served with its query string kept.
 
+Targets that are not built yet (issue #90). Draft pages are built on the
+Preview but left out of production. In a production build, a line whose
+target is not built is written as a 302 (temporary redirect) instead of a
+301, to a stand-in page: the fallback written after the target, as in
+`/therapy/couples/` (fallback `/therapy/`), or, with no fallback, the nearest
+built folder above the target (`/assessments/learning/` would fall back to
+`/assessments/`; the home page is never used). A 302 tells search engines
+the move is not final, so they keep the old address until the build that has
+the real page writes the permanent 301. Nothing in this table changes when a
+draft is signed off. The build stops, naming the line, if a target and its
+fallback are both missing. A line whose target is its own address
+(`/ndis/` to `/ndis/`) is a holding line: it only applies while that page is
+not built, and is left out once it is. The build log lists every fallback in
+use (`... 302 until ... is built`).
+
 | From | To | Status | Why | Added |
 |---|---|---|---|---|
 | `/services/` | `/therapy/` | 301 | The Services floor became the Therapy hub (issue #4). The fee table has since moved to `/fees/`, linked from `/therapy/` (issue #30). | 11 Oct 2026 |
 | `/policy/` | `/fees/#cancellation` | 301 | The Current Site's cancellation policy address. The policy is now a section of `/fees/` (issue #30). | 11 Oct 2026 |
-| `/assessments/is-your-child-learning-to-the-best-of-their-capacity/` | `/assessments/learning/` | 301 | Decided 11 Oct 2026 (#60): the old address forwards to the learning assessment page (#21). The article itself stays in the library at `/library/is-your-child-learning-to-the-best-of-their-capacity/`. | 11 Oct 2026 |
+| `/assessments/is-your-child-learning-to-the-best-of-their-capacity/` | `/assessments/learning/` (fallback `/assessments/`) | 301 | Decided 11 Oct 2026 (#60): the old address forwards to the learning assessment page (#21). The article itself stays in the library at `/library/is-your-child-learning-to-the-best-of-their-capacity/`. | 11 Oct 2026 |
 | `/assessments/what-is-adhd/` | `/library/what-is-adhd/` | 301 | Library article migrated from the Current Site (issue #39). | 11 Oct 2026 |
 | `/blog/mindfulness-and-journalling/` | `/library/mindfulness-and-journalling/` | 301 | Library article migrated from the Current Site (issue #39). | 11 Oct 2026 |
 | `/child-psychologists/nurturing-healthy-self-esteem/` | `/library/nurturing-healthy-self-esteem/` | 301 | Library article migrated from the Current Site (issue #39). | 11 Oct 2026 |
@@ -67,8 +82,9 @@ served with its query string kept.
 | `/workshops/circle-of-security-parenting-program/` | `/group-therapy/circle-of-security-parenting-program/` | 301 | Old alias of the Circle of Security page, which keeps its address (#14). | 11 Oct 2026 |
 | `/workshops/` | `/group-therapy/#workshops` | 301 | Workshops archive. Workshops are a section of the group therapy page. | 11 Oct 2026 |
 | `/external-workshop-expression-of-interest/` | `/group-therapy/#workshops` | 301 | Workshop expression-of-interest form. Workshops are a section of the group therapy page. | 11 Oct 2026 |
-| `/relationship/` | `/therapy/couples/` | 301 | Relationship page. Couples and relationship therapy page (#11). | 11 Oct 2026 |
-| `/child-psychologists/` | `/children/` | 301 | Child psychologists category. Child and adolescent hub (#6). | 11 Oct 2026 |
+| `/relationship/` | `/therapy/couples/` (fallback `/therapy/`) | 301 | Relationship page. Couples and relationship therapy page (#11). | 11 Oct 2026 |
+| `/child-psychologists/` | `/children/` (fallback `/therapy/`) | 301 | Child psychologists category. Child and adolescent hub (#6). | 11 Oct 2026 |
+| `/ndis/` | `/ndis/` (fallback `/fees/#ndis`) | 301 | The Current Site's NDIS address, where the NDIS page lives (#13). A holding line: while that page is a draft, production sends visitors to the NDIS section of the fees page; once it is built the line is left out of `_redirects`. | 11 Oct 2026 |
 | `/what-is-adhd/` | `/library/what-is-adhd/` | 301 | Short alias of the What is ADHD article. Points straight at the article, not through its old address. | 11 Oct 2026 |
 | `/staff-member/dr-amelia-shay/` | `/team/amelia-shay/` | 301 | Staff profile. | 11 Oct 2026 |
 | `/staff-member/dr-kaya-beinke/` | `/team/kaya-beinke/` | 301 | Staff profile. | 11 Oct 2026 |
@@ -87,8 +103,8 @@ served with its query string kept.
 | `/staff-member/an-yang-provisional-psychologist/` | `/team/` | 301 | Profile of a former team member. | 11 Oct 2026 |
 | `/staff-member/brooke-client-support-marketing/` | `/team/` | 301 | Profile of a former team member. | 11 Oct 2026 |
 | `/staff-member/*` | `/team/` | 301 | Any other staff profile. | 11 Oct 2026 |
-| `/category/child-psychologists/` | `/children/` | 301 | Child psychologists category. Child and adolescent hub (#6). | 11 Oct 2026 |
-| `/category/relationship/` | `/therapy/couples/` | 301 | Relationship category. Couples page (#11). | 11 Oct 2026 |
+| `/category/child-psychologists/` | `/children/` (fallback `/therapy/`) | 301 | Child psychologists category. Child and adolescent hub (#6). | 11 Oct 2026 |
+| `/category/relationship/` | `/therapy/couples/` (fallback `/therapy/`) | 301 | Relationship category. Couples page (#11). | 11 Oct 2026 |
 | `/category/assessments/` | `/assessments/` | 301 | Assessments category. | 11 Oct 2026 |
 | `/category/workshops/circle-of-security-parenting-program/` | `/group-therapy/circle-of-security-parenting-program/` | 301 | Circle of Security category. The page keeps its address (#14). | 11 Oct 2026 |
 | `/category/workshops/self-regulation/` | `/group-therapy/` | 301 | Self-regulation category. | 11 Oct 2026 |
