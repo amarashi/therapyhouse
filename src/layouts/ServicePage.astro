@@ -1,0 +1,256 @@
+---
+/**
+ * One layout for every therapy and assessment page.
+ *
+ * The order is the order a person's questions arrive in: what is this, is it
+ * for me, who would I see, can I do it from home, what happens, what does it
+ * cost, what does Medicare cover. Sections with nothing to say are absent
+ * rather than empty, so a short page stays short.
+ *
+ * Plain reading pages ship no JavaScript, and this adds none.
+ */
+import { getCollection, getEntries, render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import PlainLayout from './PlainLayout.astro';
+import PersonCard from '../components/PersonCard.astro';
+import { withBase } from '../lib/base.js';
+import { site } from '../data/site.js';
+import {
+  assertFeesPublishable,
+  isProductionSite,
+  missingIds,
+  serviceSchema,
+  servicePath,
+} from '../lib/services.js';
+
+interface Props {
+  entry: CollectionEntry<'services'>;
+}
+
+const { entry } = Astro.props;
+const data = entry.data;
+const production = isProductionSite(Astro.site);
+
+assertFeesPublishable({ id: entry.id, feeStatus: data.feeStatus, fees: data.fees }, production);
+
+/* A clinician slug that matches nobody is a build error, not an empty card. */
+const teamIds = (await getCollection('team')).map((p) => p.id);
+const unknown = missingIds(data.clinicians.map((c) => c.id), teamIds);
+if (unknown.length) {
+  throw new Error(`Service "${entry.id}" names clinicians who are not in the team: ${unknown.join(', ')}`);
+}
+const clinicians = await getEntries(data.clinicians);
+
+/* Related pages are links, so a draft is only linked from where it is visible,
+   and a hub has no address of its own until issue #4 gives it one. */
+const related = (await getEntries(data.related)).filter(
+  (other) => other && !(other.data.draft && production) && other.data.kind !== 'hub'
+);
+
+const { Content } = await render(entry);
+
+/* The business node always names the clinic's own domain (PlainLayout), so the
+   reference to it must too, or the two ids would differ on the preview. */
+const origin = site.origin;
+const url = new URL(Astro.url.pathname, Astro.site ?? site.origin).href;
+const schema = serviceSchema(data, { url, origin });
+
+const formatLabels = {
+  'in-room': 'In person at the clinic in The Gap',
+  video: 'By video, from home',
+} as const;
+
+const reviewedLabel = data.lastReviewed
+  ? new Intl.DateTimeFormat('en-AU', { month: 'long', year: 'numeric' }).format(data.lastReviewed)
+  : null;
+---
+
+<PlainLayout title={data.h1} documentTitle={data.title} description={data.description}>
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} slot="head" />
+
+  <div class="wrap page service">
+    <header class="service__head">
+      {data.draft && (
+        <p class="service__draft">Draft for review. This page is not on the clinic's website.</p>
+      )}
+      <h1>{data.h1}</h1>
+      <p class="lede">{data.lede}</p>
+    </header>
+
+    <div class="prose--flush prose stack">
+      <Content />
+    </div>
+
+    {clinicians.length > 0 && (
+      <section aria-labelledby="who">
+        <h2 id="who">Who you would see</h2>
+        <ul class="people">
+          {clinicians.map((person) => (
+            <li><PersonCard person={person} /></li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <section aria-labelledby="formats">
+      <h2 id="formats">In person or by video</h2>
+      <ul class="tick-list">
+        {data.formats.map((f) => <li>{formatLabels[f]}</li>)}
+      </ul>
+    </section>
+
+    {data.process && data.process.length > 0 && (
+      <section aria-labelledby="process">
+        <h2 id="process">What happens</h2>
+        <ol class="step-list">
+          {data.process.map((step) => <li>{step}</li>)}
+        </ol>
+      </section>
+    )}
+
+    <section aria-labelledby="fees">
+      <h2 id="fees">What it costs</h2>
+      {data.feeStatus === 'quote' || !data.fees?.length ? (
+        <p>
+          Call reception for a quote. Fees depend on what is involved, and reception will tell
+          you before anything is booked.
+        </p>
+      ) : (
+        <div class="table-scroll">
+          <table class="fee-table">
+            <caption>
+              {data.feeStatus === 'needs-confirmation' && (
+                <strong class="service__draft">Draft figures, not yet confirmed by the clinic.</strong>
+              )}
+              {reviewedLabel && <> Prices current as of {reviewedLabel}.</>}
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Session</th>
+                <th scope="col" class="amount">Fee</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.fees.map((fee) => (
+                <tr>
+                  <th scope="row">
+                    {fee.label}
+                    {fee.note && <span class="fee-table__note">{fee.note}</span>}
+                  </th>
+                  <td class="amount">{fee.amount}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+
+    {data.medicare && data.medicare.length > 0 && (
+      <section aria-labelledby="medicare">
+        <h2 id="medicare">Medicare and other funding</h2>
+        <ul class="tick-list">
+          {data.medicare.map((line) => <li>{line}</li>)}
+        </ul>
+      </section>
+    )}
+
+    {data.faqs && data.faqs.length > 0 && (
+      <section aria-labelledby="questions">
+        <h2 id="questions">Questions people ask</h2>
+        <dl class="service__faqs">
+          {data.faqs.map((faq) => (
+            <>
+              <dt>{faq.question}</dt>
+              <dd>{faq.answer}</dd>
+            </>
+          ))}
+        </dl>
+      </section>
+    )}
+
+    {related.length > 0 && (
+      <nav aria-labelledby="related">
+        <h2 id="related">Related</h2>
+        <ul class="service__related">
+          {related.map((other) => (
+            <li>
+              <a class="standalone-link" href={withBase(servicePath(other.data.kind, other.id))}>
+                {other.data.h1}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    )}
+  </div>
+</PlainLayout>
+
+<style>
+  /* The same interval between questions /assessments uses: one size, between
+     sections only, with the heading's own margin dropped so it is not doubled. */
+  .page > * + * {
+    margin-top: var(--space-section);
+  }
+
+  .page h2 {
+    margin-top: 0;
+  }
+
+  /* No hero on these pages, so the heading band needs room of its own below
+     the masthead. */
+  .service__head {
+    padding-top: var(--space-2xl);
+    max-width: var(--content-max);
+  }
+
+  /* Loud on purpose: a reviewer must never mistake a draft for the real page. */
+  .service__draft {
+    display: inline-block;
+    background: var(--surface-sunk);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    padding: var(--space-xs) var(--space-md);
+    font-size: var(--text-secondary);
+    font-weight: 700;
+    color: var(--heading);
+  }
+
+  /* Same grid as the team page, so a card looks the same wherever it appears. */
+  .people {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: var(--space-lg);
+    grid-template-columns: repeat(auto-fill, minmax(min(26rem, 100%), 1fr));
+  }
+
+  .people > li {
+    container-type: inline-size;
+    display: grid;
+  }
+
+  .service__faqs {
+    max-width: var(--content-max);
+    margin: 0;
+  }
+
+  .service__faqs dt {
+    font-weight: 700;
+    color: var(--heading);
+  }
+
+  .service__faqs dd {
+    margin: var(--space-xs) 0 var(--space-lg);
+  }
+
+  .service__related {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm) var(--space-xl);
+  }
+</style>
