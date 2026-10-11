@@ -15,7 +15,7 @@ import {
 import { requestIdleTask } from "./utils.js";
 import { exteriorHotspots, roomSceneDefaults, siteContent } from "./content-data.js";
 import { createDogEyeController } from "./dog-eye-controller.js?v=20260529-eye-scale";
-import { createEntranceVideoController } from "./entrance-video.js";
+import { createEntranceVideoController } from "./entrance-video.js?v=20261011-reduced-door";
 import { createFirelightController } from "./firelight-controller.js";
 import { createInsideScene } from "./inside-scene.js";
 import { createModalDialog } from "./modal-dialog.js";
@@ -170,7 +170,8 @@ const entranceVideo = createEntranceVideoController({
   insideScene,
   onEnterInside: () => {
     teamCarousel.preloadImages();
-  }
+  },
+  reducedMotionQuery
 });
 
 let resizeFrameId = 0;
