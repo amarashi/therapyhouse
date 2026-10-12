@@ -9,6 +9,7 @@ export function createTeamCarousel({
   nextButton,
   closeButton,
   teamMembers,
+  profileLabel = "Read the full profile",
   canOpen,
   fallbackFocus
 }) {
@@ -31,26 +32,49 @@ export function createTeamCarousel({
   function buildCards() {
     if (!deck || cardsBuilt) return;
 
+    /* Built with the DOM rather than an HTML string: every word here comes
+       from the team collection, which staff edit in the CMS. */
+    const element = (tagName, className, text) => {
+      const node = document.createElement(tagName);
+      if (className) node.className = className;
+      if (text) node.textContent = text;
+      return node;
+    };
     const cards = teamMembers.map((teamMember, index) => {
-      const card = document.createElement("article");
-      card.className = "team-card";
+      const card = element("article", "team-card");
       card.dataset.index = String(index);
-      card.innerHTML = `
-        <div class="team-card__media">
-          <img class="team-card__photo" src="${teamMember.image}" alt="${teamMember.imageAlt || `Portrait of ${teamMember.name}, ${teamMember.role} at Therapy House`}" width="720" height="900" loading="eager" decoding="async" draggable="false">
-        </div>
-        <div class="team-card__body">
-          <header>
-            <p class="team-card__eyebrow">Therapy House team</p>
-            <h3 class="team-card__name">${teamMember.name}</h3>
-            <p class="team-card__role">${teamMember.role}</p>
-          </header>
-          <div class="team-card__content">
-            <p class="team-card__summary">${teamMember.summary}</p>
-            <p class="team-card__bio">${teamMember.bio}</p>
-          </div>
-        </div>
-      `;
+
+      const media = element("div", "team-card__media");
+      const photo = element("img", "team-card__photo");
+      Object.assign(photo, {
+        src: teamMember.image,
+        alt: teamMember.imageAlt || `Portrait of ${teamMember.name}, ${teamMember.role} at Therapy House`,
+        width: 720,
+        height: 900,
+        loading: "eager",
+        decoding: "async",
+        draggable: false
+      });
+      media.appendChild(photo);
+
+      const header = element("header");
+      header.append(
+        element("p", "team-card__eyebrow", "Therapy House team"),
+        element("h3", "team-card__name", teamMember.name),
+        element("p", "team-card__role", teamMember.role)
+      );
+      const content = element("div", "team-card__content");
+      content.appendChild(element("p", "team-card__summary", teamMember.summary));
+      if (teamMember.availability) content.appendChild(element("p", "team-card__availability", teamMember.availability));
+      if (teamMember.href) {
+        const profile = element("a", "team-card__profile", profileLabel);
+        profile.href = teamMember.href;
+        content.appendChild(profile);
+      }
+
+      const body = element("div", "team-card__body");
+      body.append(header, content);
+      card.append(media, body);
       return card;
     });
 

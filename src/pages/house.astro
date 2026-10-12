@@ -5,7 +5,11 @@ import { site, contact, businessFacts } from '../data/site.js';
 import { includeInBuild, isProductionSite, shownItems } from '../lib/drafts.js';
 import { businessSchema as buildBusinessSchema } from '../lib/structured-data.js';
 import { assertRebatesCurrent, medicare } from '../data/medicare.js';
-import { HOUSE_FACTS_ID, houseFacts, houseFactsJson } from '../lib/house-facts.js';
+import { HOUSE_CONTENT_ID, houseContent, houseContentJson } from '../lib/house-content.js';
+import { teamPortrait } from '../lib/team-portraits.js';
+import { books, videos } from '../data/library-shelf.js';
+import { clinic, phoneHref } from '../../public/assets/scripts/content-data.js';
+import houseCopy from '../../public/assets/content/house-copy.json';
 import Analytics from '../components/Analytics.astro';
 import DebugPanel from '../house-debug/DebugPanel.astro';
 
@@ -43,43 +47,52 @@ const businessSchema = buildBusinessSchema({
    built from the pathname so a query string can never leak into it. */
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
 
-/* Fees, Medicare rebates and assessment prices for the rooms (issue #80),
-   built from the same files /fees/ and /assessments/ read, so the house
-   cannot quote a figure the plain pages do not. `content-data.js` reads the
-   JSON written into the head below; see src/lib/house-facts.js. */
+/* Everything a visitor reads in the rooms, built from the same files the
+   plain pages read (docs/house-plan.md, phase A): the pages, the team, the
+   services, the articles, the clinic's details and the library shelf. Only
+   what this build shows goes in ("Show on the live website", issue #95), so
+   a person, package or program switched off is not in the house either, and
+   a sign whose preview is missing is left off its room by `content-data.js`.
+   See src/lib/house-content.js. */
 assertRebatesCurrent(medicare);
-const feesPage = await getEntry('pages', 'fees');
-const assessmentsPage = await getEntry('pages', 'assessments');
-const groupsPage = await getEntry('pages', 'group-therapy');
-if (!feesPage || !assessmentsPage || !groupsPage) {
-  throw new Error('Missing content: src/content/pages/fees.md, assessments.md or group-therapy.md');
-}
-
-/* The house keeps its own copy of the team, packages and group programs
-   (house-copy.json and site-data.js), so it cannot filter them from the
-   collections. It is told instead what this build switches off ("Show on the
-   live website", issue #95), by the ids the house's copies share: team
-   members by their collection id, and packages and programs by the `id` on
-   the item in assessments.md and group-therapy.md, which is their key in
-   house-copy.json. Titles stay free to reword. content-data.js leaves them out. */
-const switchedOff = (items) =>
-  (items ?? []).filter((item) => item.id && !includeInBuild(item, production)).map((item) => item.id);
-const hidden = {
-  team: (await getCollection('team', (entry) => !includeInBuild(entry.data, production))).map((e) => e.id),
-  packages: switchedOff(assessmentsPage.data.packages),
-  programs: switchedOff(groupsPage.data.programs),
-};
-
-const facts = houseFactsJson(
-  houseFacts({
-    fees: shownItems(feesPage.data.fees, production),
-    sessionLength: feesPage.data.sessionLength,
-    privateHealth: feesPage.data.privateHealth,
-    packages: shownItems(assessmentsPage.data.packages, production),
-    medicare,
-    hidden,
-  })
+const pageIds = ['services', 'fees', 'assessments', 'group-therapy', 'library', 'philosophy', 'work-with-us', 'contact'];
+const pages = Object.fromEntries(
+  await Promise.all(
+    pageIds.map(async (id) => {
+      const entry = await getEntry('pages', id);
+      if (!entry) throw new Error(`Missing content: src/content/pages/${id}.md`);
+      const data = { ...entry.data };
+      for (const list of ['fees', 'packages', 'programs']) {
+        if (data[list]) data[list] = shownItems(data[list], production);
+      }
+      return [id, data];
+    })
+  )
 );
+const shown = (entry) => includeInBuild(entry.data, production);
+const content = houseContent({
+  pages,
+  services: await getCollection('services', shown),
+  articles: await getCollection('articles', shown),
+  team: await getCollection('team', shown),
+  books,
+  videos,
+  clinic,
+  links: houseCopy.links,
+  medicare,
+  href: withBase,
+  portrait: (image) => withBase(teamPortrait(image).photo ?? image),
+});
+const contentJson = houseContentJson(content);
+const philosophy = pages.philosophy;
+const contactPreview = {
+  phone: contact.phone,
+  tel: phoneHref(contact.phone),
+  email: contact.email,
+  address: contact.address,
+  map: content.previews['contact.address'].link.href,
+  booking: contact.bookingUrl,
+};
 ---
 <!doctype html>
 <html lang="en-AU">
@@ -98,7 +111,7 @@ const facts = houseFactsJson(
   <link rel="icon" type="image/png" href={withBase("/assets/media/favicon-64.png")} sizes="64x64">
   <link rel="icon" href={withBase("/favicon.ico")} sizes="16x16 32x32 48x48">
   <script is:inline define:vars={{ assetBase }}>window.__ASSET_BASE__ = assetBase;</script>
-  <script is:inline type="application/json" id={HOUSE_FACTS_ID} set:html={facts}></script>
+  <script is:inline type="application/json" id={HOUSE_CONTENT_ID} set:html={contentJson}></script>
   <title>Explore the House | Therapy House, The Gap, Brisbane</title>
   <link rel="stylesheet" href={withBase("/assets/styles/main.css?v=20261011-reduced-door")}>
   <script type="application/ld+json" set:html={JSON.stringify(businessSchema)} />
@@ -194,34 +207,19 @@ const facts = houseFactsJson(
         <section class="philosophy-modal__panel">
           <button class="philosophy-modal__close" id="philosophyModalClose" type="button" aria-label="Close philosophy window">&times;</button>
           <p class="philosophy-modal__eyebrow">Therapy House</p>
-          <h2 class="philosophy-modal__title" id="philosophyTitle">Our Philosophy</h2>
+          <h2 class="philosophy-modal__title" id="philosophyTitle">{philosophy.title}</h2>
           <div class="philosophy-modal__rule" aria-hidden="true">o</div>
           <img class="philosophy-modal__image" src={withBase("/assets/media/bookworm.png")} width="600" height="450" loading="lazy" alt="Friendly reader with books, representing Therapy House's warm psychology and counselling approach">
-          <p class="philosophy-modal__intro">Counselling and psychology should feel warm and inviting. Our clinic is a nurturing place where people can feel safe, understood and supported.</p>
-          <p class="philosophy-modal__subheading">Our care is built on these principles.</p>
+          <p class="philosophy-modal__intro">{philosophy.lede}</p>
           <ul class="philosophy-modal__list">
-            <li class="philosophy-modal__item">
-              <h3>Holistic Care</h3>
-              <p>We focus on your whole story, not only a diagnosis.</p>
-            </li>
-            <li class="philosophy-modal__item">
-              <h3>Inclusive Environment</h3>
-              <p>Our space is safe, neuro-affirming and welcoming for LGBTQIA+ people.</p>
-            </li>
-            <li class="philosophy-modal__item">
-              <h3>Sanctuary for Wellness</h3>
-              <p>You can work towards wellbeing at your own pace.</p>
-            </li>
-            <li class="philosophy-modal__item">
-              <h3>Meaningful Connections</h3>
-              <p>We build purposeful relationships so you feel heard and valued.</p>
-            </li>
-            <li class="philosophy-modal__item">
-              <h3>Authenticity</h3>
-              <p>We bring genuine care to the counselling process.</p>
-            </li>
+            {(philosophy.principles ?? []).map((principle) => (
+              <li class="philosophy-modal__item">
+                <h3>{principle.title}</h3>
+              </li>
+            ))}
           </ul>
-          <p class="philosophy-modal__closing">Your wellbeing matters. We are here to support you.</p>
+          {philosophy.closing && <p class="philosophy-modal__closing">{philosophy.closing}</p>}
+          <a class="content-modal__button philosophy-modal__more" href={withBase('/philosophy/')}>{houseCopy.links.philosophy}</a>
         </section>
       </div>
       <div class="content-modal" id="contentModal" role="dialog" aria-modal="true" aria-labelledby="contentModalTitle" aria-hidden="true" hidden>
@@ -242,29 +240,26 @@ const facts = houseFactsJson(
           <div class="contact-modal__body">
             <p class="contact-modal__eyebrow">Visit or call</p>
             <h2 class="contact-modal__title" id="contactTitle">Contact Us</h2>
-            <p class="contact-modal__intro">Our clinic is in The Gap, a western suburb of Brisbane. We are on a main road, but the clinic is tucked away from road noise. Street parking is usually available nearby.</p>
+            <p class="contact-modal__intro">{pages.contact.lede}</p>
             <div class="contact-modal__actions" aria-label="Contact actions">
-              <a class="contact-modal__button" href="https://my.powerdiary.com/clientportal/3cjz0" target="_blank" rel="noopener">Book a Therapy House appointment online</a>
-              <a class="contact-modal__button contact-modal__button--secondary" href="tel:+61733002170">Call Therapy House on 07 3300 2170</a>
+              <a class="contact-modal__button" href={contactPreview.booking} target="_blank" rel="noopener">{houseCopy.links.book}</a>
+              <a class="contact-modal__button" href={contactPreview.tel}>{houseCopy.links.call} on {contactPreview.phone}</a>
             </div>
             <dl class="contact-modal__details">
               <div class="contact-modal__detail">
                 <dt>Phone</dt>
-                <dd><a href="tel:+61733002170">Call Therapy House reception on 07 3300 2170</a></dd>
-              </div>
-              <div class="contact-modal__detail">
-                <dt>Fax</dt>
-                <dd>07 3319 4640</dd>
+                <dd><a href={contactPreview.tel}>{contactPreview.phone}</a></dd>
               </div>
               <div class="contact-modal__detail">
                 <dt>Email</dt>
-                <dd><a href="mailto:admin@therapyhouse.com.au">Email Therapy House reception</a></dd>
+                <dd><a href={`mailto:${contactPreview.email}`}>{contactPreview.email}</a></dd>
               </div>
               <div class="contact-modal__detail">
                 <dt>Address</dt>
-                <dd><a href="https://www.google.com/maps/search/?api=1&amp;query=1290%20Waterworks%20Rd%2C%20The%20Gap%2C%20Brisbane%2C%20QLD%204061" target="_blank" rel="noopener">Open Therapy House at 1290 Waterworks Rd, The Gap in Google Maps</a></dd>
+                <dd><a href={contactPreview.map} target="_blank" rel="noopener">{contactPreview.address}</a></dd>
               </div>
             </dl>
+            <a class="contact-modal__more" href={withBase('/contact/')}>{houseCopy.links.contact}</a>
           </div>
         </section>
       </div>

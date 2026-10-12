@@ -77,8 +77,11 @@ test("every old article address has a redirect to its library page", () => {
   }
 });
 
-/* Every address the new site has: its static pages, team profiles and articles. */
+/* Every address the new site has: its static pages, service pages, team profiles and articles. */
+const { collection } = await import("./helpers/house-content.mjs");
+const { servicePath } = await import("../src/lib/services.js");
 const routes = new Set([
+  ...collection("services").map((e) => servicePath(e.data.kind, e.id, e.data.path)),
   "/",
   ...list("src/pages/")
     .filter((f) => f.endsWith(".astro") && !["index.astro", "404.astro"].includes(f))
@@ -93,19 +96,25 @@ test("the house content has no Current Site links, and every internal link resol
   const leftovers = (source.match(CURRENT_SITE_PATH) ?? []).filter((url) => url !== "https://www.therapyhouse.com.au/");
   assert.deepEqual(leftovers, []);
 
+  // What the signs open, as /house/ builds it (src/lib/house-content.js), and
+  // the rooms' own records of the pages they stand for.
+  const { builtHouseContent } = await import("./helpers/house-content.mjs");
   const { siteContent } = await import("../public/assets/scripts/content-data.js");
+  const built = builtHouseContent();
   const links = [];
   const walk = (value, key) => {
-    if (typeof value === "string" && ["url", "sourceUrl", "sourceUrls"].includes(key)) links.push(value);
+    if (typeof value === "string" && ["href", "sourceUrl", "sourceUrls"].includes(key)) links.push(value);
     else if (Array.isArray(value)) value.forEach((v) => walk(v, key));
     else if (value && typeof value === "object") Object.entries(value).forEach(([k, v]) => walk(v, k));
   };
-  walk(siteContent);
-  // Under node there is no asset base, so internal links are bare relative paths.
-  const internal = links.filter((url) => !/^[a-z]+:/.test(url));
-  assert.ok(internal.length >= 60, `expected the rewritten links, found ${internal.length}`);
+  walk(built);
+  walk(siteContent.rooms);
+  // Under node there is no asset base: the built links are root paths and the
+  // rooms' records bare relative ones.
+  const internal = links.filter((url) => !/^[a-z]+:/.test(url)).map((url) => (url.startsWith("/") ? url : `/${url}`));
+  assert.ok(internal.length >= 60, `expected the house's links, found ${internal.length}`);
   for (const url of internal) {
-    assert.ok(routes.has(`/${url}`), `content-data.js links to /${url}, which is not a page`);
+    assert.ok(routes.has(url), `the house links to ${url}, which is not a page`);
   }
 });
 

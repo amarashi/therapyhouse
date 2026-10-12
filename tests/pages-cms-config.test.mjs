@@ -331,26 +331,16 @@ test("every JSON file's form matches the keys in the file", () => {
   }
 });
 
-test("keyed objects in the house text are fixed groups, not lists staff can add to", () => {
-  const copy = entry("house-copy");
-  const field = (path) => {
-    let fields = copy.fields;
-    let found;
-    for (const name of path.split(".")) {
-      found = fields.find((f) => f.name === name);
-      assert.ok(found, `house-copy has no ${path}`);
-      fields = found.fields;
-    }
-    return found;
-  };
+test("the house text is only the wording of its links, one field per link", () => {
+  // What a sign opens is built from the plain pages' own files
+  // (src/lib/house-content.js); house-copy.json holds nothing else.
+  const links = entry("house-copy").fields.find((f) => f.name === "links");
+  assert.ok(links, "house-copy has no links");
+  assert.equal(links.type, "object");
+  assert.ok(!isList(links), "links must not be a list");
   const data = JSON.parse(read(JSON_FILES["house-copy"]));
-  for (const path of ["assessments.packages", "groups.programs"]) {
-    const group = field(path);
-    assert.equal(group.type, "object");
-    assert.ok(!isList(group), `${path} must not be a list`);
-    const keys = path.split(".").reduce((o, k) => o[k], data);
-    assert.deepEqual(group.fields.map((f) => f.name).sort(), Object.keys(keys).sort());
-  }
+  assert.deepEqual(Object.keys(data), ["links"]);
+  assert.deepEqual(links.fields.map((f) => f.name).sort(), Object.keys(data.links).sort());
 });
 
 test("lists the developer must grow are fixed at their current length", () => {
@@ -361,19 +351,11 @@ test("lists the developer must grow are fixed at their current length", () => {
     assert.equal(found.list.min, length, `${entryName} ${path}: min`);
     assert.equal(found.list.max, length, `${entryName} ${path}: max`);
   };
-  const copy = JSON.parse(read(JSON_FILES["house-copy"]));
   const rooms = JSON.parse(read(JSON_FILES["house-rooms"]));
   const shelf = JSON.parse(read(JSON_FILES["library-shelf"]));
   // A volume needs a shape and colours in library-shelf.js; a room, a scene.
   fixed("library-shelf", "volumes[]", shelf.volumes.length);
   fixed("house-rooms", "rooms[]", rooms.rooms.length);
-  // The house's copies match people, books and articles by id, and each
-  // philosophy principle has its own sign.
-  fixed("house-copy", "philosophy.principles[]", 5);
-  fixed("house-copy", "team.availability[]", copy.team.availability.length);
-  fixed("house-copy", "team.members[]", copy.team.members.length);
-  fixed("house-copy", "library.products[]", copy.library.products.length);
-  fixed("house-copy", "library.blogArticles[]", copy.library.blogArticles.length);
   // Each home card links to a section, which only the developer sets.
   fixed("page-home", "routes[]", frontmatter("src/content/pages/home.md").routes.length);
 });
@@ -402,8 +384,6 @@ const DEVELOPER_ONLY = [
   "page-home headlineAccent",
   "clinic bookingUrl",
   "clinic postalAddress.addressCountry",
-  // Matched to the members list by name (content-data.js).
-  "house-copy team.dogs",
 ];
 
 test("ids, addresses and other developer-only fields cannot be edited", () => {

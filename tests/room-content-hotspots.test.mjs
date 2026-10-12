@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-import { roomSceneDefaults, siteContent } from "../public/assets/scripts/content-data.js";
+import { roomSceneDefaults } from "../public/assets/scripts/content-data.js";
+import { builtHouseContent } from "./helpers/house-content.mjs";
 
 const root = new URL("../", import.meta.url);
 
@@ -9,11 +10,12 @@ async function readProjectFile(path) {
   return readFile(new URL(path, root), "utf8");
 }
 
-function getContentByKey(contentKey) {
-  return contentKey.split(".").reduce((value, key) => {
-    if (value && typeof value === "object" && key in value) return value[key];
-    return undefined;
-  }, siteContent);
+// Every sign that opens a preview finds one in what /house/ builds from the
+// plain pages' files, and every preview leads on to a page.
+const { previews } = builtHouseContent();
+const getContentByKey = (contentKey) => previews[contentKey];
+for (const [key, preview] of Object.entries(previews)) {
+  assert.ok(preview.link?.href && preview.link?.label, `${key} has no link to a page`);
 }
 
 const appScript = await readProjectFile("public/assets/scripts/app.js");
@@ -40,7 +42,7 @@ assert.equal(assessmentRoomEntry.targetRoom, "assessments");
 assert.equal(assessmentRoomEntry.contentKey, "rooms.assessments");
 
 assert.match(indexHtml, /id="contentModal"/);
-assert.match(appScript, /siteContent/);
+assert.match(appScript, /previews/);
 assert.match(appScript, /function renderContentModal/);
 assert.match(appScript, /contentDialog\.open/);
 assert.match(styles, /\.content-modal__panel/);

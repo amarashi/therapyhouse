@@ -255,8 +255,8 @@ content:
         description: >-
           Use the clinic's usual wording: "Accepting new clients", "Active
           waitlist for new clients", "Not currently accepting new clients" or
-          "On leave". Leave empty to say nothing. Change it in House > House
-          text > Team as well, so the illustrated house agrees.
+          "On leave". Leave empty to say nothing. The illustrated house shows
+          it too.
         type: string
       - name: ahpra
         label: AHPRA registration number
@@ -863,12 +863,10 @@ content:
             hidden: true
           - name: offerings
             label: Services offered
-            description: The illustrated house shows the same list (House > House text > Services); change both the same way.
             type: text
             list: true
           - name: therapyModels
             label: Therapy approaches
-            description: The illustrated house shows the same list (House > House text > Services); change both the same way.
             type: text
             list: true
           - name: therapyHubText
@@ -1025,7 +1023,6 @@ content:
             list: true
           - name: reports
             label: Reports and letters
-            description: The illustrated house shows the same notes (House > House text > Services); change both the same way.
             type: text
             list: true
           - name: cancellation
@@ -1224,20 +1221,18 @@ content:
             default: ""
           - name: process
             label: Steps, in order
-            description: The illustrated house shows the same steps (House > House text > Assessments); change both the same way.
             type: text
             list: true
           - name: documents
             label: What to bring
-            description: The illustrated house shows the same list (House > House text > Assessments); change both the same way.
             type: string
             list: true
           - name: packages
             label: Assessment packages
             description: >-
               To take a package off the website, use its "Hidden from the live
-              website" switch rather than removing it: the illustrated house
-              shows the first five, with these prices.
+              website" switch rather than removing it. The illustrated house
+              has a sign for each package; one switched off loses its sign.
             type: object
             list:
               collapsible:
@@ -1390,8 +1385,8 @@ content:
             label: Group programs
             description: >-
               To take a program off the website, use its "Hidden from the live
-              website" switch rather than removing it: the illustrated house
-              has a sign for each of the first four.
+              website" switch rather than removing it. The illustrated house
+              has a sign for each program; one switched off loses its sign.
             type: object
             list:
               collapsible:
@@ -2060,386 +2055,84 @@ content:
     items:
       - name: house-copy
         label: House text
+        description: >-
+          What a sign opens in the house is a short preview of a page, taken
+          from that page as you edit it here. These are the words on the link
+          at the end of each preview, which leads to the full page.
         type: file
         path: public/assets/content/house-copy.json
         format: json
         operations:
           delete: false
         fields:
-          - name: philosophy
-            label: Our philosophy (attic)
+          - name: links
+            label: Link wording
             type: object
             fields:
-              - name: title
-                label: Heading
+              - name: therapy
+                label: To the therapy page
                 type: string
                 required: true
-              - name: intro
-                label: Introduction
-                type: text
-                required: true
-              - name: principles
-                label: The five principles
-                description: Each principle has its own sign in the attic, so there are always five.
-                type: object
-                list:
-                  min: 5
-                  max: 5
-                  collapsible:
-                    collapsed: true
-                    summary: "{fields.title}"
-                fields:
-                  - name: id
-                    label: Sign
-                    type: string
-                    hidden: true
-                  - name: title
-                    label: Principle
-                    type: string
-                    required: true
-                  - name: description
-                    label: What it means
-                    type: text
-                    required: true
-              - name: closing
-                label: Closing sentence
-                type: text
-          - name: services
-            label: Services (consulting room)
-            type: object
-            fields:
-              - name: intro
-                label: Introduction
-                type: text
-              - name: offerings
-                label: Services offered
-                description: Must match the list on the Therapy page (Pages > Therapy); change both the same way.
-                type: text
-                list: true
-              - name: therapyModels
-                label: Therapy approaches
-                description: Must match the list on the Therapy page (Pages > Therapy); change both the same way.
-                type: text
-                list: true
-              - name: reports
-                label: Reports and letters
-                description: Must match the notes on the Fees page (Pages > Fees); change both the same way.
-                type: text
-                list: true
-              - name: feesPointer
-                label: Link to the Fees page
-                type: object
-                fields:
-                  - name: title
-                    label: Heading
-                    type: string
-                    required: true
-                  - name: description
-                    label: Text
-                    type: text
-                    required: true
-                  - name: linkLabel
-                    label: Link wording
-                    type: string
-                    required: true
-          - name: assessments
-            label: Assessments (assessment room)
-            description: Prices come from Pages > Assessments.
-            type: object
-            fields:
-              - name: intro
-                label: Introduction
-                type: text
-                list: true
-              - name: process
-                label: Steps, in order
-                description: Must match the steps on the Assessments page (Pages > Assessments); change both the same way.
-                type: text
-                list: true
-              - name: documents
-                label: What to bring
-                description: Must match the list on the Assessments page (Pages > Assessments); change both the same way.
+              - name: approaches
+                label: To the page on the therapies we use
                 type: string
-                list: true
-              - name: packages
-                label: Assessment packages
-                type: object
-                fields:
-                  - name: psychoeducational
-                    label: Psycho-educational assessment
-                    type: object
-                    fields:
-                      - name: title
-                        label: Name
-                        type: string
-                        required: true
-                      - name: inclusions
-                        label: What is included
-                        type: string
-                        list: true
-                  - name: cognitive
-                    label: Cognitive assessment
-                    type: object
-                    fields:
-                      - name: title
-                        label: Name
-                        type: string
-                        required: true
-                      - name: description
-                        label: Description
-                        type: text
-                  - name: adhd
-                    label: ADHD assessment
-                    type: object
-                    fields:
-                      - name: title
-                        label: Name
-                        type: string
-                        required: true
-                      - name: description
-                        label: Description
-                        type: text
-                  - name: autism
-                    label: Autism assessment
-                    type: object
-                    fields:
-                      - name: title
-                        label: Name
-                        type: string
-                        required: true
-                      - name: description
-                        label: Description
-                        type: text
-              - name: schoolObservations
-                label: School observations
-                type: object
-                fields:
-                  - name: title
-                    label: Name
-                    type: string
-                    required: true
-                  - name: description
-                    label: Description
-                    type: text
-              - name: faq
-                label: Good to know
-                type: text
-                list: true
-          - name: groups
-            label: Group therapy (group room)
-            type: object
-            fields:
-              - name: overview
-                label: Introduction
-                type: text
-                list: true
-              - name: programs
-                label: Group programs
-                description: Each program has its own sign in the room.
-                type: object
-                fields:
-                  - name: emotionRegulation
-                    component: houseProgram
-                    label: Emotion regulation workshop
-                  - name: hunterRemote
-                    component: houseProgram
-                    label: Hunter and his amazing remote control
-                  - name: socialRelationships
-                    component: houseProgram
-                    label: Navigating social relationships
-                  - name: legoClub
-                    component: houseProgram
-                    label: Lego Club
+                required: true
+              - name: fees
+                label: To the fees page
+                type: string
+                required: true
+              - name: assessments
+                label: To the assessments page
+                type: string
+                required: true
+              - name: groups
+                label: To the group therapy page
+                type: string
+                required: true
               - name: circleOfSecurity
-                label: Circle of Security
-                type: object
-                fields:
-                  - name: title
-                    label: Name
-                    type: string
-                    required: true
-                  - name: description
-                    label: Description
-                    type: text
-                    required: true
-                  - name: details
-                    label: Details
-                    type: string
-                    list: true
-              - name: workshops
-                label: Workshops
-                type: object
-                fields:
-                  - name: title
-                    label: Heading
-                    type: string
-                    required: true
-                  - name: topics
-                    label: Topics
-                    type: string
-                    list: true
-          - name: team
-            label: Team (team parlour)
-            description: >-
-              The house's own short list of the team. Someone new appears in
-              the house once the developer has placed them there; until then
-              they are on the Team page only.
-            type: object
-            fields:
-              - name: availability
-                label: Availability
-                description: Keep the same as each person's availability under Team.
-                type: object
-                list:
-                  min: 8
-                  max: 8
-                  collapsible:
-                    collapsed: true
-                    summary: "{fields.name}: {fields.status}"
-                fields:
-                  - name: id
-                    label: Person
-                    type: string
-                    hidden: true
-                  - name: name
-                    label: Name
-                    type: string
-                    required: true
-                  - name: status
-                    label: Availability
-                    type: string
-                    required: true
-              - name: dogs
-                label: Clinic dogs
-                description: Matched to the team list below by name. Ask the developer to change it.
+                label: To the Circle of Security page
                 type: string
-                list: true
-                readonly: true
-              - name: members
-                label: Team members
-                type: object
-                list:
-                  min: 12
-                  max: 12
-                  collapsible:
-                    collapsed: true
-                    summary: "{fields.name}"
-                fields:
-                  - name: id
-                    label: Person
-                    type: string
-                    hidden: true
-                  - name: name
-                    label: Name
-                    description: For the dogs, the name must stay the same as in "Clinic dogs".
-                    type: string
-                    required: true
-                  - name: role
-                    label: Job title
-                    type: string
-                    required: true
-                  - name: credentials
-                    label: Qualifications
-                    type: string
-                  - name: summary
-                    label: Short introduction
-                    type: text
-                    required: true
-          - name: library
-            label: Library (library room)
-            type: object
-            fields:
-              - name: products
-                label: Books
-                type: object
-                list:
-                  min: 2
-                  max: 2
-                  collapsible:
-                    collapsed: true
-                    summary: "{fields.title}"
-                fields:
-                  - name: id
-                    label: Book
-                    type: string
-                    hidden: true
-                  - name: title
-                    label: Title
-                    type: string
-                    required: true
-                  - name: description
-                    label: Description
-                    type: text
-                    required: true
-              - name: videos
-                label: Videos
-                type: object
-                fields:
-                  - name: topics
-                    label: Topics
-                    type: string
-                    list: true
-              - name: publications
-                label: Publications
-                type: object
-                fields:
-                  - name: description
-                    label: Description
-                    type: text
-                    required: true
-              - name: media
-                label: In the media
-                type: object
-                fields:
-                  - name: items
-                    label: Items
-                    type: text
-                    list: true
-              - name: blogArticles
-                label: Articles
-                description: >-
-                  The articles the house lists. Each leads to its page in the
-                  library; new articles are added here by the developer.
-                type: object
-                list:
-                  min: 25
-                  max: 25
-                  collapsible:
-                    collapsed: true
-                    summary: "{fields.title}"
-                fields:
-                  - name: id
-                    label: Article
-                    type: string
-                    hidden: true
-                  - name: title
-                    label: Title
-                    type: string
-                    required: true
-                  - name: date
-                    label: Date
-                    type: date
-                    required: true
-                  - name: excerpt
-                    label: Summary
-                    type: text
-                    required: true
-          - name: workWithUs
-            label: Work with us (side door)
-            type: object
-            fields:
-              - name: values
-                label: Values
+                required: true
+              - name: library
+                label: To the library
                 type: string
-                list: true
-              - name: culture
-                label: What it is like to work here
-                type: text
-                list: true
-              - name: opportunities
-                label: Opportunities
-                type: text
-                list: true
+                required: true
+              - name: philosophy
+                label: To the philosophy page
+                type: string
+                required: true
+              - name: team
+                label: To the team page
+                type: string
+                required: true
+              - name: profile
+                label: To a team member's profile
+                type: string
+                required: true
+              - name: contact
+                label: To the contact page
+                type: string
+                required: true
+              - name: workWithUs
+                label: To the work with us page
+                type: string
+                required: true
+              - name: book
+                label: Book online
+                type: string
+                required: true
+              - name: call
+                label: Call reception
+                type: string
+                required: true
+              - name: email
+                label: Email reception
+                type: string
+                required: true
+              - name: map
+                label: Open the address in a map
+                type: string
+                required: true
 
       - name: house-rooms
         label: Rooms and signs

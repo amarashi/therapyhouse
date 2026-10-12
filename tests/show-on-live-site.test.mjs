@@ -5,7 +5,7 @@ import { join } from "node:path";
 
 import { buildSite } from "../tools/build-site.mjs";
 import { stringify } from "yaml";
-import { HOUSE_FACTS_ID } from "../src/lib/house-facts.js";
+import { HOUSE_CONTENT_ID } from "../src/lib/house-content.js";
 import { splitMarkdown } from "./helpers/markdown.mjs";
 
 /**
@@ -120,10 +120,10 @@ after(() => {
 
 const page = (dist, path) => readFileSync(join(dist, path, "index.html"), "utf8");
 const built = (dist, path) => existsSync(join(dist, path, "index.html"));
-const houseFactsIn = (dist) =>
+const houseContentIn = (dist) =>
   JSON.parse(
     page(dist, "house").match(
-      new RegExp(`<script type="application/json" id="${HOUSE_FACTS_ID}">([\\s\\S]*?)</script>`)
+      new RegExp(`<script type="application/json" id="${HOUSE_CONTENT_ID}">([\\s\\S]*?)</script>`)
     )[1]
   );
 
@@ -198,15 +198,21 @@ test("a switched-off home route card is on the Preview only", () => {
   assert.ok(!page(production, "").includes(ROUTE));
 });
 
-test("the house is told what production switches off, and quotes no switched-off price", () => {
-  const previewFacts = houseFactsIn(preview);
-  const productionFacts = houseFactsIn(production);
-  assert.equal(previewFacts.hidden, undefined, "the Preview hides nothing");
-  assert.deepEqual(productionFacts.hidden, { team: [PERSON.id], packages: ["fixturePackage"], programs: ["fixtureProgram"] });
+test("the house leaves out what production switches off, and quotes no switched-off price", () => {
+  // /house/ builds its previews from what the build shows, so a switched-off
+  // person, fee, package or program is simply not in production's previews.
+  const previewHouse = houseContentIn(preview);
+  const productionHouse = houseContentIn(production);
+  const ids = (house) => house.team.map((member) => member.id);
+  assert.ok(ids(previewHouse).includes(PERSON.id));
+  assert.ok(!ids(productionHouse).includes(PERSON.id));
 
-  const feeTitles = (facts) => facts.fees.map((f) => f.title);
-  assert.ok(feeTitles(previewFacts).includes(FEE));
-  assert.ok(!feeTitles(productionFacts).includes(FEE));
-  assert.ok("fixturePackage" in previewFacts.packagePrices);
-  assert.ok(!("fixturePackage" in productionFacts.packagePrices));
+  const feeTitles = (house) => house.previews["services.fees"].items.map((item) => item.title);
+  assert.ok(feeTitles(previewHouse).includes(FEE));
+  assert.ok(!feeTitles(productionHouse).includes(FEE));
+  assert.ok("assessments.packages.fixturePackage" in previewHouse.previews);
+  assert.ok(!("assessments.packages.fixturePackage" in productionHouse.previews));
+  assert.ok("groups.programs.fixtureProgram" in previewHouse.previews);
+  assert.ok(!("groups.programs.fixtureProgram" in productionHouse.previews));
 });
+

@@ -27,8 +27,13 @@ assert.deepEqual(
   ["welcome", "services", "groups", "library", "team", "contact", "work-with-us"]
 );
 
-assert.equal(siteContent.team.members.length, 12);
-assert.equal(siteContent.library.blogArticles.length, 25);
+// What the signs open is built from the plain pages' files when /house/ is
+// built (src/lib/house-content.js), so the carousel holds the whole team
+// collection and the library previews the newest articles.
+const { builtHouseContent, collection } = await import("./helpers/house-content.mjs");
+const built = builtHouseContent();
+assert.equal(built.team.length, collection("team").length);
+assert.equal(built.previews["library.blogArticles"].items.length, 5);
 // The clinic's details come from clinic.json, which staff edit in the CMS, so
 // they are compared with that file rather than with a copy of today's values.
 const { default: clinic } = await import("../public/assets/content/clinic.json", { with: { type: "json" } });
