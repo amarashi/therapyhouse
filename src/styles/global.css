@@ -169,6 +169,62 @@ a.standalone-link::after {
   margin-inline: 0;
 }
 
+/* A long reading body broken into short answers: the service pages,
+   /telehealth/ and /fees/. Each heading gets a short gold rule over it and the
+   air of a new section, and each bulleted list — signs to look for, things to
+   bring — sits on its own lamplit card, because it is the part a reader scans
+   for themselves. */
+.prose--chapters h2 {
+  margin-top: var(--space-3xl);
+}
+
+.prose--chapters h2:first-child {
+  margin-top: 0;
+}
+
+.prose--chapters h2::before {
+  content: '';
+  display: block;
+  width: 44px;
+  height: 3px;
+  margin-bottom: var(--space-md);
+  border-radius: var(--radius-pill);
+  background: var(--lamp-amber);
+}
+
+.prose--chapters ul {
+  padding: var(--space-lg) var(--space-xl) var(--space-lg) calc(var(--space-xl) + 1.25em);
+  background: var(--surface-sunk);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+  box-shadow: var(--edge-lit);
+}
+
+.prose--chapters ul li:last-child {
+  margin-bottom: 0;
+}
+
+/* A section heading with its small illustrated object standing beside it
+   (`Vignette` with the class `art-head__art`). */
+.art-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.art-head h2 {
+  margin: 0;
+}
+
+.art-head__art {
+  display: block;
+  width: 64px;
+  height: auto;
+  flex: none;
+  filter: drop-shadow(0 6px 8px rgba(48, 25, 8, 0.14));
+}
+
 .lede {
   font-size: var(--text-lede);
   line-height: var(--lh-lede);

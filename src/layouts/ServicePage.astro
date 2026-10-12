@@ -7,21 +7,30 @@
  * cost, what does Medicare cover. Sections with nothing to say are absent
  * rather than empty, so a short page stays short.
  *
- * Plain reading pages ship no JavaScript, and this adds none.
+ * Each page carries the object it has on the /therapy/ and /assessments/
+ * shelves, standing beside its heading, so the hub and the page read as the
+ * same thing. The sections this layout adds each have a picture of their own
+ * (the armchairs, the laptop, the path, the coin jar, the piggy bank, the
+ * letterbox) from `public/assets/services/`; see `art-src/README.md`.
+ *
+ * Plain reading pages ship no JavaScript, and this adds none. The "On this
+ * page" map is plain links, drawn only on wide screens.
  */
 import { getCollection, getEntries, render } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
 import PlainLayout from './PlainLayout.astro';
 import PersonCard from '../components/PersonCard.astro';
 import ServiceList from '../components/ServiceList.astro';
+import Vignette from '../components/Vignette.astro';
+import IllustratedHead from '../components/IllustratedHead.astro';
 import { withBase } from '../lib/base.js';
 import { site } from '../data/site.js';
 import {
   assertFeesPublishable,
   hubMembers,
   missingIds,
+  serviceLinks,
   serviceSchema,
-  servicePath,
 } from '../lib/services.js';
 import { includeInBuild, isProductionSite, shownEntries, shownItems } from '../lib/drafts.js';
 
@@ -47,8 +56,10 @@ if (unknown.length) {
    production rather than stopping the build; the Preview still shows them. */
 const clinicians = shownEntries(await getEntries(data.clinicians), production);
 
-/* Related pages are links, so a draft is only linked from where it is visible. */
+/* Related pages are links, so a draft is only linked from where it is visible.
+   Shown as the same tiles the hubs use, each with its own object. */
 const related = shownEntries(await getEntries(data.related), production);
+const relatedLinks = serviceLinks(related);
 
 /* Fee rows switched off ("Show on the live website") stay on the Preview only. */
 const fees = shownItems(data.fees, production);
@@ -60,8 +71,9 @@ const isHub = data.kind === 'hub';
 const memberGroups = isHub
   ? hubMembers(entry, await getCollection('services', (other) => includeInBuild(other.data, production)))
   : [];
+const groupHeading = (label: string) => (label === 'Therapy' ? 'Therapy pages' : 'Assessment pages');
 
-const { Content } = await render(entry);
+const { Content, headings } = await render(entry);
 
 /* The business node always names the clinic's own domain (PlainLayout), so the
    reference to it must too, or the two ids would differ on the preview. */
@@ -77,6 +89,37 @@ const formatLabels = {
   video: 'By video, from home',
 } as const;
 
+/* Each way of meeting, with its picture and where to read more about it. */
+const formatTiles = {
+  'in-room': { art: 'in-room', href: '/contact/', more: 'Finding the clinic' },
+  video: { art: 'video', href: '/telehealth/', more: 'How video sessions work' },
+} as const;
+
+const shortFormat = { 'in-room': 'In person in The Gap', video: 'By video' } as const;
+
+const showFees = !(isHub && !fees.length);
+
+/* A price a person can read at a glance, under the lede. Only a figure the
+   page itself publishes, and never a draft one. */
+const leadFee =
+  fees.length && data.feeStatus !== 'quote' && data.feeStatus !== 'needs-confirmation'
+    ? fees[0].amount
+    : null;
+
+/* "On this page": the body's own headings, then the sections this layout
+   adds, in page order. */
+const contents = [
+  ...headings.filter((h) => h.depth === 2).map((h) => ({ id: h.slug, label: h.text })),
+  ...memberGroups.map((group) => ({ id: `pages-${group.key}`, label: groupHeading(group.label) })),
+  ...(clinicians.length ? [{ id: 'who', label: 'Who you would see' }] : []),
+  { id: 'formats', label: 'In person or by video' },
+  ...(data.process?.length ? [{ id: 'process', label: 'What happens' }] : []),
+  ...(showFees ? [{ id: 'fees', label: 'What it costs' }] : []),
+  ...(data.medicare?.length ? [{ id: 'medicare', label: 'Medicare and other funding' }] : []),
+  ...(data.faqs?.length ? [{ id: 'questions', label: 'Questions people ask' }] : []),
+  ...(relatedLinks.length ? [{ id: 'related', label: 'Related' }] : []),
+];
+
 const reviewedLabel = data.lastReviewed
   ? new Intl.DateTimeFormat('en-AU', { month: 'long', year: 'numeric' }).format(data.lastReviewed)
   : null;
@@ -86,13 +129,22 @@ const reviewedLabel = data.lastReviewed
   <script type="application/ld+json" set:html={JSON.stringify(schema)} slot="head" />
 
   <div class="wrap page service">
-    <header class="service__head">
+    {/* The heading band (IllustratedHead), with the facts a person checks
+        first under the lede — how they can come, and roughly what it costs. */}
+    <IllustratedHead title={data.h1} lede={data.lede} art={entry.id}>
       {data.draft && (
-        <p class="service__draft">Draft for review. This page is not on the clinic's website.</p>
+        <p slot="before" class="service__draft">Draft for review. This page is not on the clinic's website.</p>
       )}
-      <h1>{data.h1}</h1>
-      <p class="lede">{data.lede}</p>
-    </header>
+      <ul class="service__facts" aria-label="At a glance">
+        {data.formats.map((f) => <li class="fact">{shortFormat[f]}</li>)}
+        {leadFee && (
+          <li class="fact fact--fee"><a href="#fees">{leadFee}</a></li>
+        )}
+        {clinicians.length > 0 && (
+          <li class="fact fact--link"><a href="#who">Who you would see</a></li>
+        )}
+      </ul>
+    </IllustratedHead>
 
     {data.crisisNote && (
       <aside class="service__crisis" aria-label="If you need help now">
@@ -103,136 +155,172 @@ const reviewedLabel = data.lastReviewed
       </aside>
     )}
 
-    <div class="prose--flush prose stack">
-      <Content />
-    </div>
-
-    {memberGroups.map((group) => (
-      <section aria-labelledby={`pages-${group.key}`}>
-        <h2 id={`pages-${group.key}`}>{group.label === 'Therapy' ? 'Therapy pages' : 'Assessment pages'}</h2>
-        <ServiceList links={group.links} />
-      </section>
-    ))}
-
-    {clinicians.length > 0 && (
-      <section aria-labelledby="who">
-        <h2 id="who">Who you would see</h2>
-        <ul class="people">
-          {clinicians.map((person) => (
-            <li><PersonCard person={person} /></li>
-          ))}
-        </ul>
-      </section>
-    )}
-
-    <section aria-labelledby="formats">
-      <h2 id="formats">In person or by video</h2>
-      <ul class="tick-list">
-        {data.formats.map((f) => <li>{formatLabels[f]}</li>)}
-      </ul>
-    </section>
-
-    {data.process && data.process.length > 0 && (
-      <section aria-labelledby="process">
-        <h2 id="process">What happens</h2>
-        <ol class="step-list">
-          {data.process.map((step) => <li>{step}</li>)}
-        </ol>
-      </section>
-    )}
-
-    {!(isHub && !fees.length) && (
-    <section aria-labelledby="fees">
-      <h2 id="fees">What it costs</h2>
-      {data.sessionFees && !fees.length ? (
-        <p>
-          Sessions are charged at the clinic's usual session fees, which are listed with what
-          Medicare pays back on the fees page.
-        </p>
-      ) : data.feeStatus === 'quote' || !fees.length ? (
-        <p>
-          Call reception for a quote. Fees depend on what is involved, and reception will tell
-          you before anything is booked.
-        </p>
-      ) : (
-        <div class="table-scroll">
-          <table class="fee-table">
-            <caption>
-              {data.feeStatus === 'needs-confirmation' && (
-                <strong class="service__draft">Draft figures, not yet confirmed by the clinic.</strong>
-              )}
-              {reviewedLabel && <> Prices current as of {reviewedLabel}.</>}
-            </caption>
-            <thead>
-              <tr>
-                <th scope="col">Session</th>
-                <th scope="col" class="amount">Fee</th>
-              </tr>
-            </thead>
-            <tbody>
-              {fees.map((fee) => (
-                <tr>
-                  <th scope="row">
-                    {fee.label}
-                    {fee.note && <span class="fee-table__note">{fee.note}</span>}
-                  </th>
-                  <td class="amount">{fee.amount}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+    <div class="service__layout">
+      <div class="service__main">
+        <div class="prose--flush prose prose--chapters stack">
+          <Content />
         </div>
+
+        {memberGroups.map((group) => (
+          <section aria-labelledby={`pages-${group.key}`}>
+            <h2 id={`pages-${group.key}`}>{groupHeading(group.label)}</h2>
+            <ServiceList links={group.links} />
+          </section>
+        ))}
+
+        {clinicians.length > 0 && (
+          <section aria-labelledby="who">
+            <h2 id="who">Who you would see</h2>
+            <ul class="people">
+              {clinicians.map((person) => (
+                <li><PersonCard person={person} /></li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {/* Each way in, shown as the place it happens: the armchairs or the
+            laptop. A page offered in person only shows one. */}
+        <section aria-labelledby="formats">
+          <h2 id="formats">In person or by video</h2>
+          <ul class="formats">
+            {data.formats.map((f) => (
+              <li class="format">
+                <Vignette class="format__art" name={formatTiles[f].art} sizes="100px" />
+                <div>
+                  <p class="format__label">{formatLabels[f]}</p>
+                  <a class="standalone-link format__more" href={withBase(formatTiles[f].href)}>
+                    {formatTiles[f].more}
+                  </a>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {data.process && data.process.length > 0 && (
+          <section class="process" aria-labelledby="process">
+            <h2 id="process">What happens</h2>
+            <div class="process__split">
+              <ol class="step-list">
+                {data.process.map((step) => <li>{step}</li>)}
+              </ol>
+              {/* The path the steps walk down. */}
+              <Vignette class="process__art" name="process" sizes="180px" />
+            </div>
+          </section>
+        )}
+
+        {showFees && (
+          <section class="costs" aria-labelledby="fees">
+            <div class="art-head">
+              <Vignette class="art-head__art" name="fees" sizes="72px" />
+              <h2 id="fees">What it costs</h2>
+            </div>
+            {data.sessionFees && !fees.length ? (
+              <p>
+                Sessions are charged at the clinic's usual session fees, which are listed with what
+                Medicare pays back on the fees page.
+              </p>
+            ) : data.feeStatus === 'quote' || !fees.length ? (
+              <p>
+                Call reception for a quote. Fees depend on what is involved, and reception will tell
+                you before anything is booked.
+              </p>
+            ) : (
+              <div class="table-scroll">
+                <table class="fee-table">
+                  <caption>
+                    {data.feeStatus === 'needs-confirmation' && (
+                      <strong class="service__draft">Draft figures, not yet confirmed by the clinic.</strong>
+                    )}
+                    {reviewedLabel && <> Prices current as of {reviewedLabel}.</>}
+                  </caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Session</th>
+                      <th scope="col" class="amount">Fee</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {fees.map((fee) => (
+                      <tr>
+                        <th scope="row">
+                          {fee.label}
+                          {fee.note && <span class="fee-table__note">{fee.note}</span>}
+                        </th>
+                        <td class="amount">{fee.amount}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            <p class="service__fees-link">
+              <a class="standalone-link" href={withBase('/fees/')}>All fees and Medicare rebates</a>
+            </p>
+          </section>
+        )}
+
+        {/* Funding as its own box, the piggy bank standing on its edge: a
+            separate question from the price, and one a person comes back to. */}
+        {data.medicare && data.medicare.length > 0 && (
+          <section class="funding" aria-labelledby="medicare">
+            <Vignette class="funding__art" name="medicare" sizes="104px" />
+            <h2 id="medicare">Medicare and other funding</h2>
+            <ul class="tick-list">
+              {data.medicare.map((line) => <li>{line}</li>)}
+            </ul>
+          </section>
+        )}
+
+        {/* Each question and its answer as one card, two across on a wide
+            screen: they do not depend on each other, so they read side by
+            side rather than as one long column. */}
+        {data.faqs && data.faqs.length > 0 && (
+          <section aria-labelledby="questions">
+            <div class="art-head">
+              <Vignette class="art-head__art" name="faq" sizes="72px" />
+              <h2 id="questions">Questions people ask</h2>
+            </div>
+            <dl class="service__faqs">
+              {data.faqs.map((faq) => (
+                <div class="faq">
+                  <dt>{faq.question}</dt>
+                  <dd>{faq.answer}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        )}
+
+        {relatedLinks.length > 0 && (
+          <nav aria-labelledby="related">
+            <h2 id="related">Related</h2>
+            <ServiceList links={relatedLinks} />
+          </nav>
+        )}
+      </div>
+
+      {contents.length > 3 && (
+        <nav class="toc" aria-labelledby="toc-title">
+          <p class="toc__title" id="toc-title">On this page</p>
+          <ol class="toc__list">
+            {contents.map((item) => (
+              <li><a href={`#${item.id}`}>{item.label}</a></li>
+            ))}
+          </ol>
+        </nav>
       )}
-      <p class="service__fees-link">
-        <a class="standalone-link" href={withBase('/fees/')}>All fees and Medicare rebates</a>
-      </p>
-    </section>
-    )}
-
-    {data.medicare && data.medicare.length > 0 && (
-      <section aria-labelledby="medicare">
-        <h2 id="medicare">Medicare and other funding</h2>
-        <ul class="tick-list">
-          {data.medicare.map((line) => <li>{line}</li>)}
-        </ul>
-      </section>
-    )}
-
-    {data.faqs && data.faqs.length > 0 && (
-      <section aria-labelledby="questions">
-        <h2 id="questions">Questions people ask</h2>
-        <dl class="service__faqs">
-          {data.faqs.map((faq) => (
-            <>
-              <dt>{faq.question}</dt>
-              <dd>{faq.answer}</dd>
-            </>
-          ))}
-        </dl>
-      </section>
-    )}
-
-    {related.length > 0 && (
-      <nav aria-labelledby="related">
-        <h2 id="related">Related</h2>
-        <ul class="service__related">
-          {related.map((other) => (
-            <li>
-              <a class="standalone-link" href={withBase(servicePath(other.data.kind, other.id, other.data.path))}>
-                {other.data.h1}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
-    )}
+    </div>
   </div>
 </PlainLayout>
 
 <style>
   /* The same interval between questions /assessments uses: one size, between
      sections only, with the heading's own margin dropped so it is not doubled. */
-  .page > * + * {
+  .page > * + *,
+  .service__main > * + * {
     margin-top: var(--space-section);
   }
 
@@ -240,11 +328,67 @@ const reviewedLabel = data.lastReviewed
     margin-top: 0;
   }
 
-  /* No hero on these pages, so the heading band needs room of its own below
-     the masthead. */
-  .service__head {
-    padding-top: var(--space-2xl);
-    max-width: var(--content-max);
+  /* ---- The facts under the lede ---- */
+
+  /* The facts: small, quiet labels that answer "can I do this from home?"
+     and "roughly what does it cost?" before the first paragraph. */
+  .service__facts {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+  }
+
+  .fact {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    min-height: 36px;
+    padding: 0 var(--space-md);
+    border-radius: var(--radius-pill);
+    background: var(--surface-accent);
+    color: var(--hedge-green);
+    font-size: var(--text-secondary);
+    font-weight: 600;
+  }
+
+  .fact::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: var(--radius-pill);
+    background: var(--hedge-sage);
+  }
+
+  .fact--fee {
+    background: var(--surface-sunk);
+    box-shadow: inset 0 0 0 1px var(--line);
+    color: var(--ink);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+
+  .fact--fee::before {
+    background: var(--chestnut);
+  }
+
+  .fact--link {
+    background: transparent;
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+
+  .fact--link::before {
+    content: none;
+  }
+
+  .fact a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .fact a:hover {
+    text-decoration: underline;
   }
 
   /* Loud on purpose: a reviewer must never mistake a draft for the real page. */
@@ -272,6 +416,71 @@ const reviewedLabel = data.lastReviewed
     margin: 0;
   }
 
+  /* ---- The body, and the map beside it ---- */
+
+  .service__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2xl);
+    align-items: start;
+  }
+
+  .toc {
+    display: none;
+  }
+
+  @media (min-width: 72rem) {
+    .service__layout {
+      /* Narrow enough that two team cards still fit side by side beside it
+         at a laptop width. */
+      grid-template-columns: minmax(0, 1fr) 12.5rem;
+      column-gap: clamp(var(--space-2xl), 3vw, 3.5rem);
+    }
+
+    .toc {
+      display: block;
+      position: sticky;
+      top: var(--space-2xl);
+      max-height: calc(100vh - var(--space-3xl));
+      overflow-y: auto;
+      padding: var(--space-xs) 0 var(--space-xs) var(--space-lg);
+      border-left: 2px solid var(--line);
+    }
+  }
+
+  .toc__title {
+    margin: 0 0 var(--space-sm);
+    font-size: var(--text-meta);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .toc__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-xs);
+  }
+
+  .toc__list a {
+    display: block;
+    padding: 2px 0;
+    font-size: var(--text-secondary);
+    line-height: var(--lh-compact);
+    color: var(--ink-soft);
+    text-decoration: none;
+  }
+
+  .toc__list a:hover {
+    color: var(--hedge-green);
+    text-decoration: underline;
+  }
+
+  /* ---- People ---- */
+
   /* Same grid as the team page, so a card looks the same wherever it appears. */
   .people {
     list-style: none;
@@ -279,7 +488,7 @@ const reviewedLabel = data.lastReviewed
     margin: 0;
     display: grid;
     gap: var(--space-lg);
-    grid-template-columns: repeat(auto-fill, minmax(min(26rem, 100%), 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(25rem, 100%), 1fr));
   }
 
   .people > li {
@@ -287,30 +496,168 @@ const reviewedLabel = data.lastReviewed
     display: grid;
   }
 
-  .service__faqs {
-    max-width: var(--content-max);
+  /* ---- In person or by video ---- */
+
+  .formats {
+    list-style: none;
     margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-lg);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+    max-width: 52rem;
   }
 
-  .service__faqs dt {
+  .format {
+    display: grid;
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+    gap: var(--space-lg);
+    align-items: center;
+    padding: var(--space-lg);
+    background: var(--surface-sunk);
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius-md);
+    box-shadow: var(--edge-lit);
+  }
+
+  .format :global(.format__art) {
+    display: block;
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 8px 10px rgba(48, 25, 8, 0.14));
+  }
+
+  .format__label {
+    margin: 0 0 var(--space-xs);
+    font-family: var(--font-display);
+    font-size: var(--text-cardtitle);
     font-weight: 700;
+    line-height: 1.25;
     color: var(--heading);
   }
 
-  .service__faqs dd {
-    margin: var(--space-xs) 0 var(--space-lg);
+  .format__more {
+    font-size: var(--text-secondary);
+  }
+
+  /* ---- What happens ---- */
+
+  .process__split {
+    display: grid;
+    gap: var(--space-xl);
+    align-items: end;
+  }
+
+  .process__split .step-list {
+    margin-bottom: 0;
+    max-width: var(--content-max);
+  }
+
+  .process :global(.process__art) {
+    display: block;
+    width: 150px;
+    height: auto;
+  }
+
+  @media (min-width: 64rem) {
+    .process__split {
+      grid-template-columns: minmax(0, var(--content-max)) 170px;
+      column-gap: var(--space-2xl);
+    }
+
+    .process :global(.process__art) {
+      width: 100%;
+    }
+  }
+
+  /* ---- What it costs ---- */
+
+  .costs .table-scroll {
+    max-width: 52rem;
   }
 
   .service__fees-link {
     margin-top: var(--space-lg);
   }
 
-  .service__related {
-    list-style: none;
-    padding: 0;
+  /* ---- Funding ---- */
+
+  .funding {
+    position: relative;
+    max-width: 52rem;
+    padding: var(--space-2xl) var(--space-xl) var(--space-xl);
+    background: var(--surface-sunk);
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--edge-lit);
+  }
+
+  .funding :global(.funding__art) {
+    position: absolute;
+    top: 0;
+    right: var(--space-xl);
+    width: 6rem;
+    height: auto;
+    transform: translateY(-55%);
+    filter: drop-shadow(0 8px 10px rgba(48, 25, 8, 0.16));
+    pointer-events: none;
+  }
+
+  .funding h2 {
+    padding-right: 6.5rem;
+    font-size: var(--text-subhead);
+    line-height: var(--lh-subhead);
+  }
+
+  .funding .tick-list {
+    margin-bottom: 0;
+  }
+
+  /* ---- Questions ---- */
+
+  .service__faqs {
     margin: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-sm) var(--space-xl);
+    display: grid;
+    gap: var(--space-lg);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+  }
+
+  .faq {
+    padding: var(--space-lg) var(--space-xl);
+    background: var(--surface-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    box-shadow: var(--edge-lit);
+  }
+
+  .faq dt {
+    font-family: var(--font-display);
+    font-size: var(--text-cardtitle);
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--heading);
+  }
+
+  .faq dd {
+    margin: var(--space-sm) 0 0;
+    font-size: var(--text-secondary);
+    line-height: var(--lh-compact);
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 30rem) {
+    .format {
+      grid-template-columns: 4.5rem minmax(0, 1fr);
+      gap: var(--space-md);
+      padding: var(--space-md);
+    }
+
+    .funding {
+      padding: var(--space-2xl) var(--space-lg) var(--space-lg);
+    }
+
+    .faq {
+      padding: var(--space-md) var(--space-lg);
+    }
   }
 </style>

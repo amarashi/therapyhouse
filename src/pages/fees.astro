@@ -14,6 +14,9 @@
  */
 import { getCollection, getEntry, render } from 'astro:content';
 import PlainLayout from '../layouts/PlainLayout.astro';
+import IllustratedHead from '../components/IllustratedHead.astro';
+import ServiceList from '../components/ServiceList.astro';
+import Vignette from '../components/Vignette.astro';
 import { withBase } from '../lib/base.js';
 import { builtPaths } from '../lib/links.js';
 import { businessId, serviceLinks } from '../lib/services.js';
@@ -98,12 +101,9 @@ const schema = {
   <script type="application/ld+json" set:html={JSON.stringify(schema)} slot="head" />
 
   <div class="wrap page fees-page">
-    <header class="fees-page__head">
-      <h1>{title}</h1>
-      <p class="lede">{lede}</p>
-    </header>
+    <IllustratedHead title={title} lede={lede} art="fees" />
 
-    <div class="prose--flush prose stack">
+    <div class="prose--flush prose prose--chapters stack">
       <Content />
     </div>
 
@@ -146,7 +146,10 @@ const schema = {
     </section>
 
     <section aria-labelledby="medicare">
-      <h2 id="medicare">Medicare rebates</h2>
+      <div class="art-head">
+        <Vignette class="art-head__art" name="medicare" sizes="64px" />
+        <h2 id="medicare">Medicare rebates</h2>
+      </div>
       <div class="prose--flush prose stack">
         <p>
           A Medicare rebate is the amount Medicare pays back to you for a session. It comes
@@ -211,6 +214,8 @@ const schema = {
 
     <section aria-labelledby="referral">
       <h2 id="referral">How to get a GP referral and a Mental Health Treatment Plan</h2>
+      {/* The GP's bag beside the steps that start with the GP. */}
+      <div class="referral">
       <ol class="step-list">
         <li>
           Book a longer appointment with your usual GP, or a GP at the practice you are
@@ -231,13 +236,19 @@ const schema = {
           refers you again if you need more.
         </li>
       </ol>
+      <Vignette class="referral__art" name="gp" sizes="200px" />
+      </div>
       <p class="fees-page__source">
         Referral rules from the <a href={medicare.rulesSource}>Better Access explanatory note</a>{' '}
         on MBS Online.
       </p>
     </section>
 
-    <section aria-labelledby="video">
+    {/* Three other things that change what a session costs, side by side:
+        each a short answer, each with its own object on top. */}
+    <div class="ways">
+    <section class="way" aria-labelledby="video">
+      <Vignette class="way__art" name="video" sizes="120px" />
       <h2 id="video">Video sessions</h2>
       <div class="prose--flush prose stack">
         <p>
@@ -253,14 +264,16 @@ const schema = {
       </div>
     </section>
 
-    <section aria-labelledby="private-health">
+    <section class="way" aria-labelledby="private-health">
+      <Vignette class="way__art" name="private-health" sizes="120px" />
       <h2 id="private-health">Private health insurance</h2>
       <ul class="tick-list">
         {privateHealth?.map((item) => <li>{item}</li>)}
       </ul>
     </section>
 
-    <section aria-labelledby="ndis">
+    <section class="way" aria-labelledby="ndis">
+      <Vignette class="way__art" name="ndis" sizes="120px" />
       <h2 id="ndis">NDIS</h2>
       <ul class="tick-list">
         {ndis?.map((item) => <li>{item}</li>)}
@@ -269,9 +282,13 @@ const schema = {
         <p><a class="standalone-link" href={ndisHref}>NDIS at Therapy House</a></p>
       )}
     </section>
+    </div>
 
     <section aria-labelledby="assessments">
-      <h2 id="assessments">Assessments</h2>
+      <div class="art-head">
+        <Vignette class="art-head__art" name="assess-intro" sizes="64px" />
+        <h2 id="assessments">Assessments</h2>
+      </div>
       <div class="prose--flush prose stack">
         <p>
           Assessments are priced as packages, separately from therapy sessions. The
@@ -292,21 +309,23 @@ const schema = {
           <a href={itemUrl(medicare.neurodevelopmental.item)}>{medicare.neurodevelopmental.item}</a>).
           Ask reception before you book whether any part of your assessment can be claimed.
         </p>
-        {assessmentLinks.length > 0 && (
-          <ul class="fees-page__links">
-            {assessmentLinks.map((link) => (
-              <li><a class="standalone-link" href={withBase(link.href)}>{link.label}</a></li>
-            ))}
-          </ul>
-        )}
         <p>
           <a class="standalone-link" href={withBase('/assessments/')}>How assessment works, and every package in full</a>
         </p>
       </div>
+      {/* The assessment pages as the same tiles /assessments/ shows. */}
+      {assessmentLinks.length > 0 && (
+        <div class="fees-page__tiles">
+          <ServiceList links={assessmentLinks} />
+        </div>
+      )}
     </section>
 
     <section aria-labelledby="reports">
-      <h2 id="reports">Reports and letters</h2>
+      <div class="art-head">
+        <Vignette class="art-head__art" name="letters" sizes="64px" />
+        <h2 id="reports">Reports and letters</h2>
+      </div>
       <div class="prose--flush prose stack">
         {reports?.map((item) => <p>{item}</p>)}
       </div>
@@ -314,7 +333,10 @@ const schema = {
 
     {cancellation && (
       <section aria-labelledby="cancellation">
-        <h2 id="cancellation">Cancellations</h2>
+        <div class="art-head">
+          <Vignette class="art-head__art" name="cancellations" sizes="64px" />
+          <h2 id="cancellation">Cancellations</h2>
+        </div>
         <p>
           This is the cancellation policy the clinic published in {cancellation.published}. The
           fee for cancelling depends on how much notice you give:
@@ -351,11 +373,6 @@ const schema = {
     margin-top: 0;
   }
 
-  .fees-page__head {
-    padding-top: var(--space-2xl);
-    max-width: var(--content-max);
-  }
-
   .fee-table {
     max-width: 46rem;
   }
@@ -382,13 +399,74 @@ const schema = {
     font-size: var(--text-secondary);
   }
 
-  .fees-page__links {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-sm) var(--space-xl);
+  .fees-page__tiles {
+    margin-top: var(--space-xl);
+  }
+
+  /* ---- The GP referral ---- */
+
+  .referral {
+    display: grid;
+    gap: var(--space-xl);
+    align-items: center;
+  }
+
+  .referral .step-list {
+    margin-bottom: 0;
+    max-width: var(--content-max);
+  }
+
+  .referral :global(.referral__art) {
+    display: block;
+    width: min(170px, 50%);
+    height: auto;
+  }
+
+  @media (min-width: 60rem) {
+    .referral {
+      grid-template-columns: minmax(0, var(--content-max)) 200px;
+      column-gap: var(--space-3xl);
+    }
+
+    .referral :global(.referral__art) {
+      width: 100%;
+    }
+  }
+
+  /* ---- Video, private health, NDIS ---- */
+
+  .ways {
+    display: grid;
+    gap: var(--space-lg);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr));
+    align-items: start;
+  }
+
+  .way {
+    padding: var(--space-lg) var(--space-xl) var(--space-xl);
+    background: var(--surface-sunk);
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--edge-lit);
+  }
+
+  .way :global(.way__art) {
+    display: block;
+    width: 110px;
+    height: auto;
+    margin-bottom: var(--space-sm);
+    filter: drop-shadow(0 8px 10px rgba(48, 25, 8, 0.14));
+  }
+
+  .way h2 {
+    font-size: var(--text-subhead);
+    line-height: var(--lh-subhead);
+  }
+
+  .way .tick-list,
+  .way .prose > :last-child,
+  .way > :last-child {
+    margin-bottom: 0;
   }
 
   @media (max-width: 52rem) {

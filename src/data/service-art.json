@@ -27,6 +27,14 @@
     "width": 640,
     "height": 693
   },
+  "bundaberg": {
+    "width": 640,
+    "height": 530
+  },
+  "cancellations": {
+    "width": 640,
+    "height": 690
+  },
   "child-adhd": {
     "width": 640,
     "height": 660
@@ -59,29 +67,69 @@
     "width": 640,
     "height": 636
   },
+  "faq": {
+    "width": 640,
+    "height": 882
+  },
   "fees": {
     "width": 640,
     "height": 640
+  },
+  "gladstone": {
+    "width": 640,
+    "height": 667
   },
   "good-to-know": {
     "width": 640,
     "height": 714
   },
+  "gp": {
+    "width": 640,
+    "height": 769
+  },
   "grief": {
     "width": 640,
     "height": 674
+  },
+  "in-room": {
+    "width": 640,
+    "height": 736
   },
   "learning": {
     "width": 640,
     "height": 716
   },
+  "letters": {
+    "width": 640,
+    "height": 669
+  },
+  "mackay": {
+    "width": 640,
+    "height": 601
+  },
+  "medicare": {
+    "width": 640,
+    "height": 702
+  },
+  "mount-isa": {
+    "width": 640,
+    "height": 545
+  },
   "ndis": {
     "width": 640,
     "height": 621
   },
+  "private-health": {
+    "width": 640,
+    "height": 719
+  },
   "process": {
     "width": 640,
     "height": 611
+  },
+  "telehealth-setup": {
+    "width": 640,
+    "height": 604
   },
   "therapy-intro": {
     "width": 640,

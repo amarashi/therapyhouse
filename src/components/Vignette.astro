@@ -6,16 +6,18 @@ import art from '../data/service-art.json';
  * One of the small illustrated objects in `public/assets/services/`, for a
  * section of the /therapy/ or /assessments/ page. Always decorative: each one
  * stands beside words that already say everything, so its alt text is empty.
- * Lazy, because none of them is ever in the opening view.
+ * Lazy by default; `eager` is for the one picture in a page's opening view,
+ * such as the object beside a service page's heading.
  */
 interface Props {
   name: string;
   class?: string;
   /** The `sizes` attribute: how wide the picture is drawn. */
   sizes: string;
+  eager?: boolean;
 }
 
-const { name, class: className, sizes } = Astro.props;
+const { name, class: className, sizes, eager = false } = Astro.props;
 const pic = (art as Record<string, { width: number; height: number }>)[name];
 if (!pic) throw new Error(`No vignette called "${name}" in src/data/service-art.json`);
 const src = (w: number) => withBase(`/assets/services/${name}-${w}.webp`);
@@ -29,6 +31,7 @@ const src = (w: number) => withBase(`/assets/services/${name}-${w}.webp`);
   alt=""
   width={pic.width}
   height={pic.height}
-  loading="lazy"
+  loading={eager ? 'eager' : 'lazy'}
+  fetchpriority={eager ? 'high' : undefined}
   decoding="async"
 />

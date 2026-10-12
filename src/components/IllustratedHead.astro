@@ -1,0 +1,97 @@
+---
+/**
+ * The heading band of a plain page that has no room behind it: the heading
+ * and lede on the left, the page's own object from `public/assets/services/`
+ * in a pool of lamplight on the right. Used by every service page, /telehealth/
+ * and /fees/, so all of them open the same way.
+ *
+ * On a phone the object comes first, small, above the heading — it is the
+ * page's picture, and placed after the lede it would only push the words down.
+ *
+ * Anything passed in the default slot (a draft notice, the at-a-glance facts)
+ * is drawn under the lede; the `before` slot is drawn above the heading.
+ */
+import Vignette from './Vignette.astro';
+import art from '../data/service-art.json';
+
+interface Props {
+  title: string;
+  lede?: string;
+  /** A name in `src/data/service-art.json`. Missing or unknown: no picture. */
+  art?: string;
+}
+
+const { title, lede, art: name } = Astro.props;
+const hasArt = Boolean(name && name in art);
+---
+
+<header class:list={['head', hasArt && 'head--art']}>
+  <div class="head__intro">
+    <slot name="before" />
+    <h1>{title}</h1>
+    {lede && <p class="lede head__lede">{lede}</p>}
+    <slot />
+  </div>
+  {hasArt && (
+    <div class="head__stage">
+      <Vignette class="head__art" name={name!} sizes="(min-width: 58rem) 250px, 180px" eager />
+    </div>
+  )}
+</header>
+
+<style>
+  /* No hero on these pages, so the heading band needs room of its own below
+     the masthead. */
+  .head {
+    padding-top: var(--space-2xl);
+    display: grid;
+    gap: var(--space-lg);
+    align-items: center;
+  }
+
+  .head__intro {
+    max-width: var(--content-max);
+  }
+
+  .head__lede:not(:last-child) {
+    margin-bottom: var(--space-lg);
+  }
+
+  .head__stage {
+    order: -1;
+    justify-self: start;
+    display: grid;
+    place-items: center;
+    width: 180px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    /* A pool of lamplight for the object to stand in, the warm glow the rooms
+       are lit with, so the picture sits on the page instead of on a box. */
+    background: radial-gradient(
+      closest-side,
+      rgba(255, 210, 84, 0.3),
+      rgba(255, 210, 84, 0.08) 70%,
+      rgba(255, 210, 84, 0)
+    );
+  }
+
+  @media (min-width: 58rem) {
+    .head--art {
+      grid-template-columns: minmax(0, var(--content-max)) minmax(0, 300px);
+      column-gap: clamp(var(--space-2xl), 5vw, 88px);
+    }
+
+    .head__stage {
+      order: 0;
+      justify-self: center;
+      width: 100%;
+    }
+  }
+
+  .head__stage :global(.head__art) {
+    display: block;
+    width: 80%;
+    height: auto;
+    filter: drop-shadow(0 14px 18px rgba(48, 25, 8, 0.18));
+  }
+</style>

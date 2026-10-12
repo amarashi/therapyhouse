@@ -11,6 +11,9 @@
 import { getCollection, getEntry, render } from 'astro:content';
 import PlainLayout from '../../layouts/PlainLayout.astro';
 import PersonCard from '../../components/PersonCard.astro';
+import IllustratedHead from '../../components/IllustratedHead.astro';
+import Vignette from '../../components/Vignette.astro';
+import art from '../../data/service-art.json';
 import { withBase } from '../../lib/base.js';
 import { builtPaths } from '../../lib/links.js';
 import { businessId } from '../../lib/services.js';
@@ -73,12 +76,9 @@ const schema = {
   <script type="application/ld+json" set:html={JSON.stringify(schema)} slot="head" />
 
   <div class="wrap page telehealth">
-    <header class="telehealth__head">
-      <h1>{title}</h1>
-      <p class="lede">{lede}</p>
-    </header>
+    <IllustratedHead title={title} lede={lede} art="video" />
 
-    <div class="prose--flush prose stack">
+    <div class="prose--flush prose prose--chapters stack">
       <Content />
       {forWhom.length > 0 && (
         <p>
@@ -90,7 +90,11 @@ const schema = {
       )}
     </div>
 
-    <section aria-labelledby="medicare">
+    {/* What it costs, as two boxes side by side: what Medicare pays back, and
+        where the fees are. Each with the object it is about. */}
+    <div class="money">
+    <section class="money__box" aria-labelledby="medicare">
+      <Vignette class="money__art" name="medicare" sizes="104px" />
       <h2 id="medicare">Medicare rebates for video sessions</h2>
       <div class="prose--flush prose stack">
         <p>
@@ -116,7 +120,8 @@ const schema = {
       </div>
     </section>
 
-    <section aria-labelledby="fees">
+    <section class="money__box" aria-labelledby="fees">
+      <Vignette class="money__art" name="fees" sizes="104px" />
       <h2 id="fees">Fees</h2>
       <p>
         Session fees are on the fees page. Whether a video session costs the same as a session in
@@ -126,13 +131,18 @@ const schema = {
         <a class="standalone-link" href={withBase('/fees/')}>Fees and Medicare rebates</a>
       </p>
     </section>
+    </div>
 
     {process && process.length > 0 && (
       <section aria-labelledby="first-session">
         <h2 id="first-session">Your first video session, step by step</h2>
-        <ol class="step-list">
-          {process.map((step) => <li>{step}</li>)}
-        </ol>
+        <div class="first-session">
+          <ol class="step-list">
+            {process.map((step) => <li>{step}</li>)}
+          </ol>
+          {/* The quiet corner the first step asks for. */}
+          <Vignette class="first-session__art" name="telehealth-setup" sizes="220px" />
+        </div>
       </section>
     )}
 
@@ -143,8 +153,12 @@ const schema = {
           Outside the south-east, the nearest psychologist can be a long drive away. A video
           session takes the drive out of it.
         </p>
+        {/* A card for each town, its picture on top: the cane and palms of
+            Mackay, the harbour at Gladstone, the red earth of Mount Isa. */}
+        <div class="towns">
         {townSections.map(({ entry, Body }) => (
           <section class="town" aria-labelledby={`town-${entry.id}`}>
+            {entry.id in art && <Vignette class="town__art" name={entry.id} sizes="200px" />}
             <h3 id={`town-${entry.id}`}>{entry.data.name}</h3>
             <div class="prose--flush prose stack">
               <Body />
@@ -157,6 +171,7 @@ const schema = {
             </p>
           </section>
         ))}
+        </div>
       </section>
     )}
 
@@ -205,26 +220,116 @@ const schema = {
     margin-top: 0;
   }
 
-  .telehealth__head {
-    padding-top: var(--space-2xl);
-    max-width: var(--content-max);
-  }
-
   .telehealth__source {
     font-size: var(--text-secondary);
   }
 
-  .town {
+  /* ---- Medicare and fees ---- */
+
+  .money {
+    display: grid;
+    gap: var(--space-2xl) var(--space-xl);
+    align-items: start;
+  }
+
+  @media (min-width: 60rem) {
+    .money {
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    }
+  }
+
+  .money__box {
+    position: relative;
+    padding: var(--space-2xl) var(--space-xl) var(--space-xl);
+    background: var(--surface-sunk);
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--edge-lit);
+  }
+
+  .money__box :global(.money__art) {
+    position: absolute;
+    top: 0;
+    right: var(--space-xl);
+    width: 6rem;
+    height: auto;
+    transform: translateY(-55%);
+    filter: drop-shadow(0 8px 10px rgba(48, 25, 8, 0.16));
+    pointer-events: none;
+  }
+
+  .money__box h2 {
+    padding-right: 6.5rem;
+    font-size: var(--text-subhead);
+    line-height: var(--lh-subhead);
+  }
+
+  .money__box > :last-child,
+  .money__box .stack > :last-child {
+    margin-bottom: 0;
+  }
+
+  /* ---- The first session ---- */
+
+  .first-session {
+    display: grid;
+    gap: var(--space-xl);
+    align-items: center;
+  }
+
+  .first-session .step-list {
+    margin-bottom: 0;
     max-width: var(--content-max);
   }
 
-  .town + .town,
+  .first-session :global(.first-session__art) {
+    display: block;
+    width: min(200px, 60%);
+    height: auto;
+  }
+
+  @media (min-width: 60rem) {
+    .first-session {
+      grid-template-columns: minmax(0, var(--content-max)) 220px;
+      column-gap: var(--space-3xl);
+    }
+
+    .first-session :global(.first-session__art) {
+      width: 100%;
+    }
+  }
+
+  /* ---- Regional towns ---- */
+
+  .towns {
+    display: grid;
+    gap: var(--space-lg);
+    margin-top: var(--space-xl);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 24rem), 1fr));
+  }
+
   .town {
-    margin-top: var(--space-2xl);
+    padding: var(--space-lg) var(--space-xl) var(--space-xl);
+    background: var(--surface-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--edge-lit);
+  }
+
+  .town :global(.town__art) {
+    display: block;
+    width: 160px;
+    height: auto;
+    margin: 0 auto var(--space-sm);
+    filter: drop-shadow(0 8px 10px rgba(48, 25, 8, 0.14));
   }
 
   .town h3 {
     margin-top: 0;
+  }
+
+  .town .telehealth__source {
+    margin-bottom: 0;
   }
 
   .telehealth__towns {
