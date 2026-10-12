@@ -86,7 +86,6 @@ const content = houseContent({
   portrait: (image) => withBase(teamPortrait(image).photo ?? image),
 });
 const contentJson = houseContentJson(content);
-const philosophy = pages.philosophy;
 /* A sign's own words, for the pop-up it opens (house-rooms.json). */
 const signLabel = (roomId, signId) =>
   houseRooms.rooms.find((room) => room.id === roomId)?.signs.find((sign) => sign.id === signId)?.label ?? '';
@@ -98,6 +97,9 @@ const signLabel = (roomId, signId) =>
 const roomPages = roomNavigation.roomOrder
   .filter((id) => id !== 'exterior' && siteContent.rooms[id]?.sourceUrls?.length)
   .map((id) => ({ name: roomNavigation.rooms[id].title, href: withBase(`/${siteContent.rooms[id].sourceUrls[0]}`) }));
+/* Reception joined the welcome room, which stands for the front page; the
+   contact page keeps its own line, under its own title. */
+roomPages.splice(1, 0, { name: pages.contact.title, href: withBase('/contact/') });
 const menuRooms = roomNavigation.roomOrder.map((id) => ({
   id,
   name: id === 'exterior' ? houseCopy.menu.outside : roomNavigation.rooms[id].title,
@@ -107,7 +109,7 @@ const contactPreview = {
   tel: phoneHref(contact.phone),
   email: contact.email,
   address: contact.address,
-  map: content.previews['contact.address'].link.href,
+  map: content.previews['contact.findUs'].link.href,
   booking: contact.bookingUrl,
 };
 ---
@@ -227,28 +229,6 @@ const contactPreview = {
             </div>
           </div>
         </div>
-      </div>
-      <div class="philosophy-modal" id="philosophyModal" role="dialog" aria-modal="true" aria-labelledby="philosophyTitle" aria-hidden="true" hidden>
-        <section class="philosophy-modal__panel">
-          <button class="philosophy-modal__close" id="philosophyModalClose" type="button" aria-label="Close philosophy window">&times;</button>
-          <h2 class="philosophy-modal__title" id="philosophyTitle">{philosophy.title}</h2>
-          <span class="content-modal__rule" aria-hidden="true"></span>
-          <img class="philosophy-modal__image" src={withBase("/assets/media/bookworm.png")} width="600" height="450" loading="lazy" alt="Friendly reader with books, representing Therapy House's warm psychology and counselling approach">
-          <p class="philosophy-modal__intro">{philosophy.lede}</p>
-          <ul class="philosophy-modal__list">
-            {(philosophy.principles ?? []).map((principle) => (
-              <li class="philosophy-modal__item">
-                <h3>{principle.title}</h3>
-              </li>
-            ))}
-          </ul>
-          {philosophy.closing && <p class="philosophy-modal__closing">{philosophy.closing}</p>}
-          <a class="content-modal__more" href={withBase('/philosophy/')}>{houseCopy.links.philosophy}</a>
-          <div class="house-actions" aria-label="Book or call">
-            <a class="house-action" href={contactPreview.booking} target="_blank" rel="noopener">{callsToAction.book.label}</a>
-            <a class="house-action" href={contactPreview.tel}>{callsToAction.call.label}</a>
-          </div>
-        </section>
       </div>
       <div class="content-modal" id="contentModal" role="dialog" aria-modal="true" aria-labelledby="contentModalTitle" aria-hidden="true" hidden>
         <section class="content-modal__panel">

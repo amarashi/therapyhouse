@@ -35,7 +35,7 @@
         {
           "id": "mailbox",
           "label": "Contact",
-          "ariaLabel": "Open Therapy House contact and reception details"
+          "ariaLabel": "Go in to the welcome room, to book, call or find the clinic"
         },
         {
           "id": "staff-side-door",
@@ -48,8 +48,8 @@
       "id": "welcome",
       "title": "Welcome Room",
       "label": "Welcome",
-      "exteriorEntry": "Main door",
-      "summary": "A warm entry point for the main Therapy House story, philosophy, team and contact paths.",
+      "exteriorEntry": "Main door or mailbox",
+      "summary": "The front room: the team, the philosophy, booking and calling, how to find the clinic, and the way through to sessions by video.",
       "intro": [
         "Therapy House is a place for all children, and anyone who has once been a child.",
         "Therapy House is a boutique psychology clinic for people of all ages.",
@@ -78,12 +78,22 @@
         {
           "id": "philosophy",
           "label": "Our Philosophy",
-          "ariaLabel": "Read the Therapy House philosophy"
+          "ariaLabel": "Go up to the attic reading room and the Therapy House philosophy"
         },
         {
           "id": "contact",
-          "label": "Contact Us",
-          "ariaLabel": "Contact Therapy House in The Gap"
+          "label": "Book or call",
+          "ariaLabel": "Book online or call reception"
+        },
+        {
+          "id": "find-us",
+          "label": "Find us",
+          "ariaLabel": "The address, and where to park"
+        },
+        {
+          "id": "telehealth",
+          "label": "See us by video",
+          "ariaLabel": "Go through to the telehealth room, for sessions by video"
         },
         {
           "id": "back",
@@ -351,54 +361,10 @@
       ]
     },
     {
-      "id": "contact",
-      "title": "Reception",
-      "label": "Contact",
-      "exteriorEntry": "Mailbox",
-      "summary": "Practical contact, booking, parking and location information.",
-      "images": [
-        {
-          "id": "reception-room",
-          "alt": "Therapy House reception room"
-        }
-      ],
-      "signs": [
-        {
-          "id": "book-online",
-          "label": "Book Online"
-        },
-        {
-          "id": "phone",
-          "label": "Phone"
-        },
-        {
-          "id": "email",
-          "label": "Email"
-        },
-        {
-          "id": "address",
-          "label": "Address"
-        },
-        {
-          "id": "parking",
-          "label": "Parking"
-        },
-        {
-          "id": "telehealth",
-          "label": "See us by video",
-          "ariaLabel": "Go through to the telehealth room, for sessions by video"
-        },
-        {
-          "id": "back",
-          "label": "Back"
-        }
-      ]
-    },
-    {
       "id": "telehealth",
       "title": "Telehealth Room",
       "label": "Telehealth",
-      "exteriorEntry": "Through reception",
+      "exteriorEntry": "Through the welcome room",
       "summary": "Seeing a Therapy House psychologist by video, from anywhere in Australia.",
       "images": [
         {

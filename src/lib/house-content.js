@@ -96,7 +96,6 @@ export function houseContent({
   const libraryPage = page('library');
   const philosophyPage = page('philosophy');
   const workPage = page('work-with-us');
-  const contactPage = page('contact');
   const telehealthPage = page('telehealth');
 
   const facts = houseFacts({
@@ -267,30 +266,15 @@ export function houseContent({
     };
   });
 
-  /* ---- Reception ---- */
-  const tel = `tel:+61${clinic.phone.replace(/\D/g, '').replace(/^0/, '')}`;
-  previews['contact.bookingUrl'] = {
-    text: [contactPage.lede],
-    link: { href: clinic.bookingUrl, label: label('book') },
-  };
-  previews['contact.phone'] = {
-    text: [clinic.phone],
-    link: { href: tel, label: label('call') },
-  };
-  previews['contact.email'] = {
-    text: [clinic.email],
-    link: { href: `mailto:${clinic.email}`, label: label('email') },
-  };
-  previews['contact.address'] = {
-    text: [clinic.address],
+  /* ---- Welcome room: finding the clinic ----
+     Booking, calling and email have their own pop-up (the contact window in
+     house.astro); this sign is the address and the parking. */
+  previews['contact.findUs'] = {
+    text: [clinic.address, ...short(clinic.intro, 2)],
     link: {
       href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(clinic.address)}`,
       label: label('map'),
     },
-  };
-  previews['contact.intro'] = {
-    text: short(clinic.intro, 2),
-    link: to('/contact/', 'contact'),
   };
 
   /* ---- Work with us ---- */

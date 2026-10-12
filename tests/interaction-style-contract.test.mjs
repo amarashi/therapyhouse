@@ -24,12 +24,10 @@ assert.equal(roomSceneDefaults.rooms.team.hotspots.find((hotspot) => hotspot.id 
 assert.match(appScript, /createTeamCarousel/);
 assert.match(appScript, /teamCarousel\.open/);
 assert.match(appScript, /createModalDialog/);
-assert.match(appScript, /philosophyDialog\.open/);
 assert.match(appScript, /contactDialog\.open/);
 
 assert.match(styles, /\.scene-sign::before/);
 assert.match(styles, /\.scene-sign:hover/);
 assert.match(styles, /\.exterior-hotspot::before/);
 assert.match(styles, /\.exterior-hotspot:hover::before/);
-assert.match(styles, /\.philosophy-modal__panel/);
 assert.match(styles, /\.contact-modal__panel/);

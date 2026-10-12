@@ -12,7 +12,7 @@ import {
   insideParallaxDepths
 } from "./site-data.js";
 import { requestIdleTask } from "./utils.js";
-import { exteriorHotspots, houseContent, previews, roomNavigation, roomSceneDefaults, teamMembers } from "./content-data.js?v=20261013-motion";
+import { exteriorHotspots, formerRoomIds, houseContent, previews, roomNavigation, roomSceneDefaults, teamMembers } from "./content-data.js?v=20261013-motion";
 import { createDogEyeController } from "./dog-eye-controller.js?v=20261013-motion";
 import { createEntranceVideoController } from "./entrance-video.js?v=20261013-rooms";
 import { createFirelightController } from "./firelight-controller.js";
@@ -41,9 +41,6 @@ const teamCarouselCount = document.getElementById("teamCarouselCount");
 const teamCarouselPrev = document.getElementById("teamCarouselPrev");
 const teamCarouselNext = document.getElementById("teamCarouselNext");
 const teamCarouselClose = document.getElementById("teamCarouselClose");
-const philosophyModal = document.getElementById("philosophyModal");
-const philosophyModalPanel = philosophyModal.querySelector(".philosophy-modal__panel");
-const philosophyModalClose = document.getElementById("philosophyModalClose");
 const contentModal = document.getElementById("contentModal");
 const contentModalPanel = contentModal.querySelector(".content-modal__panel");
 const contentModalClose = document.getElementById("contentModalClose");
@@ -133,24 +130,12 @@ const teamCarousel = createTeamCarousel({
   fallbackFocus: () => insideScene.getSceneSigns().find((sign) => sign.dataset.action === "about")
 });
 
-const philosophyDialog = createModalDialog({
-  modal: philosophyModal,
-  closeButton: philosophyModalClose,
-  fallbackFocus: () => insideScene.getSceneSigns().find((sign) => sign.dataset.action === "philosophy"),
-  onOpen: () => {
-    teamCarousel.close();
-    contentDialog.close();
-    contactDialog.close();
-  }
-});
-
 const contentDialog = createModalDialog({
   modal: contentModal,
   closeButton: contentModalClose,
   fallbackFocus: () => insideScene.getSceneSigns().find((sign) => sign.dataset.action === "content"),
   onOpen: () => {
     teamCarousel.close();
-    philosophyDialog.close();
     contactDialog.close();
   }
 });
@@ -162,7 +147,6 @@ const contactDialog = createModalDialog({
   onOpen: () => {
     teamCarousel.close();
     contentDialog.close();
-    philosophyDialog.close();
   }
 });
 
@@ -210,7 +194,6 @@ function returnToExteriorView() {
 
 function closeDialogs() {
   teamCarousel.close();
-  philosophyDialog.close();
   contentDialog.close();
   contactDialog.close();
 }
@@ -311,7 +294,7 @@ function followHistory(event) {
       returnToExteriorView();
       markMenuRoom("exterior");
     } else {
-      showRoom(state.room);
+      showRoom(formerRoomIds[state.room] ?? state.room);
     }
   } finally {
     restoring = false;
@@ -433,8 +416,6 @@ function bindSceneActions() {
       stepBack();
     } else if (action === "about") {
       teamCarousel.open();
-    } else if (action === "philosophy") {
-      if (insideScene.isActive) philosophyDialog.open();
     } else if (action === "contact") {
       if (insideScene.isActive) contactDialog.open();
     } else if (sign.dataset.targetRoom) {
@@ -467,7 +448,6 @@ function bindModalScrolling() {
     }, { passive: false });
   };
 
-  bindPanel(philosophyModalPanel, philosophyDialog);
   bindPanel(contentModalPanel, contentDialog);
 }
 
@@ -483,13 +463,6 @@ function bindKeyboardShortcuts() {
     if (contactDialog.isOpen()) {
       if (event.key === "Escape") {
         contactDialog.close();
-      }
-      return;
-    }
-
-    if (philosophyDialog.isOpen()) {
-      if (event.key === "Escape") {
-        philosophyDialog.close();
       }
       return;
     }
@@ -514,7 +487,8 @@ function bindKeyboardShortcuts() {
  * always did, on the turntable.
  */
 function readRequestedRoom() {
-  const requested = new URLSearchParams(window.location.search).get("room");
+  const asked = new URLSearchParams(window.location.search).get("room");
+  const requested = formerRoomIds[asked] ?? asked;
   if (!requested || requested === "exterior") return "";
 
   return roomSceneDefaults.rooms[requested] ? requested : "";
@@ -542,7 +516,6 @@ function init() {
   dogEyeController.init();
   insideScene.init();
   teamCarousel.init();
-  philosophyDialog.init();
   contentDialog.init();
   contactDialog.init();
   entranceVideo.init();
