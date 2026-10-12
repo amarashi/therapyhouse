@@ -14,6 +14,7 @@
  * is one link away from them.
  */
 import { withBase } from '../../lib/base.js';
+import { inlineHtml } from '../../lib/inline-text.js';
 import { getCollection, getEntry, render } from 'astro:content';
 import PlainLayout from '../../layouts/PlainLayout.astro';
 import HeroReveal from '../../components/HeroReveal.astro';
@@ -33,7 +34,17 @@ const page = await getEntry('pages', 'services');
 if (!page) throw new Error('Missing content: src/content/pages/services.md');
 
 const { Content } = await render(page);
-const { title, documentTitle, description, lede, offerings, therapyModels } = page.data;
+const { title, documentTitle, description, lede, offerings, therapyModels, therapyHubText: text } = page.data;
+if (!text) throw new Error('Missing therapyHubText in src/content/pages/services.md');
+
+/* The group headings are edited with the page; the keys are HUB_GROUPS'. */
+const groupHeadings: Record<string, string> = {
+  adults: text.groupHeadings.adults,
+  'children-families': text.groupHeadings.childrenFamilies,
+  couples: text.groupHeadings.couples,
+  'how-we-work': text.groupHeadings.howWeWork,
+  more: text.groupHeadings.more,
+};
 ---
 
 <PlainLayout title={title} documentTitle={documentTitle} description={description}>
@@ -64,14 +75,14 @@ const { title, documentTitle, description, lede, offerings, therapyModels } = pa
 
     {audienceHubs.length > 0 && (
       <section class="hub" aria-labelledby="by-age">
-        <h2 id="by-age">Start from who the help is for</h2>
+        <h2 id="by-age">{text.audienceHeading}</h2>
         <ServiceList links={audienceHubs} />
       </section>
     )}
 
     {groups.length > 0 && (
       <section class="hub" aria-labelledby="therapy-pages">
-        <h2 id="therapy-pages">Find the right kind of help</h2>
+        <h2 id="therapy-pages">{text.groupsHeading}</h2>
         {/* A group of one page takes half a row, so two of them share one
             instead of each leaving an empty half beside it. */}
         <div class="hub__groups">
@@ -80,7 +91,7 @@ const { title, documentTitle, description, lede, offerings, therapyModels } = pa
               class:list={['hub__group', group.links.length === 1 && 'hub__group--single']}
               aria-labelledby={`hub-${group.key}`}
             >
-              <h3 id={`hub-${group.key}`}>{group.label}</h3>
+              <h3 id={`hub-${group.key}`}>{groupHeadings[group.key] ?? group.label}</h3>
               <ServiceList links={group.links} />
             </section>
           ))}
@@ -96,18 +107,15 @@ const { title, documentTitle, description, lede, offerings, therapyModels } = pa
     */}
     <div class="band">
       <section aria-labelledby="offerings">
-        <h2 id="offerings">What we help with</h2>
+        <h2 id="offerings">{text.offeringsHeading}</h2>
         <ul class="tick-list">
           {offerings?.map((item) => <li>{item}</li>)}
         </ul>
-        <p class="band__aside-note">
-          Assessments have their own process, timeline and pricing —
-          <a href={withBase("/assessments/")}>see the assessment packages</a>.
-        </p>
+        <p class="band__aside-note" set:html={inlineHtml(text.assessmentsNote)} />
       </section>
 
       <section class="band__side" aria-labelledby="models">
-        <h2 id="models">Therapy models</h2>
+        <h2 id="models">{text.modelsHeading}</h2>
         <ul class="tick-list band__side-list">
           {therapyModels?.map((item) => <li>{item}</li>)}
         </ul>
@@ -120,13 +128,10 @@ const { title, documentTitle, description, lede, offerings, therapyModels } = pa
       <section class="pointer" aria-labelledby="fees">
         <Vignette class="pointer__art" name="fees" sizes="120px" />
         <div>
-          <h2 id="fees">Fees and Medicare</h2>
+          <h2 id="fees">{text.feesHeading}</h2>
+          <p set:html={inlineHtml(text.feesText)} />
           <p>
-            Session fees, Medicare rebates with a GP referral, private health, NDIS and
-            cancellations are all on one page.
-          </p>
-          <p>
-            <a class="standalone-link" href={withBase('/fees/')}>Fees and Medicare rebates</a>
+            <a class="standalone-link" href={withBase('/fees/')}>{text.feesLinkText}</a>
           </p>
         </div>
       </section>
@@ -134,13 +139,10 @@ const { title, documentTitle, description, lede, offerings, therapyModels } = pa
       <section class="pointer" aria-labelledby="video">
         <Vignette class="pointer__art" name="video" sizes="120px" />
         <div>
-          <h2 id="video">Sessions by video</h2>
+          <h2 id="video">{text.videoHeading}</h2>
+          <p set:html={inlineHtml(text.videoText)} />
           <p>
-            If you live outside Brisbane, or the trip to The Gap is hard, you can see a
-            psychologist by video from anywhere in Australia.
-          </p>
-          <p>
-            <a class="standalone-link" href={withBase('/telehealth/')}>How video sessions work</a>
+            <a class="standalone-link" href={withBase('/telehealth/')}>{text.videoLinkText}</a>
           </p>
         </div>
       </section>

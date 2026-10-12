@@ -75,6 +75,16 @@ const assessmentPackage = z.object({
   draft,
 });
 
+/**
+ * A fixed set of short texts: the headings and sentences a page's template
+ * prints around its content (section headings, link wording, one-line
+ * pointers), so that staff can reword them in the CMS ("Headings and short
+ * text") without the developer. Every key is required, because the template
+ * prints each one. A sentence may hold a link written `[words](/page/)`
+ * (src/lib/inline-text.js).
+ */
+const words = (...keys) => z.object(Object.fromEntries(keys.map((key) => [key, z.string()])));
+
 export const pagesSchema = z.object({
   /** <h1>, and the <title> unless `documentTitle` is set. */
   title: z.string(),
@@ -126,6 +136,24 @@ export const pagesSchema = z.object({
   /* ---- Services blocks ---- */
   offerings: z.array(z.string()).optional(),
   therapyModels: z.array(z.string()).optional(),
+  /** /therapy/'s headings and pointers. `groupHeadings` names the hub's
+      groups, one per `hubGroup` (HUB_GROUPS in src/lib/services.js), plus
+      `more` for pages not yet given one. */
+  therapyHubText: words(
+    'audienceHeading',
+    'groupsHeading',
+    'offeringsHeading',
+    'assessmentsNote',
+    'modelsHeading',
+    'feesHeading',
+    'feesText',
+    'feesLinkText',
+    'videoHeading',
+    'videoText',
+    'videoLinkText'
+  )
+    .extend({ groupHeadings: words('adults', 'childrenFamilies', 'couples', 'howWeWork', 'more') })
+    .optional(),
   fees: z.array(feeRow).optional(),
   rebates: z.array(z.string()).optional(),
   reports: z.array(z.string()).optional(),
@@ -140,6 +168,61 @@ export const pagesSchema = z.object({
   cancellation: z
     .object({ published: z.string(), sourceUrl: z.string().url(), rules: z.array(z.string()), notes: z.array(z.string()) })
     .optional(),
+  /** /fees/'s headings and the sentences without a Medicare figure in them.
+      A sentence that states a rebate, an item number or a session limit
+      stays in src/pages/fees.astro, beside the data it reads. */
+  feesText: words(
+    'sessionFeesHeading',
+    'sessionColumn',
+    'costColumn',
+    'unconfirmedNote',
+    'provisionalHeading',
+    'couplesFamilyHeading',
+    'adjustmentsHeading',
+    'medicareHeading',
+    'medicareIntro',
+    'referralHeading',
+    'videoHeading',
+    'videoText',
+    'videoLinkText',
+    'privateHealthHeading',
+    'ndisHeading',
+    'ndisLinkText',
+    'assessmentsHeading',
+    'assessmentsIntro',
+    'assessmentsLinkText',
+    'reportsHeading',
+    'cancellationHeading',
+    'questionsHeading',
+    'questionsText'
+  )
+    .extend({
+      /** Medicare points after the first, which states the session limit. */
+      medicareNotes: z.array(z.string()),
+      referralSteps: z.array(z.string()).min(1),
+    })
+    .optional(),
+
+  /* ---- Telehealth blocks ---- */
+  /** /telehealth/'s headings and sentences. The Medicare paragraph and the
+      rebate lines stay in the template: they print figures from
+      src/data/medicare.js. */
+  telehealthText: words(
+    'moreHelpIntro',
+    'medicareHeading',
+    'referralLinkText',
+    'feesHeading',
+    'feesText',
+    'feesLinkText',
+    'processHeading',
+    'regionalHeading',
+    'regionalText',
+    'townPagesHeading',
+    'cliniciansHeading',
+    'cliniciansText',
+    'bookingHeading',
+    'bookingText'
+  ).optional(),
 
   /* ---- Assessments blocks ---- */
   process: z.array(z.string()).optional(),
@@ -152,6 +235,23 @@ export const pagesSchema = z.object({
    * clinic's mouth.
    */
   goodToKnow: z.array(z.string()).optional(),
+  /** /assessments/'s headings, table headings and pointers. */
+  assessmentsText: words(
+    'typesHeading',
+    'processHeading',
+    'documentsHeading',
+    'documentsIntro',
+    'packagesHeading',
+    'packagesNote',
+    'packageColumn',
+    'registeredColumn',
+    'registeredColumnShort',
+    'provisionalColumn',
+    'provisionalColumnShort',
+    'addOnsHeading',
+    'fundingNote',
+    'goodToKnowHeading'
+  ).optional(),
 
   /* ---- Group therapy blocks ---- */
   /* The switch is on each program in the list. The Circle of Security block

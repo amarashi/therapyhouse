@@ -1,0 +1,36 @@
+{
+  "crisisNote": "If you need to talk to someone now, call Lifeline on [13 11 14](tel:131114) (any time, day or night). In an emergency, call [000](tel:000).",
+  "servicePages": {
+    "contentsHeading": "On this page",
+    "therapyPagesHeading": "Therapy pages",
+    "assessmentPagesHeading": "Assessment pages",
+    "cliniciansHeading": "Who you would see",
+    "formatsHeading": "In person or by video",
+    "inRoom": {
+      "label": "In person at the clinic in The Gap",
+      "short": "In person in The Gap",
+      "linkText": "Finding the clinic"
+    },
+    "video": {
+      "label": "By video, from home",
+      "short": "By video",
+      "linkText": "How video sessions work"
+    },
+    "processHeading": "What happens",
+    "feesHeading": "What it costs",
+    "sessionFeesText": "Sessions are charged at the clinic's usual session fees, which are listed with what Medicare pays back on the fees page.",
+    "quoteText": "Call reception for a quote. Fees depend on what is involved, and reception will tell you before anything is booked.",
+    "feesLinkText": "All fees and Medicare rebates",
+    "medicareHeading": "Medicare and other funding",
+    "questionsHeading": "Questions people ask",
+    "relatedHeading": "Related"
+  },
+  "townPages": {
+    "medicareHeading": "Medicare rebate",
+    "feesLinkText": "Fees and Medicare rebates",
+    "couplesLinkText": "Couples therapy",
+    "cliniciansHeading": "The clinicians",
+    "cliniciansText": "[Meet the team](/team/), or read [how video sessions work](/telehealth/).",
+    "sourcesHeading": "Where these facts come from"
+  }
+}

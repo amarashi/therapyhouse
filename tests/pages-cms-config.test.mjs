@@ -315,6 +315,7 @@ const JSON_FILES = {
   "house-copy": "public/assets/content/house-copy.json",
   "house-rooms": "public/assets/content/house-rooms.json",
   "library-shelf": "src/data/library-shelf.json",
+  "shared-text": "src/data/shared-text.json",
 };
 
 test("every JSON file's form matches the keys in the file", () => {

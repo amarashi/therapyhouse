@@ -13,12 +13,19 @@ import { getCollection, render } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
 import PlainLayout from '../../layouts/PlainLayout.astro';
 import { withBase } from '../../lib/base.js';
+import { inlineHtml } from '../../lib/inline-text.js';
 import { builtPaths } from '../../lib/links.js';
 import { businessId } from '../../lib/services.js';
 import { includeInBuild, isProductionSite } from '../../lib/drafts.js';
 import { assertTownPage } from '../../lib/towns.js';
 import { site } from '../../data/site.js';
+import sharedText from '../../data/shared-text.json';
 import { assertRebatesCurrent, formatAsAt, formatRebate, medicare } from '../../data/medicare.js';
+
+/* Headings and links shared by every town page, edited in the CMS as
+   "Wording shared across pages" (src/data/shared-text.json). The Medicare
+   sentence stays here: its figures come from src/data/medicare.js. */
+const text = sharedText.townPages;
 
 export async function getStaticPaths() {
   const production = isProductionSite(import.meta.env.SITE);
@@ -82,26 +89,23 @@ const schema = {
     </div>
 
     <section aria-labelledby="medicare" data-town-body>
-      <h2 id="medicare">Medicare rebate</h2>
+      <h2 id="medicare">{text.medicareHeading}</h2>
       <p>
         Per video session of 50 minutes or more, as at {formatAsAt(medicare.asAt)}:{' '}
         {formatRebate(psychologist.rebate)} with a psychologist, {formatRebate(clinical.rebate)} with
         a clinical psychologist.{' '}
-        <a href={withBase('/fees/')}>Fees and Medicare rebates</a>
-        {couplesHref && <>{' · '}<a href={couplesHref}>Couples therapy</a></>}
+        <a href={withBase('/fees/')}>{text.feesLinkText}</a>
+        {couplesHref && <>{' · '}<a href={couplesHref}>{text.couplesLinkText}</a></>}
       </p>
     </section>
 
     <section aria-labelledby="clinicians" data-town-body>
-      <h2 id="clinicians">The clinicians</h2>
-      <p>
-        <a href={withBase('/team/')}>Meet the team</a>, or read{' '}
-        <a href={withBase('/telehealth/')}>how video sessions work</a>.
-      </p>
+      <h2 id="clinicians">{text.cliniciansHeading}</h2>
+      <p set:html={inlineHtml(text.cliniciansText)} />
     </section>
 
     <section aria-labelledby="sources" data-town-body>
-      <h2 id="sources">Where these facts come from</h2>
+      <h2 id="sources">{text.sourcesHeading}</h2>
       <ul class="town-page__sources">
         {data.facts.map((fact) => (
           <li>{fact.text} <a href={fact.sourceUrl}>{fact.sourceName}</a></li>
