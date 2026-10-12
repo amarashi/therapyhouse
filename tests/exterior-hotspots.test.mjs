@@ -15,7 +15,7 @@ const indexHtml = await readProjectFile("src/pages/house.astro");
 const styles = await readProjectFile("public/assets/styles/main.css");
 
 const expectedIds = ["main-door", "services-window", "group-window", "blogs-sign", "team-sign", "mailbox", "staff-side-door"];
-const expectedTargets = ["welcome", "services", "groups", "library", "team", "contact", "work-with-us"];
+const expectedTargets = ["welcome", "services", "groups", "library", "team", "welcome", "work-with-us"];
 
 assert.deepEqual(exteriorHotspots.map((hotspot) => hotspot.id), expectedIds);
 assert.deepEqual(exteriorHotspots.map((hotspot) => hotspot.targetRoom), expectedTargets);

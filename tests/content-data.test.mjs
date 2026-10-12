@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 
 const { roomIds, roomNavigation, siteContent } = await import("../public/assets/scripts/content-data.js");
 
-const expectedRoomIds = ["exterior", "welcome", "team", "services", "assessments", "groups", "library", "philosophy", "contact", "telehealth", "work-with-us"];
+const expectedRoomIds = ["exterior", "welcome", "team", "services", "assessments", "groups", "library", "philosophy", "telehealth", "work-with-us"];
 
 assert.equal(siteContent.source.name, "Therapy House current WordPress site");
 assert.equal(siteContent.source.scrape.urlCount, 55);
@@ -24,7 +24,7 @@ for (const roomId of expectedRoomIds) {
 
 assert.deepEqual(
   siteContent.rooms.exterior.hotspots.map((hotspot) => hotspot.targetRoom),
-  ["welcome", "services", "groups", "library", "team", "contact", "work-with-us"]
+  ["welcome", "services", "groups", "library", "team", "welcome", "work-with-us"]
 );
 
 // What the signs open is built from the plain pages' files when /house/ is

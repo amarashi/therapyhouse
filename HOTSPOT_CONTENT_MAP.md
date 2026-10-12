@@ -33,16 +33,22 @@ The exterior is a 48-frame turntable. Its spots:
 | `group-window` | Group Therapy | Group Room |
 | `blogs-sign` | Library | Library |
 | `team-sign` | Team | Team Parlour |
-| `mailbox` | Contact | Reception |
+| `mailbox` | Contact | Welcome Room |
 | `staff-side-door` | Work With Us | Work With Us |
 
 ## Room: `welcome`: Welcome Room
 
+The front room, and reception too: reception was a room of its own until
+it joined this one (see "One front room" in docs/house-plan.md). An old
+`?room=contact` address still walks in here.
+
 | Sign | Words on it | Opens |
 | --- | --- | --- |
 | `about` | About Us | the team carousel |
-| `philosophy` | Our Philosophy | the philosophy pop-up |
-| `contact` | Contact Us | the contact pop-up |
+| `philosophy` | Our Philosophy | Attic Reading Room |
+| `contact` | Book or call | the contact pop-up: booking and calling, phone, email, address |
+| `find-us` | Find us | preview `contact.findUs` (address and parking), then Google Maps |
+| `telehealth` | See us by video | Telehealth Room |
 | `back` | Back | one step back (outside, if the visit began here) |
 
 ## Room: `team`: Team Parlour
@@ -115,18 +121,6 @@ The exterior is a 48-frame turntable. Its spots:
 | `sanctuary` | Sanctuary For Wellness | preview `philosophy.principles.2`, then /philosophy/ |
 | `meaningful-connections` | Meaningful Connections | preview `philosophy.principles.3`, then /philosophy/ |
 | `authenticity` | Authenticity | preview `philosophy.principles.4`, then /philosophy/ |
-| `back` | Back | one step back (outside, if the visit began here) |
-
-## Room: `contact`: Reception
-
-| Sign | Words on it | Opens |
-| --- | --- | --- |
-| `book-online` | Book Online | preview `contact.bookingUrl`, then https://my.powerdiary.com/clientportal/3cjz0 |
-| `phone` | Phone | preview `contact.phone`, then tel:+61733002170 |
-| `email` | Email | preview `contact.email`, then mailto:admin@therapyhouse.com.au |
-| `address` | Address | preview `contact.address`, then https://www.google.com/maps/search/?api=1&query=1290%20Waterworks%20Rd%2C%20The%20Gap%2C%20Brisbane%2C%20QLD%2C%204061 |
-| `parking` | Parking | preview `contact.intro`, then /contact/ |
-| `telehealth` | See us by video | Telehealth Room |
 | `back` | Back | one step back (outside, if the visit began here) |
 
 ## Room: `telehealth`: Telehealth Room

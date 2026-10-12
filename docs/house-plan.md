@@ -72,7 +72,8 @@ to the matching plain page, and with booking and calling given equal weight.
 A new room, `telehealth`, with its own illustration: a quiet corner of the
 house set up for video sessions. Its signs preview how video sessions work,
 Medicare, who you would see and how to book, each leading to `/telehealth/`.
-It is reached from a sign in reception and from the rooms menu. The
+It is reached from a sign in reception (now the welcome room, see "One
+front room" below) and from the rooms menu. The
 `/telehealth/` page itself gets no door into the house: PRODUCT.md keeps the
 pages written for the telehealth audience plain and answer-first.
 
@@ -107,12 +108,35 @@ one commit each.
 | A | `src/lib/house-content.js` builds every sign's preview from the plain pages' files; `house-copy.json` keeps only the house's own wording. The team carousel reads the team collection. |
 | B | Pop-ups are short previews on solid cream, each with a link to its page and the booking and calling pair. |
 | C | `?room=<id>` addresses, history entries for every move, a Back sign that steps back one room, and the Rooms menu. |
-| D | The telehealth room (`public/assets/rooms/telehealth-room.webp`; master in `art-src/rooms-inside/`, untracked), reached from a sign in reception and from the menu. |
+| D | The telehealth room (`public/assets/rooms/telehealth-room.webp`; master in `art-src/rooms-inside/`, untracked), reached from a sign in reception (now the welcome room) and from the menu. |
 | E | The CMS House screen explains where its words come from; the unused `houseProgram` component is gone. |
 | F | `CODEBASE.md`, `HOTSPOT_CONTENT_MAP.md`, `AGENTS.md` and `SITE_CONTENT.md` describe the site as it is; `tests/house-text-source.test.mjs` keeps typed text out of `house.astro`. |
 | G | Room changes cross-fade after the next picture decodes; reachable rooms preload; no layout reads per pointer move; parallax easing is timed. |
 
+## One front room
+
+Added on 2026-10-13, after the phases above. The welcome room and reception
+were two front rooms: the front door opened the welcome room, which said
+"Welcome to Therapy House" and sent a visitor on to reception, which said
+"Welcome" again. A parent who wanted to book walked through two rooms to do
+it, against "never make a worried parent wait" in PRODUCT.md. Reception has
+joined the welcome room, which kept its picture.
+
+| What | Now |
+| --- | --- |
+| Welcome room signs | About Us (team carousel), Our Philosophy (up to the attic), Book or call (the contact pop-up), Find us (address and parking), See us by video (the telehealth room), Back. |
+| The philosophy pop-up | Gone; the attic holds the philosophy, so it is written in one place. |
+| The mailbox outside, the `/contact/` hero, the Rooms menu | Lead to the welcome room. An old `?room=contact` address does too (`formerRoomIds` in `content-data.js`). |
+| `reception-room.webp` | Off the site; a copy is in `art-src/rooms-inside/` (untracked). |
+
 Still open:
+
+- The `/contact/` hero still shows the reception cutaway picture
+  (`reception-room-out*.webp`), and it now opens the welcome room. A cutaway
+  of the welcome room would make the picture match the room it opens.
+- The notebook painted into the welcome room picture reads "(07) 3223 4550",
+  which is not the clinic's number (07 3300 2170). The "Book or call" sign sits
+  on it and its pop-up has the right number, but the picture itself is wrong.
 
 - The new room's master image is local only, like the other masters in `art-src/`.
 - Removing a sign in the CMS stops the build (a missing id throws), so the live site keeps its last good version and a deploy alert goes out. A friendlier guard would need Pages CMS to fix each room's list of signs.

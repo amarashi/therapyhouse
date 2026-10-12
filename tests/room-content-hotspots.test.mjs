@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-import { roomSceneDefaults } from "../public/assets/scripts/content-data.js";
+import { clinic, roomSceneDefaults } from "../public/assets/scripts/content-data.js";
 import { builtHouseContent } from "./helpers/house-content.mjs";
 
 const root = new URL("../", import.meta.url);
@@ -24,7 +24,7 @@ const styles = await readProjectFile("public/assets/styles/main.css");
 
 for (const [roomId, roomScene] of Object.entries(roomSceneDefaults.rooms)) {
   for (const hotspot of roomScene.hotspots) {
-    if (["back", "about", "philosophy", "contact"].includes(hotspot.action)) continue;
+    if (["back", "about", "contact"].includes(hotspot.action)) continue;
     if (hotspot.targetRoom) continue;
 
     assert.ok(hotspot.contentKey, `${roomId}.${hotspot.id} should define a contentKey`);
@@ -32,14 +32,17 @@ for (const [roomId, roomScene] of Object.entries(roomSceneDefaults.rooms)) {
   }
 }
 
-const contactRoomHotspots = roomSceneDefaults.rooms.contact.hotspots
-  .filter((hotspot) => hotspot.id !== "back")
-  .map((hotspot) => hotspot.action);
-assert.deepEqual(contactRoomHotspots, ["content", "content", "content", "content", "content", "content"]);
-
-// Reception leads through to the telehealth room (docs/house-plan.md, phase D).
-const telehealthDoor = roomSceneDefaults.rooms.contact.hotspots.find((hotspot) => hotspot.id === "telehealth");
-assert.equal(telehealthDoor.targetRoom, "telehealth");
+// One front room (docs/house-plan.md): reception joined the welcome room, so
+// booking and calling, finding the clinic and the way to the telehealth room
+// are all in the first room a visitor walks into, and there is no reception.
+assert.equal(roomSceneDefaults.rooms.contact, undefined);
+const welcome = Object.fromEntries(roomSceneDefaults.rooms.welcome.hotspots.map((hotspot) => [hotspot.id, hotspot]));
+assert.deepEqual(Object.keys(welcome), ["about", "philosophy", "contact", "find-us", "telehealth", "back"]);
+assert.equal(welcome.contact.action, "contact");
+assert.equal(previews[welcome["find-us"].contentKey].text[0], clinic.address);
+assert.equal(welcome.philosophy.targetRoom, "philosophy");
+assert.equal(welcome.telehealth.targetRoom, "telehealth");
+assert.match(appScript, /formerRoomIds\[asked\]/, "an old ?room=contact address must still walk in");
 for (const hotspot of roomSceneDefaults.rooms.telehealth.hotspots.filter((h) => h.action !== "back")) {
   assert.match(previews[hotspot.contentKey].link.href, /^\/telehealth\//, `${hotspot.id} should lead to /telehealth/`);
 }
@@ -57,7 +60,7 @@ assert.match(styles, /\.content-modal__button/);
 
 // Phase B (docs/house-plan.md): booking and calling close every pop-up as an
 // equal pair, and neither is ever shown alone.
-for (const id of ["philosophyModal", "contentModal", "contactModal"]) {
+for (const id of ["contentModal", "contactModal"]) {
   const start = indexHtml.indexOf(`id="${id}"`);
   assert.notEqual(start, -1, `house.astro has no #${id}`);
   const dialog = indexHtml.slice(start, indexHtml.indexOf("</section>", start));

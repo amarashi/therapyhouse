@@ -60,7 +60,14 @@ function roomLayer(roomId, path, className) {
     : { src: asset(path), alt: image.alt };
 }
 
-export const roomIds = ["exterior", "welcome", "team", "services", "assessments", "groups", "library", "philosophy", "contact", "telehealth", "work-with-us"];
+export const roomIds = ["exterior", "welcome", "team", "services", "assessments", "groups", "library", "philosophy", "telehealth", "work-with-us"];
+
+/*
+ * Reception was a room of its own until it joined the welcome room
+ * (docs/house-plan.md, "One front room"). An address or a history entry from
+ * before then still names it, and walks in to where reception now is.
+ */
+export const formerRoomIds = { contact: "welcome" };
 
 function navigationRoom(id) {
   const { title, label, description, exteriorEntry } = roomText(id);
@@ -170,9 +177,9 @@ export const exteriorHotspots = [
   {
     id: "mailbox",
     ...signText("exterior", "mailbox"),
-    targetRoom: "contact",
+    targetRoom: "welcome",
     exteriorFeature: "mailbox",
-    contentKey: "rooms.contact",
+    contentKey: "rooms.welcome",
     position: { x: 0.835, y: 0.66, width: 0.16, height: 0.22, shiftX: -0.08 }
   },
   {
@@ -229,8 +236,8 @@ export const roomSceneDefaults = {
         hotspot({
           room: "welcome",
           id: "philosophy",
-          action: "philosophy",
-          contentKey: "philosophy",
+          targetRoom: "philosophy",
+          contentKey: "rooms.philosophy",
           className: "scene-sign--wall",
           x: 335,
           y: 265,
@@ -243,7 +250,6 @@ export const roomSceneDefaults = {
           room: "welcome",
           id: "contact",
           action: "contact",
-          targetRoom: "contact",
           contentKey: "contact",
           className: "scene-sign--notebook",
           x: 1438,
@@ -257,6 +263,10 @@ export const roomSceneDefaults = {
           scaleX: 0.64,
           scaleY: 1.31
         }),
+        /* Reception's signs, since it joined this room: the way out through
+           the round window, and the arch through to the telehealth room. */
+        hotspot({ room: "welcome", id: "find-us", contentKey: "contact.findUs", x: 737, y: 160, scale: 0.74 }),
+        hotspot({ room: "welcome", id: "telehealth", targetRoom: "telehealth", contentKey: "rooms.telehealth", x: 1087, y: 300 }),
         hotspot({
           room: "welcome",
           id: "back",
@@ -403,28 +413,8 @@ export const roomSceneDefaults = {
       ]
     },
 
-    contact: {
-      id: "contact",
-      imageSize: roomImageSize,
-      background: {
-        layers: [
-          roomLayer("contact", "assets/rooms/reception-room.webp")
-        ]
-      },
-      effects: { firelight: false, dogEyes: false },
-      hotspots: [
-        hotspot({ room: "contact", id: "book-online", contentKey: "contact.bookingUrl", x: 1480, y: 335 }),
-        hotspot({ room: "contact", id: "phone", contentKey: "contact.phone", x: 1410, y: 485 }),
-        hotspot({ room: "contact", id: "email", contentKey: "contact.email", x: 940, y: 280 }),
-        hotspot({ room: "contact", id: "address", contentKey: "contact.address", x: 880, y: 485 }),
-        hotspot({ room: "contact", id: "parking", contentKey: "contact.intro", x: 290, y: 550 }),
-        hotspot({ room: "contact", id: "telehealth", targetRoom: "telehealth", contentKey: "rooms.telehealth", x: 1250, y: 600 }),
-        hotspot({ room: "contact", id: "back", action: "back", x: 180, y: 180 })
-      ]
-    },
-
     /*
-     * The telehealth room, through reception (docs/house-plan.md, phase D): a
+     * The telehealth room, through the welcome room (docs/house-plan.md, phase D): a
      * study in the cottage set up for video sessions, its window onto gum
      * trees and hills. Every sign leads to /telehealth/. The /telehealth/
      * page has no door of its own into the house: it is written for people
@@ -555,10 +545,12 @@ export const siteContent = {
       hotspots: exteriorHotspots
     },
 
-    welcome: roomRecord("welcome", [asset("")], [
+    welcome: roomRecord("welcome", [asset(""), asset("contact/")], [
       roomLink("welcome", "about-team", "team", { targetRoom: "team", sign: "about" }),
-      roomLink("welcome", "philosophy", "philosophy"),
-      roomLink("welcome", "contact", "contact", { targetRoom: "contact" }),
+      roomLink("welcome", "philosophy", "rooms.philosophy", { targetRoom: "philosophy" }),
+      roomLink("welcome", "contact", "contact"),
+      roomLink("welcome", "find-us", "contact.findUs"),
+      roomLink("welcome", "telehealth", "rooms.telehealth", { targetRoom: "telehealth" }),
       /* Not a sign in the room, so never shown; kept as the record of the way back out. */
       { id: "explore-house", label: "Explore The House", targetRoom: "exterior", contentKey: "roomGuide" }
     ]),
@@ -615,15 +607,6 @@ export const siteContent = {
     philosophy: roomRecord("philosophy", [asset("philosophy/")], [
       roomLink("philosophy", "philosophy-overview", "philosophy"),
       ...principleSigns.map((id, index) => roomLink("philosophy", id, `philosophy.principles.${index}`))
-    ]),
-
-    contact: roomRecord("contact", [asset("contact/")], [
-      roomLink("contact", "book-online", "contact.bookingUrl"),
-      roomLink("contact", "phone", "contact.phone"),
-      roomLink("contact", "email", "contact.email"),
-      roomLink("contact", "address", "contact.address"),
-      roomLink("contact", "parking", "contact.intro"),
-      roomLink("contact", "telehealth", "rooms.telehealth", { targetRoom: "telehealth" })
     ]),
 
     telehealth: roomRecord("telehealth", [asset("telehealth/")], [

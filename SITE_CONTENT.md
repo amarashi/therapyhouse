@@ -56,7 +56,7 @@ separate site — it is a presentation layer mounted over the same pages.
 | `/team/<slug>/` | — (carousel card) | Individual practitioner ×12 (list awaiting the clinic's confirmation, see `/team/` below) | `src/content/team/` | ✏️ ❓ |
 | `/library/` | Library | Library — articles, books, videos | `library` | ✅ |
 | `/library/<slug>/` | — (blog hotspot) | Individual article ×25 (issue #39) | `src/content/articles/` | ✅ |
-| `/contact/` | Reception | Contact & Booking | `contact` | ✅ |
+| `/contact/` | Welcome Room (Book or call, Find us) | Contact & Booking | `contact` | ✅ |
 | `/work-with-us/` | Work With Us | Work With Us | `workWithUs` | ✏️ |
 | `/philosophy/` | — (modal today) | Our Philosophy | `philosophy` | ✅ |
 | `/privacy-policy/` | — | Privacy Policy (built in #42, linked in the footer) | `src/content/pages/privacy-policy.md` | ⚖️ ❓ |

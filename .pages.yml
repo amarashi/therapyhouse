@@ -2111,14 +2111,6 @@ content:
                 label: To the telehealth page
                 type: string
                 required: true
-              - name: book
-                label: Book online
-                type: string
-                required: true
-              - name: call
-                label: Call reception
-                type: string
-                required: true
               - name: email
                 label: Email reception
                 type: string
@@ -2210,8 +2202,8 @@ content:
             label: Rooms
             type: object
             list:
-              min: 11
-              max: 11
+              min: 10
+              max: 10
               collapsible:
                 collapsed: true
                 summary: "{fields.title}"
