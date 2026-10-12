@@ -346,6 +346,15 @@ test("the house text is only its own wording, one field per key", () => {
   }
 });
 
+test("no CMS note asks staff to make the same change twice", () => {
+  // The house reads the pages' own files (docs/house-plan.md, phase A), so
+  // there is no second copy for a note to point staff at.
+  const config = read(".pages.yml");
+  assert.doesNotMatch(config, /change both/i);
+  assert.doesNotMatch(config, /House > House text >/);
+  assert.doesNotMatch(config, /houseProgram/);
+});
+
 test("lists the developer must grow are fixed at their current length", () => {
   const fixed = (entryName, path, length) => {
     const found = [...walk(entry(entryName).fields)].find((w) => w.path === path)?.field;

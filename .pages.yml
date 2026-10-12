@@ -103,20 +103,6 @@ components:
               label: Couples and family sessions
       - name: draft
         component: draft
-  houseProgram:
-    type: object
-    fields:
-      - name: title
-        label: Name
-        type: string
-        required: true
-      - name: audience
-        label: Who it is for
-        type: string
-      - name: description
-        label: Description
-        type: text
-        required: true
 
 content:
   # ------------------------------------------------------------------ Team
@@ -2050,7 +2036,11 @@ content:
   # ------------------------------------------------------------------ House
   - name: house
     label: House
-    description: The words in the illustrated house. Where a sign or picture sits is set by the developer.
+    description: >-
+      The words that belong to the illustrated house itself. What a sign
+      opens is a short preview of a page, taken from that page as you edit
+      it under Pages, Team, Articles and the rest, so there is nothing to
+      copy here. Where a sign or picture sits is set by the developer.
     type: group
     items:
       - name: house-copy
