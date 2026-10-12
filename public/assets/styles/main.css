@@ -204,6 +204,18 @@
       user-select: none;
     }
 
+    /* The house outside turns when dragged (turntable-viewer.js): an open
+       hand says so, a closed one while it turns. Doors and signs keep their
+       pointer until a drag has begun. */
+    .stage:not(.is-inside) {
+      cursor: grab;
+    }
+
+    .stage.is-dragging,
+    .stage.is-dragging * {
+      cursor: grabbing !important;
+    }
+
     .orientation-lock {
       position: fixed;
       inset: 0;
@@ -295,7 +307,7 @@
       padding: 0;
       background: transparent;
       cursor: pointer;
-      touch-action: manipulation;
+      touch-action: none;
       isolation: isolate;
       z-index: 3;
     }
@@ -353,7 +365,7 @@
       color: rgba(58, 38, 18, 0.96);
       cursor: pointer;
       pointer-events: auto;
-      touch-action: manipulation;
+      touch-action: none;
       transform: translateZ(0);
     }
 

@@ -47,6 +47,11 @@ export function createTurntableViewer({
   let inertialVelocity = 0;
   let isInteractionLocked = false;
   let isDragging = false;
+  // The pointer pressed on the house that may yet become a drag, and how far
+  // it must move first (`init`).
+  let pressPointerId = null;
+  const dragThreshold = 6;
+  let hoverPaused = false;
   let dragStartX = 0;
   let dragStartAngle = 0;
   let lastDragAngle = 0;
@@ -415,31 +420,52 @@ export function createTurntableViewer({
 
     stage.addEventListener("pointerdown", (event) => {
       if (isInteractionLocked) return;
-      if (event.target.closest(".door-hotspot, .exterior-hotspot")) return;
+      if (event.button !== undefined && event.button !== 0) return;
 
-      isDragging = true;
+      /*
+       * A press anywhere on the house can turn it, a door or a sign included:
+       * they cover much of the house, and a drag that could not start on one
+       * felt like the house would not turn. It becomes a drag once the pointer
+       * has moved `dragThreshold` pixels. A press that stays put is a click,
+       * and the door or sign under it opens as before.
+       */
+      pressPointerId = event.pointerId;
       dragStartX = event.clientX;
       dragStartAngle = targetAngle;
       lastDragAngle = targetAngle;
       lastDragTime = performance.now();
       dragVelocity = 0;
+      inertialVelocity = 0;
+    });
+
+    function beginDrag(event) {
+      isDragging = true;
+      // Once someone turns the house by hand, hover stops turning it for them
+      // until the pointer leaves the house; it used to start up again the
+      // moment they let go, and fought them.
+      hoverPaused = true;
       hoverActive = false;
       hoverVelocity = 0;
       hoverTargetVelocity = 0;
-      inertialVelocity = 0;
-
+      stage.classList.add("is-dragging");
       try {
+        // Captured, the click that ends the drag lands on the stage and not
+        // on the door or sign it started on, so turning never opens a room.
         stage.setPointerCapture(event.pointerId);
       } catch (error) {
         // Synthetic pointer events in automated tests may not have an active pointer.
       }
-    });
+    }
 
     stage.addEventListener("pointermove", (event) => {
       if (isInteractionLocked) return;
 
       // Measured on resize (`resizeCanvas`), not on every move.
       const rect = stageRect || stage.getBoundingClientRect();
+
+      if (!isDragging && pressPointerId === event.pointerId && Math.abs(event.clientX - dragStartX) >= dragThreshold) {
+        beginDrag(event);
+      }
 
       if (isDragging) {
         const dx = event.clientX - dragStartX;
@@ -455,6 +481,8 @@ export function createTurntableViewer({
         setTargetAngle(nextAngle);
         return;
       }
+
+      if (hoverPaused || pressPointerId !== null || event.pointerType === "touch") return;
 
       const position = clamp((event.clientX - rect.left) / Math.max(rect.width, 1), 0, 1);
       const centred = position * 2 - 1;
@@ -478,6 +506,8 @@ export function createTurntableViewer({
         inertialVelocity = dragVelocity;
       }
       isDragging = false;
+      pressPointerId = null;
+      stage.classList.remove("is-dragging");
       if (event.pointerId !== undefined && stage.hasPointerCapture(event.pointerId)) {
         stage.releasePointerCapture(event.pointerId);
       }
@@ -486,11 +516,17 @@ export function createTurntableViewer({
 
     stage.addEventListener("pointerup", endDrag);
     stage.addEventListener("pointercancel", endDrag);
-    stage.addEventListener("pointerleave", () => {
+    stage.addEventListener("pointerleave", (event) => {
+      // A captured drag keeps going outside the stage; only a pointer that
+      // has really left ends a drag here.
+      if (isDragging && stage.hasPointerCapture?.(event.pointerId)) return;
       if (isDragging && Math.abs(dragVelocity) >= dragInertiaMinimum) {
         inertialVelocity = dragVelocity;
       }
       isDragging = false;
+      pressPointerId = null;
+      hoverPaused = false;
+      stage.classList.remove("is-dragging");
       hoverActive = false;
       hoverTargetVelocity = 0;
       ensureAnimation();
