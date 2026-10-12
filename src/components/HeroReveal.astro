@@ -42,14 +42,13 @@ interface Props {
   /** Homepage shows a scroll cue; inner pages don't need one. */
   showCue?: boolean;
   /**
-   * The opening frame. Both layouts run the same scroll transition; they
-   * differ in the composition it starts from.
+   * The opening frame. Both layouts settle into the same composition — title
+   * left, room right — and differ only in the frame they open on.
    *
    * `stacked` — the default, and what every page other than the homepage
    * uses: the title stands on the room, holding the page's left edge, and the
    * room runs wider and taller than the frame can hold. You are inside it at
-   * rest, and scrolling walks you back out until the whole room is visible in
-   * the distance. The room is the reason these pages do not read as a clinic
+   * rest, and settling walks you back out until the whole room is in view. The room is the reason these pages do not read as a clinic
    * template, so it is given more than the size to be looked at.
    *
    * `anchored` — one left edge for the whole page. The welcome is set large
@@ -62,10 +61,10 @@ interface Props {
    */
   layout?: 'stacked' | 'anchored';
   /**
-   * Render the resting composition with no scroll transition at all — the
-   * same layout everyone gets under `prefers-reduced-motion`: the title above
-   * the room, the room at the size it fits, and the content directly under
-   * it. Nothing sets this today; it is the escape hatch for a page that turns
+   * Open on the settled composition and never move — the same layout everyone
+   * gets under `prefers-reduced-motion`: the title on the left, the room
+   * smaller beside it, and the content directly under them. Nothing sets this
+   * today; it is the escape hatch for a page that turns
    * out to need the answer above everything else.
    */
   still?: boolean;
@@ -160,17 +159,13 @@ const sizes = imageSmall
 ---
 
 {/*
-  Every hero holds still while the page scrolls past it. The stage is sticky,
-  the section is taller than the viewport, and that surplus is the runway the
-  transition gets: `--p` (0→1, published by the scroll script in the layout)
-  drives the room back into the distance while the title comes forward, grows
-  and takes the middle of the screen. The two directions are the point — the
-  room recedes, the name of the place advances — so the title crosses in front
-  of the artwork rather than clearing out of its way.
-
-  The layouts differ only in the frame they open on: `anchored` puts the
-  welcome and the house side by side, `stacked` stands the title on the room.
-  From there the movement is the same one.
+  Every hero opens on the same frame it always has — the title standing on a
+  large room — and settles into a quieter one: the title larger on the left,
+  the room smaller on the right, the page's content rising under them. The
+  first scroll starts it and it plays through on its own; it is not tied to
+  how far you scroll. The settled frame is the real layout, so that is also
+  what anyone on `prefers-reduced-motion` gets from the start. The measuring
+  lives in the script at the foot of PlainLayout.
 */}
 <section
   class:list={[
@@ -394,101 +389,79 @@ const sizes = imageSmall
 
 <style>
   /* ===================================================================
-     The hero is one movement on every page: the room goes back, and the
-     title comes forward and takes the middle of the screen.
+     The hero is one movement on every page: the room steps back to the
+     right, and the title comes forward, larger, on the left.
 
-     Everything below splits in two. First the resting composition — the
-     frame the page opens on, and the whole of what anyone on
-     `prefers-reduced-motion` ever sees. Then, inside a `no-preference`
-     block, the pinned stage and the transition itself, driven entirely by
-     `--p` (0→1, published by the scroll script in PlainLayout) plus three
-     lengths that script measures for the title's travel. No layout property
-     is animated — the room and the title are each a transform and an
-     opacity — so a scroll never waits on the hero.
+     The stylesheet is written end-first. The base rules below are the
+     settled composition — title and room side by side — and that is also
+     the whole of what anyone on `prefers-reduced-motion` ever sees. The
+     opening frame (the title standing on a large room) lives inside a
+     `no-preference` block and only applies until the hero is settled.
+
+     Settling is not scrubbed by the scroll. The first scroll starts it and
+     it plays through on its own, like a short clip (the script in
+     PlainLayout does the measuring). Because the settled frame is the real
+     layout, the title ends the movement drawn at its true size, with no
+     scale left on it — which is what keeps the words sharp. The old
+     version enlarged a pre-drawn picture of the title by up to 38%, and
+     that is the blur people were seeing.
      =================================================================== */
 
-  /* The runway below the pinned stage, which the content covers before any of
-     it is ever on screen. It matches the cream the stage hands over on. */
   .hero {
     background-color: var(--lamplit-cream);
+    /* The title's size in the opening frame. The settled title is this
+       times `--k` (see the h1), which the layout script fits to the column
+       the title lands in. */
+    --title-a: var(--text-display);
   }
 
-  /* The ground belongs to the stage, not to the section around it, and that is
-     load-bearing rather than tidy. The artwork is a cut-out on an opaque white
-     field and it is composited with `mix-blend-mode: multiply` so that field
-     drops into whatever it is standing on. A blend mode only sees the backdrop
-     inside its own stacking context — and the pinned stage is one — so with the
-     gradient on the section, the room's field had nothing to multiply against
-     and rode up the screen as a pale rectangle. On the stage it is in the same
-     context as the artwork, and the field disappears again.
+  .hero--anchored {
+    --title-a: var(--text-hero);
+  }
 
-     It also stops the ground sliding under a stage that is holding still: white
-     where the room ends up, settling to the cream the content opens on.
-
-     Where it finishes is not a taste decision. The content rises over the
-     runway while the stage is pinned, and the highest its top edge ever
-     reaches is `100vh - --hero-overlap` — 68vh at the wide sizes, 75vh
-     narrow. The ground has to be the cream the content opens on by then, or
-     the two meet as a step rather than a handover: the gradient used to end
-     at the foot of the stage, so the edge arrived while the ground was still
-     four fifths of the way through the ramp and drew a line across the page.
-     So it lands cream a further 6vh early and holds there, and the ramp is
-     moved up rather than shortened to pay for it — the same length of fade,
-     finished before there is anything to meet. */
+  /* The ground belongs to the stage, not to the section around it: the
+     artwork is a cut-out on an opaque white field composited with
+     `mix-blend-mode: multiply`, and a blend only sees the backdrop inside its
+     own stacking context. White at the top, settling to the cream the
+     content opens on by the foot of the stage. */
   .hero__stage {
     background-image: linear-gradient(
       180deg,
       var(--paper-white) 0,
       var(--paper-white) 16%,
       var(--warm-white) 46%,
-      var(--lamplit-cream)
-        max(40%, calc(100% - var(--hero-overlap, 32vh) - 6vh))
+      var(--lamplit-cream) 100%
     );
     background-color: var(--paper-white);
   }
 
-  /* ---- The resting composition ----
+  /* ---- The settled composition ----
 
-     One left edge: the title sits on the same margin the masthead and every
-     heading below it use, and the artwork sits under it, running to the
-     opposite margin. The homepage overrides this into two columns at wide
-     widths; nothing else needs to.
-
-     The copy is a grid item rather than an absolutely positioned block. That
-     was what made the old hero feel unplaced: the title floated at a fixed
-     offset from the top while the artwork centred itself in the viewport, so
-     the two never related to each other at any window size. */
+     One left edge: the title holds the same margin the masthead and every
+     heading below it use. Below 64rem the room sits under the title, smaller
+     than the screen and set to the right; from 64rem it stands beside it. */
   .hero__stage {
-    /* Positioned in its own right, not only when it is pinned: on the room
-       pages the door plate is measured off the frame rather than off the
-       artwork (see `.hero__door`), and that has to hold under reduced motion
-       too, where nothing here is sticky. */
+    /* Positioned in its own right: the door plate in the opening frame is
+       measured off the stage. */
     position: relative;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       'copy'
-      'art'
-      'cue';
-    grid-template-rows: auto 1fr auto;
-    align-content: center;
+      'art';
+    /* Packed to the top, never centred in the stage. The stage's height is
+       held while the movement plays, and rows that centred themselves in it
+       would drift as it let go. */
+    align-content: start;
+    align-items: center;
     justify-items: start;
-    gap: clamp(var(--space-lg), 2.4vh, var(--space-xl));
+    row-gap: clamp(var(--space-lg), 3.2vh, var(--space-2xl));
     padding-inline: var(--page-inset);
-    padding-block: clamp(var(--space-xl), 5vh, var(--space-3xl));
-    /* Grid rows default to `min-content`; without this the artwork refuses to
-       shrink and pushes the cue out of a short viewport. */
+    padding-block: clamp(var(--space-xl), 5vh, var(--space-3xl)) var(--space-2xl);
     min-height: 0;
-    /* The wash behind the title (`.hero__copy::before`) is drawn well outside
-       its own box — `inset: -46% -58%`, which computes to 639px against a
-       390px screen. It was clipped by the `overflow: hidden` on the pinned
-       stage, and that rule lives inside `prefers-reduced-motion:
-       no-preference`: turn motion off and the clip went with it, handing a
-       390px phone 89px of horizontal scroll. The reader who asks for less
-       movement is the last one who should get a page that slides sideways, so
-       the clip belongs here, where the composition is, rather than with the
-       transition. `clip` and not `hidden`: the pinned stage must not become a
-       scroll container. */
+    /* `clip` and not `hidden`: the stage must not become a scroll container.
+       The wash behind the title is drawn well outside its own box, and
+       without this it handed a 390px phone 89px of sideways scroll. */
     overflow-x: clip;
   }
 
@@ -499,75 +472,71 @@ const sizes = imageSmall
 
   .hero__copy {
     grid-area: copy;
+    /* The full column, so the script can read how much width the title
+       has to grow into. The h1 inside still keeps its own measure. */
+    justify-self: stretch;
     position: relative;
     z-index: 3;
   }
 
-  /* The wash that carries the title over the room. Soft-edged on purpose: the
-     rounded rectangle this replaces was fine standing still in a corner, but
-     the title now travels to the middle of the screen, and a rounded
-     rectangle travelling is a white card arriving — a component, not a title
-     advancing. So it is light in the room instead: enough of the page's own
-     white under the words to hold them legible over whatever part of the
-     illustration they cross, and no edge anywhere for the eye to catch.
-     Where the ground behind the title is already white — the homepage, and
-     the far end of every transition — it is invisible, which is the other
-     reason it can simply stay on. */
-  .hero__copy::before {
+  .hero h1 {
+    /* Every size inside the title — the type, the line under it, the
+       description set in it — is written as a multiple of `--k`. That keeps
+       the whole block one shape at either size, so the movement between the
+       two is a single clean scale and the lines never re-wrap mid-way. */
+    --k: var(--title-k, 1.22);
+    position: relative;
+    font-size: calc(var(--title-a) * var(--k));
+    line-height: var(--lh-display);
+    letter-spacing: var(--track-display);
+    /* In `ch`, so the measure grows with the type and the line breaks are
+       the same at both sizes. */
+    max-width: 11ch;
+    margin-bottom: 0;
+  }
+
+  .hero--anchored h1 {
+    max-width: 12ch;
+  }
+
+  /* The wash that carries the title over the room in the opening frame.
+     Soft-edged on purpose — no edge anywhere for the eye to catch. It lives
+     on the h1 rather than the copy block so it travels and scales with the
+     title. Settled, the title stands on open white beside the room and the
+     wash would only bleach the room's left edge, so it is off. */
+  .hero h1::before {
     content: '';
     position: absolute;
     z-index: -1;
-    /* Sized off the title's own box, so the wash grows with a long title and
-       stays honest under a short one. The block sits in the middle half of it,
-       which is the whole trick: the falloff reaches zero at the edges of this
-       box rather than at the edges of the words, so there is no line for the
-       eye to catch anywhere. Clip it tighter and the gradient gets cut off
-       mid-ramp and reads as a pale rectangle — which is exactly what the first
-       version did. */
-    inset: -46% -58%;
+    inset: -46% -58% -110%;
     background: radial-gradient(
       50% 50% at 50% 50%,
       var(--hero-scrim) 0%,
       var(--hero-scrim) 20%,
       transparent 100%
     );
-    /* Strongest where it is needed and lightest where it is not. At rest the
-       title stands on a room at full strength and the wash is carrying it; by
-       the time the title is centred the room has gone back and gone pale, and a
-       wash still at full strength would only be bleaching a hole in it. `--cp`
-       is the title's own progress — see the transition block. */
-    opacity: calc(1 - var(--cp, 0) * 0.55);
+    opacity: 0;
     pointer-events: none;
   }
 
-  .hero h1 {
-    font-size: var(--text-display);
-    line-height: var(--lh-display);
-    letter-spacing: var(--track-display);
-    max-width: 16ch;
-    margin-bottom: 0;
-  }
-
   /* The chestnut rule — the system's one decorative mark, doing the one job it
-     is allowed: a rule under a title. It is also what ties the title to the
-     left edge rather than leaving it hanging in space. */
+     is allowed: a rule under a title. */
   .hero h1::after {
     content: '';
     display: block;
-    width: 76px;
+    width: calc(76px * var(--k));
     height: 2px;
-    margin-block: clamp(var(--space-md), 1.8vh, var(--space-lg));
+    margin-block: calc(clamp(var(--space-md), 1.8vh, var(--space-lg)) * var(--k));
     background: var(--chestnut);
   }
 
-  /* Block-level so it sits under the greeting, and above the chestnut rule
-     the h1's ::after draws. Body face at the lede size: a description of the
-     place, not a second greeting. */
+  /* Block-level so it sits under the greeting. Body face at the lede size:
+     a description of the place, not a second greeting. */
   .hero__sub {
     display: block;
-    margin-top: var(--space-sm);
+    margin-top: calc(var(--space-sm) * var(--k));
     font-family: var(--font-body);
-    font-size: var(--text-lede);
+    font-size: calc(var(--text-lede) * var(--k));
     line-height: var(--lh-lede);
     letter-spacing: normal;
     font-weight: 500;
@@ -578,10 +547,6 @@ const sizes = imageSmall
     color: var(--heading-accent);
   }
 
-  /* One measure for the supporting line, at every width. It rides inside the
-     title's block as that block grows, so a measure that changed at two
-     breakpoints was also changing how much room the title had left to grow
-     into — see `--copy-grow` in the layout script. */
   .hero .lede {
     max-width: 32ch;
     margin-bottom: 0;
@@ -591,41 +556,27 @@ const sizes = imageSmall
 
   .hero__art {
     grid-area: art;
-    justify-self: center;
+    justify-self: end;
     align-self: center;
     display: grid;
     z-index: 2;
-    /* The artwork is a cut-out on an opaque white field. Against a flat white
-       hero that was invisible; against the gradient it showed as a pale
-       rectangle standing behind the house. Multiplying drops the white into
-       whatever ground it happens to be on and leaves the illustration alone —
-       the page tints it by about a percent, which is the point. Applied to the
-       group rather than to each layer, so the still and the loop still
-       cross-fade normally instead of multiplying with each other mid-fade.
-
-       Two multiplies now, not one, and both are load-bearing. This one carries
-       the picture down onto the page's own ground; the one on `.hero__scene`
-       carries it down onto the lamplight that comes up under it when the door
-       is reached for. `z-index` here already makes this a stacking context, so
-       a single blend on the inner group would have seen the glow and stopped
-       there, and the white field would have come back as a rectangle. */
+    /* The artwork is a cut-out on an opaque white field. Multiplying drops
+       the white into whatever ground it is on and leaves the illustration
+       alone. Two multiplies, both load-bearing: this one carries the picture
+       onto the page's ground, the one on `.hero__scene` carries it onto the
+       lamplight that comes up under it when the door is reached for. */
     mix-blend-mode: multiply;
   }
 
   /* Everything that travels with the room. The plate that names the door is
-     deliberately not in here — see the transition block. */
+     deliberately not in here: it moves, but it never scales. */
   .hero__scene {
     grid-area: 1 / 1;
     display: grid;
     mix-blend-mode: multiply;
   }
 
-  /* The lamp coming up under the room. It sits behind the artwork inside the
-     blend group, so the picture's white field multiplies down into it and the
-     glow takes the shape of the cut-out rather than of its bounding box — the
-     room ends up standing in a pool of light instead of inside a glowing
-     rectangle. Warm, and never a halo: DESIGN.md's rule is that things get
-     warmer when you reach for them, not heavier. */
+  /* The lamp coming up under the room when the door is reached for. */
   .hero__art::before {
     content: '';
     grid-area: 1 / 1;
@@ -658,20 +609,49 @@ const sizes = imageSmall
     grid-area: 1 / 1;
   }
 
+  /* The settled room: smaller than the screen, and to the right of the title
+     rather than under it. Sized off the width and the height both, so a short
+     window never pushes the content below the fold. */
+  .hero__art img,
+  .hero__loop {
+    display: block;
+    width: min(66vw, 560px, 46vh);
+    height: auto;
+    border-radius: var(--radius-xl);
+  }
+
+  /* A corner radius on a cut-out standing in open white was never visible,
+     and on a room it only clips the room's own edge. */
+  .hero--stacked .hero__art img,
+  .hero--stacked .hero__loop {
+    border-radius: 0;
+  }
+
+  @media (min-width: 64rem) {
+    .hero__stage {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-areas: 'copy art';
+      column-gap: clamp(var(--space-xl), 4vw, 72px);
+      padding-block: clamp(var(--space-2xl), 7vh, 96px) clamp(var(--space-2xl), 6vh, 72px);
+    }
+
+    .hero__art img,
+    .hero__loop {
+      width: min(100%, 820px, 76vh);
+    }
+  }
+
   /* ---- The door ----
 
-     The whole picture is the hit area, and it is stretched over the artwork
-     rather than wrapped around it so the `alt` text stays a description of a
-     room instead of becoming the name of a link. */
+     The whole picture is the hit area, stretched over the artwork rather than
+     wrapped around it so the `alt` text stays a description of a room. */
   .hero__doorway {
     z-index: 1;
     cursor: pointer;
   }
 
   /* The plate. Small, cream, lit along its top edge — the same object the
-     house uses for a hotspot label, standing on the artwork rather than
-     floating over it. Muted ink at rest and full contrast either way: this
-     goes quiet by being small and low-chroma, never by being faint. */
+     house uses for a hotspot label, standing on the artwork. */
   .hero__door {
     grid-area: 1 / 1;
     z-index: 3;
@@ -701,8 +681,7 @@ const sizes = imageSmall
 
   .hero__door-mark {
     flex: none;
-    /* The doorway sits a shade low against uppercase letterforms, which have
-       no descenders to balance it. */
+    /* The doorway sits a shade low against uppercase letterforms. */
     margin-bottom: -1px;
     color: var(--heading);
     transition: color 200ms ease;
@@ -734,210 +713,10 @@ const sizes = imageSmall
     outline-offset: 2px;
   }
 
-  /* Above 64rem the room pages open *inside* the room: the artwork is wider
-     and taller than the frame can hold, and its bottom edge is some hundreds
-     of pixels below the fold. A plate hung off that edge is a plate nobody
-     ever sees at rest — which is the one moment it exists for.
-
-     So on those pages it is measured off the frame instead: the page's own
-     left edge, the same one the title and every heading below it hold, and the
-     floor of the stage. It still reads as standing in the room, because at
-     this size the room is the whole frame. */
-  @media (min-width: 64rem) {
-    .hero--stacked .hero__door {
-      position: absolute;
-      z-index: 4;
-      left: calc(var(--page-inset) + clamp(10px, 1.6vw, 20px));
-      bottom: clamp(var(--space-xl), 5vh, 48px);
-      margin: 0;
-    }
-  }
-
-  .hero__art img,
-  .hero__loop {
-    display: block;
-    width: min(86vw, 560px, 68vh);
-    height: auto;
-    border-radius: var(--radius-xl);
-  }
-
-  @media (min-width: 64rem) {
-    .hero__art img,
-    .hero__loop {
-      width: min(72vw, 980px, 74vh);
-    }
-  }
-
-  /* ---- The stacked frame: every page except the homepage ----
-
-     The room used to be sized to fit whatever was left of one screen after the
-     title — on a laptop, a 660px picture with four hundred empty pixels either
-     side of it. That is the wrong instinct twice over: the room illustration is
-     the whole reason these pages do not read as a clinic template, and fitting
-     it into the leftovers capped it at a size no amount of tuning could raise.
-
-     So it stops being an item stacked under a heading. It holds the page's own
-     left edge — the same edge as the masthead, the title and every heading
-     below — and runs to the opposite margin, which above 90rem is the lift's
-     shaft rather than the screen edge. In the pinned stage it is larger again
-     than the frame can hold: you are inside the room at rest, and the scroll
-     walks you back out of it. */
-  .hero--stacked .hero__stage {
-    /* The room can outgrow the copy column, so the grid must let it. */
-    justify-items: stretch;
-    /* Two rows, not three. The scroll cue is a homepage device, and leaving its
-       empty row in the template left a row-gap of dead space under the room. */
-    grid-template-areas:
-      'copy'
-      'art';
-    grid-template-rows: auto auto;
-    padding-block: clamp(var(--space-xl), 5vh, var(--space-3xl)) var(--space-2xl);
-    row-gap: clamp(var(--space-lg), 3.2vh, var(--space-2xl));
-  }
-
-  .hero--stacked .hero__copy {
-    justify-self: start;
-  }
-
-  /* ---- The first phone screen ----
-     The stage centres its rows in the viewport, which is right where both rows
-     fit: title and room share the frame. On a phone the room is bled past both
-     edges and runs well below the fold, so centring a two-row stack of which
-     the second row is taller than the screen simply pushed the first row down —
-     175 empty pixels above "Services & Fees" on a 390x844 screen, paid for out
-     of the room underneath it.
-
-     Packed to the top instead, the title sits where the eye lands and every
-     pixel the centring was holding empty goes to the illustration. Nothing else
-     moves: the transition measures the title's resting position rather than
-     assuming one, so it starts from wherever the composition puts it. */
-  @media (max-width: 63.999rem) {
-    .hero__stage {
-      align-content: start;
-    }
-  }
-
-  .hero--stacked .hero__art {
-    justify-self: stretch;
-    align-self: center;
-    /* Out past the stage's gutters to the screen edges. Below 64rem those
-       gutters are 12–26px, and giving them up is the only width left to win. */
-    margin-inline: calc(var(--page-inset) * -1);
-  }
-
-  .hero--stacked .hero__art img,
-  .hero--stacked .hero__loop {
-    width: 100%;
-    /* The masters are 1448px wide. A tenth over native does not show on a
-       render this soft, and it is what keeps a 2560px screen from being the
-       one place the room comes out smaller than the page can hold. */
-    max-width: 1600px;
-    /* Past ~2000px the cap bites before the margin does. The room keeps the
-       page's left edge rather than centring itself in what is left, so the
-       title, the room and every heading below still share one line. */
-    margin-inline: 0 auto;
-    /* A corner radius on a cut-out standing in open white was never visible;
-       at this size it would only clip the room's own edge. */
-    border-radius: 0;
-  }
-
-  @media (min-width: 64rem) {
-    /* One left edge for the page. The bleed is a small-screen measure; here
-       there is enough width that running past the margin would read as a
-       stray offset rather than as scale. */
-    .hero--stacked .hero__art {
-      margin-inline: 0;
-    }
-
-    /* The room comes up behind the title instead of sitting under it: one
-       cell, the copy laid over the illustration, so the page opens on the
-       room rather than on a heading with the room somewhere below the fold.
-       Wide screens only — at phone widths the room bleeds to both edges and
-       there is nowhere quiet in it for a heading to sit. */
-    .hero--stacked .hero__stage {
-      grid-template-areas: 'stage';
-      grid-template-rows: auto;
-    }
-
-    .hero--stacked .hero__copy,
-    .hero--stacked .hero__art {
-      grid-area: stage;
-    }
-
-    .hero--stacked .hero__copy {
-      align-self: start;
-    }
-  }
-
-  /* ---- The anchored frame: the homepage ----
-     At wide widths the welcome and the artwork sit side by side, sharing the
-     page's left edge and its opposite margin. Below 64rem it simply uses the
-     stacked composition above, like every other page. */
-
-  .hero--anchored h1 {
-    font-size: var(--text-hero);
-    max-width: none;
-  }
-
-  @media (min-width: 64rem) {
-    .hero--anchored .hero__stage {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      grid-template-areas:
-        'copy art'
-        'cue  art';
-      grid-template-rows: 1fr auto;
-      align-content: stretch;
-      align-items: center;
-      column-gap: clamp(var(--space-xl), 4vw, 72px);
-      padding-inline: var(--page-inset) 0;
-      padding-block: clamp(var(--space-2xl), 12vh, 160px) var(--space-2xl);
-    }
-
-    .hero--anchored .hero__copy {
-      align-self: center;
-    }
-
-    .hero--anchored h1 {
-      max-width: 12ch;
-    }
-
-    .hero--anchored .hero__art {
-      justify-self: end;
-      align-self: center;
-    }
-
-    .hero--anchored .hero__art img,
-    .hero--anchored .hero__loop {
-      /* Two columns, so the house has the stage's full height to work with —
-         and it takes it. Held to 84vh it was leaving a quarter of the stage
-         empty under itself and sitting hard against the right margin; at 100vh
-         it fills the frame it is in, and the extra width is what walks it back
-         off that margin toward the middle. The welcome crosses its left edge
-         from here, which is the same layering the room pages open on and what
-         the wash behind the title is for. */
-      width: min(64vw, 1060px, 100vh);
-    }
-
-    /* The artwork runs past the right edge here, and the control was going with
-       it. On the near side it stays reachable. */
-    .hero--anchored .hero__loop-toggle {
-      justify-self: start;
-    }
-
-    /* Which is the corner the plate stands in. They stack rather than collide:
-       the door on the ground, the control above it. */
-    .hero--anchored.hero--has-door .hero__loop-toggle {
-      margin-bottom: 62px;
-    }
-  }
-
   /* ---- The loop and its control ---- */
 
-  /* Exactly on top of the still, and sized by the same rules — never stretched
-     to the cell, because a grid item sizing itself off the cell it is also
-     sizing lands on its intrinsic 1194px. The fade runs once, when the first
-     frame is ready, so the swap is not a flicker between two near-identical
-     pictures. */
+  /* Exactly on top of the still and sized by the same rules. The fade runs
+     once, when the first frame is ready. */
   .hero__loop {
     opacity: 0;
     transition: opacity 700ms ease;
@@ -952,15 +731,10 @@ const sizes = imageSmall
     justify-self: end;
     align-self: end;
     margin: 10px;
-    /* Above the door's hit area, which covers the whole picture — otherwise
-       the only control that can stop the moving artwork is unreachable. */
+    /* Above the door's hit area, which covers the whole picture. */
     z-index: 2;
     display: grid;
     place-items: center;
-    /* The control that stops the only thing moving on the page, at the size
-       every other control on the site honours. It was 34px — under the floor,
-       and on the artwork, where a thumb is least accurate. The glyph stays
-       16px; it is the target that grew. */
     width: 44px;
     height: 44px;
     padding: 0;
@@ -996,14 +770,15 @@ const sizes = imageSmall
     display: none;
   }
 
-  /* ---- The scroll cue ---- */
+  /* ---- The scroll cue ----
+     Only the opening frame has one; settled, there is nothing to cue. */
 
   .hero__cue {
     grid-area: cue;
     justify-self: start;
     align-self: end;
     z-index: 4;
-    display: flex;
+    display: none;
     flex-direction: column;
     align-items: center;
     gap: 10px;
@@ -1018,27 +793,15 @@ const sizes = imageSmall
     color: var(--ink-faint);
   }
 
-  /* Nothing to cue where nothing moves. */
-  .hero--still .hero__cue {
-    display: none;
-  }
-
   @media (prefers-reduced-motion: reduce) {
-    .hero__cue {
-      display: none;
-    }
-
-    /* Belt and braces: the script never loads the loop here, and if it somehow
-       does, it stays out of sight. */
+    /* Belt and braces: the script never loads the loop here. */
     .hero__loop,
     .hero__loop-toggle {
       display: none;
     }
 
     /* The door still answers — it warms and it underlines — it just stops
-       moving to do it. The clinic serves neurodivergent families, and a plate
-       that hops under the pointer is exactly the sort of small unasked-for
-       movement this setting is turning off. */
+       moving to do it. */
     .hero__art::before,
     .hero__door,
     .hero__door-mark,
@@ -1054,316 +817,212 @@ const sizes = imageSmall
   }
 
   /* ===================================================================
-     The transition.
+     The opening frame, and the movement out of it.
 
-     Scroll-linked scaling is exactly the kind of movement that makes people
-     ill, and the clinic serves neurodivergent families, so all of it lives
-     inside `no-preference` rather than being undone afterwards. Turn motion
-     off and none of these rules exist: the hero is the resting composition
-     above, laid out as an ordinary page header, and `--p` never leaves 0.
+     All of it lives inside `no-preference`: turn motion off and none of
+     these rules exist, so the hero is simply the settled composition above.
+     `.hero--settled` is added by the layout script on the first scroll (or
+     at once, if the page loads already scrolled). Without the script the
+     page keeps the opening frame, which is a complete page on its own.
      =================================================================== */
 
   @media (prefers-reduced-motion: no-preference) {
-    /* One screen of stage, plus the runway that is scrolled through it, and
-       the page's content overlapping the tail of that runway.
-
-       The runway was 70vh with no overlap, which meant the recession ended on
-       a full viewport of empty cream — a small house floating in nothing —
-       before the first line of content arrived. Shortening it alone did not
-       fix that; the emptiness was inside the sticky stage, not after it. With
-       the negative margin the content rises into the lower third of the frame
-       as the artwork withdraws to the upper, so the transition hands over
-       instead of trailing off. The overlap is deeper than the runway on
-       purpose: the content starts travelling past the pinned stage before it
-       releases, which is what makes the handover read as one movement. */
-    .hero:not(.hero--still) {
-      /* How deep the content sits over the runway. Named because the ground
-         has to know it: the topmost the content's edge ever reaches up the
-         pinned stage is `100vh - this`, and the stage's gradient has to have
-         finished by then or the two meet at a line. */
-      --hero-overlap: 32vh;
-      height: 160vh;
-      margin-bottom: calc(var(--hero-overlap) * -1);
-
-      /* The runway in two acts with a rest between them, and both the room and
-         the title read from the same pair of clocks — because it is one
-         movement, not two that happen to overlap.
-
-         `--cp` is the arrival: by three fifths of the runway the room has
-         finished withdrawing and the title has finished coming forward, and
-         what is on screen is the composition the whole thing exists for.
-         Nothing then moves for a tenth of the runway.
-
-         `--exit` is the departure, and it is a distance rather than a
-         fraction: past the rest, everything in the frame rises a pixel for
-         every pixel scrolled. The stage is still pinned, so without this the
-         page would scroll and the hero would not — with it, the frame leaves
-         the way any other part of the page leaves, intact and all together. */
-      --cp: clamp(0, calc(var(--p, 0) / 0.6), 1);
-      --cq: clamp(0, calc((var(--p, 0) - 0.7) / 0.3), 1);
-      --exit: calc(var(--cq) * 0.3 * var(--runway, 0px));
-    }
-
-    .hero:not(.hero--still) .hero__stage {
-      position: sticky;
-      top: 0;
+    /* One screen of stage, and the room is allowed to run past it. */
+    .hero[data-hero]:not(.hero--settled) .hero__stage {
       height: 100vh;
-      overflow: hidden;
+      height: 100svh;
+      overflow: clip;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        'copy'
+        'art'
+        'cue';
+      grid-template-rows: auto 1fr auto;
+      align-content: center;
+      gap: clamp(var(--space-lg), 2.4vh, var(--space-xl));
+      padding-block: clamp(var(--space-xl), 5vh, var(--space-3xl));
     }
 
-    /* The room goes back. It shrinks about its own centre, lifts into the upper
-       part of the frame, and settles on the middle of the stage, so what is
-       left at the end of the runway is the whole house, small and centred,
-       standing above the content that has arrived under it.
-
-       The sideways travel matters most on the homepage, where the house opens
-       against the right margin with the welcome beside it: withdrawing to the
-       centre is what makes it read as the scene turning to face you rather
-       than as a picture being shrunk in place. Everywhere else the room already
-       opens centred, `--art-dx` measures as nearly zero, and the term costs
-       nothing. */
-    .hero:not(.hero--still) .hero__art {
-      /* How far away the room ends up — the one number here that is a taste
-         decision rather than a measurement. The lift that goes with it is
-         derived from this and from where the title lands (see `--art-rise` in
-         the layout script), so raising this pushes the room back and the white
-         under it takes care of itself.
-
-         The recession runs on `--cp` and is therefore spent by the time the
-         title lands. Running it to the end of the runway instead meant the room
-         was still shrinking while the title was already leaving, so the
-         composition this movement exists for — small room, clear air, title
-         under it — was never a frame anyone saw, only a moment the scroll
-         passed through.
-
-         Declared here rather than on the group that moves, because the layout
-         script reads both this and `--art-zoom` off `.hero__art` when it works
-         out how far the room has to lift. They inherit down to the scene from
-         here, so there is still one place either number is written. */
-      --art-shrink: 0.68;
+    .hero[data-hero]:not(.hero--settled) h1 {
+      --k: 1;
     }
 
-    /* The picture travels; its box does not. Everything glued to the artwork —
-       the still, the loop, and the door's hit area — takes the same transform,
-       so the region a click lands in stays exactly the region the room is
-       painted in, all the way back. */
-    .hero:not(.hero--still) .hero__scene,
-    .hero:not(.hero--still) .hero__doorway {
-      transform: translateX(calc(var(--cp) * var(--art-dx, 0px)))
-        translateY(
-          calc(var(--cp) * var(--art-rise, -30vh) - var(--exit, 0px))
-        )
-        scale(calc(var(--art-zoom, 1) - var(--cp) * var(--art-shrink, 0.6)));
-      transform-origin: center center;
+    .hero[data-hero]:not(.hero--settled) h1::before {
+      opacity: 1;
     }
 
-    .hero:not(.hero--still) .hero__scene {
-      /* Aerial perspective, and the reason the title can cross the room rather
-         than having to dodge it: distance takes contrast out of a thing before
-         it takes size. A room that only shrank would keep reading as the same
-         room, closer to the front than a title standing over it. This is a
-         fifth of its strength over the whole runway — not enough to notice as a
-         fade, enough to put air between the two. */
-      opacity: calc(1 - var(--cp) * 0.22);
-      will-change: transform, opacity;
+    .hero[data-hero]:not(.hero--settled) .hero__copy {
+      justify-self: start;
     }
 
-    /* And the plate stays the size it was written to be read at. Riding the
-       recession would have taken it to a third of itself, and on a phone the
-       room opens zoomed past both edges (`--art-zoom`), which would have put
-       the plate off the screen at rest — the one moment it has to be visible.
-
-       So it holds its corner and goes out early instead, the same way the
-       scroll cue does: it is an invitation for the first screen, and by the
-       time the room is receding the visitor has answered it.
-       Except when it is the thing the keyboard is on. Tabbing backwards into
-       the hero from further down the page lands here, and a focus ring on an
-       element faded to nothing is not a focus ring — so focus takes the plate
-       back to full strength wherever the scroll has got to. */
-    .hero:not(.hero--still) .hero__door:not(:focus-visible) {
-      opacity: clamp(0, calc((0.2 - var(--p, 0)) / 0.2), 1);
+    .hero[data-hero]:not(.hero--settled) .hero__art {
+      justify-self: center;
     }
 
-    /* And it climbs as it goes, by exactly the depth the content rises over
-       the runway (`--hero-overlap`). Nobody sees that — it is transparent by
-       then — but it is what keeps a focus ring from arriving underneath the
-       page: the plate's own box would otherwise still be sitting in the strip
-       the content has climbed over, and the pinned stage is a stacking context
-       that nothing inside it can escape. Above the overlap it is in clear air,
-       so tabbing backwards into the hero lands on a ring you can see. */
-    @media (min-width: 64rem) {
-      .hero--stacked:not(.hero--still) .hero__door {
-        bottom: calc(
-          clamp(var(--space-xl), 5vh, 48px) + var(--cp) * var(--hero-overlap, 0px)
-        );
-      }
+    .hero[data-hero]:not(.hero--settled) .hero__art img,
+    .hero[data-hero]:not(.hero--settled) .hero__loop {
+      width: min(86vw, 560px, 68vh);
     }
 
-    /* And the title comes forward: it travels from the page's left edge to the
-       middle of the screen and grows as it goes, crossing in front of the room
-       rather than clearing out of its way. Two directions at once is what makes
-       the room read as receding rather than as merely shrinking.
-
-       The three lengths are measured, not guessed. The same block starts in
-       four different places across the two frames and three breakpoints, and a
-       hand-written offset would be right in one of them; the layout script
-       reads the resting box once, and again on resize, and publishes how far it
-       has to travel and how much it can grow before it runs out of stage. With
-       no script the values are simply absent, the title rests where it was laid
-       out, and the page is still complete. */
-    .hero:not(.hero--still) .hero__copy {
-      /* It arrives on `--cp`, holds while nothing moves, and then leaves on
-         `--exit` — the same two clocks the room runs on, which is what keeps
-         the white between them constant on the way out instead of the title
-         climbing through a room that stayed behind.
-
-         The hold is a tenth of the runway: long enough to be a frame, short
-         enough that the content climbing behind the pinned stage does not catch
-         the title up before it starts to leave. On the homepage, whose welcome
-         is the tallest block of the nine, that margin is what the length of the
-         hold is actually set by. */
-      transform: translate(
-          calc(var(--cp) * var(--copy-dx, 0px)),
-          calc(var(--cp) * var(--copy-dy, 0px) - var(--exit, 0px))
-        )
-        scale(calc(1 + var(--cp) * var(--copy-grow, 0)));
-      transform-origin: 50% 50%;
-      will-change: transform;
+    .hero[data-hero]:not(.hero--settled) .hero__cue {
+      display: flex;
     }
 
-    /* Gone by the time the recession has any depth: it is an instruction for
-       the first screen, and by then it has been followed. */
-    .hero:not(.hero--still) .hero__cue {
-      opacity: clamp(0, calc((0.22 - var(--p, 0)) / 0.22), 1);
-    }
-
-    /* The room is sized to the width the stage has, not to the height, so on
-       anything but a tall window it overruns the frame and the page opens on a
-       crop — you are standing in the room, and the recession is what walks you
-       back out of it far enough to see the whole house. Above 64rem the title
-       stands over the room, so the overrun costs nothing.
-
-       Below 64rem the title has its own row, and a room that overran would push
-       it off the top of the stage rather than stand behind it. There the room is
-       capped to the frame and the recession alone carries the depth. */
     @media (max-width: 63.999rem) {
-      .hero--stacked:not(.hero--still) .hero__art img,
-      .hero--stacked:not(.hero--still) .hero__loop {
-        width: min(100%, 88vh);
+      .hero[data-hero]:not(.hero--settled) .hero__stage {
+        align-content: start;
       }
     }
 
-    /* The house opens larger than the rooms do — it is the whole building, and
-       on the homepage it has the frame to itself — so it needs to travel
-       further to end up the same distance away, and higher to keep the welcome
-       off its front door on the way. Only where the two-column frame applies;
-       narrower than that the homepage uses the stacked one and its numbers. */
+    /* Room pages: the title stands on the room, and the room runs to both
+       edges on a phone and past the frame on a wide screen — you are inside
+       it, and settling walks you back out. */
+    .hero--stacked[data-hero]:not(.hero--settled) .hero__stage {
+      justify-items: stretch;
+      grid-template-areas:
+        'copy'
+        'art';
+      grid-template-rows: auto auto;
+      padding-block: clamp(var(--space-xl), 5vh, var(--space-3xl)) var(--space-2xl);
+      row-gap: clamp(var(--space-lg), 3.2vh, var(--space-2xl));
+    }
+
+    .hero--stacked[data-hero]:not(.hero--settled) .hero__art {
+      justify-self: stretch;
+      margin-inline: calc(var(--page-inset) * -1);
+    }
+
+    .hero--stacked[data-hero]:not(.hero--settled) .hero__art img,
+    .hero--stacked[data-hero]:not(.hero--settled) .hero__loop {
+      width: min(100%, 88vh);
+      max-width: 1600px;
+      margin-inline: 0 auto;
+    }
+
     @media (min-width: 64rem) {
-      .hero--anchored:not(.hero--still) .hero__art {
-        --art-rise: -34vh;
-        --art-shrink: 0.72;
+      .hero--stacked[data-hero]:not(.hero--settled) .hero__stage {
+        grid-template-areas: 'stage';
+        grid-template-rows: auto;
+      }
+
+      .hero--stacked[data-hero]:not(.hero--settled) .hero__copy,
+      .hero--stacked[data-hero]:not(.hero--settled) .hero__art {
+        grid-area: stage;
+      }
+
+      .hero--stacked[data-hero]:not(.hero--settled) .hero__copy {
+        align-self: start;
+      }
+
+      .hero--stacked[data-hero]:not(.hero--settled) .hero__art {
+        margin-inline: 0;
+      }
+
+      .hero--stacked[data-hero]:not(.hero--settled) .hero__art img,
+      .hero--stacked[data-hero]:not(.hero--settled) .hero__loop {
+        width: 100%;
+      }
+
+      /* The room's bottom edge is below the fold here, so the plate is
+         measured off the frame instead, on the page's left edge. */
+      .hero--stacked[data-hero]:not(.hero--settled) .hero__door {
+        position: absolute;
+        z-index: 4;
+        left: calc(var(--page-inset) + clamp(10px, 1.6vw, 20px));
+        bottom: clamp(var(--space-xl), 5vh, 48px);
+        margin: 0;
       }
     }
 
-    /* A very wide screen is also a short one relative to its width, so the room
-       arrives at the stage already the size of the stage — and a recession
-       tuned on a laptop leaves it barely smaller than the title crossing it.
-       Further back, and higher, so the depth reads at the size the screen is
-       actually showing. */
-    @media (min-width: 100rem) {
-      .hero:not(.hero--still) .hero__art {
-        --art-rise: -34vh;
-        --art-shrink: 0.76;
+    /* The homepage: the welcome and the house side by side, the house large
+       and running off the right edge. */
+    @media (min-width: 64rem) {
+      .hero--anchored[data-hero]:not(.hero--settled) .hero__stage {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        grid-template-areas:
+          'copy art'
+          'cue  art';
+        grid-template-rows: 1fr auto;
+        align-content: stretch;
+        align-items: center;
+        column-gap: clamp(var(--space-xl), 4vw, 72px);
+        padding-inline: var(--page-inset) 0;
+        padding-block: clamp(var(--space-2xl), 12vh, 160px) var(--space-2xl);
+      }
+
+      .hero--anchored[data-hero]:not(.hero--settled) .hero__copy {
+        align-self: center;
+      }
+
+      .hero--anchored[data-hero]:not(.hero--settled) .hero__art {
+        justify-self: end;
+      }
+
+      .hero--anchored[data-hero]:not(.hero--settled) .hero__art img,
+      .hero--anchored[data-hero]:not(.hero--settled) .hero__loop {
+        width: min(64vw, 1060px, 100vh);
+      }
+
+      .hero--anchored[data-hero]:not(.hero--settled) .hero__loop-toggle {
+        justify-self: start;
+      }
+
+      .hero--anchored.hero--has-door[data-hero]:not(.hero--settled) .hero__loop-toggle {
+        margin-bottom: 62px;
       }
     }
 
     @media (max-width: 52rem) {
-      .hero:not(.hero--still) {
-        --hero-overlap: 25vh;
-        height: 145vh;
-      }
-
-      /* And the wash stays longer: at this width the copy crosses the room for
-         most of the runway rather than only at the end of it. */
-      .hero:not(.hero--still) .hero__copy::before {
-        opacity: calc(1 - var(--cp, 0) * 0.3);
-      }
-
-      .hero--anchored:not(.hero--still) .hero__art img,
-      .hero--anchored:not(.hero--still) .hero__loop {
+      .hero--anchored[data-hero]:not(.hero--settled) .hero__art img,
+      .hero--anchored[data-hero]:not(.hero--settled) .hero__loop {
         width: 84vw;
       }
     }
 
-    /* ---- Phones ----
-       Not the same case as a small tablet, which is why this is its own
-       breakpoint rather than the bottom of the one above: 800 logical pixels
-       of tablet has both the width to show a whole room and the height to
-       walk back from it, and neither of those is true at 390. */
     @media (max-width: 34rem) {
-      /* Less far up: the frame is a third of the width and half again the
-         height, so the wide numbers leave the room in the top corner as a
-         postage stamp. */
-      .hero:not(.hero--still) .hero__art {
-        --art-rise: -16vh;
-        --art-shrink: 0.5;
-      }
-
-      /* A phone is the one frame a room cannot fill: it is drawn four units
-         wide to three, and the screen is nine to nineteen. Sized to the width
-         it leaves a third of the stage empty under it — so instead it opens
-         well past both edges, and the recession is what brings the edges back.
-         That is the same walking-out-of-the-room the wide frames get from
-         their own height, and it needs the deeper shrink to travel the extra
-         distance in the same runway.
-
-         Only where the artwork is a room. The homepage's house is a whole
-         object with sky around it, and cropping a house is just a crop. */
-      .hero--stacked:not(.hero--still) .hero__art {
-        --art-zoom: 1.4;
-        --art-shrink: 0.7;
+      .hero--anchored[data-hero]:not(.hero--settled) .hero__art img,
+      .hero--anchored[data-hero]:not(.hero--settled) .hero__loop {
+        width: min(92vw, 62vh);
       }
     }
-  }
 
-  /* A title that fills the width has nowhere to grow into, and a phone is where
-     that bites. 13ch is two or three short lines — which is how a title wants
-     to be set at this size anyway — and it leaves the stage the room to bring
-     it forward. */
-  @media (max-width: 34rem) {
-    .hero h1,
-    .hero--anchored h1 {
-      max-width: 13ch;
+    /* ---- The movement ----
+       The script lays the settled frame out, measures it, and puts each
+       piece back where it stood in the opening frame with a transform. This
+       class then lets go of those transforms, so everything travels to its
+       settled place on its own: one curve, one duration, all together. The
+       room's crop is held at the opening frame's height while it plays. */
+    .hero--playing {
+      --hero-ease: cubic-bezier(0.3, 0.7, 0.2, 1);
     }
 
-    /* And the same for the line under it, which is otherwise the widest thing
-       in the block and therefore the one that decides how much room the title
-       has. Four short lines here, rather than three that reach both margins. */
-    .hero .lede {
-      max-width: 28ch;
+    .hero--playing .hero__stage {
+      overflow: clip;
     }
 
-    /* The house is the positioning, and on a phone it was the smallest thing
-       on the screen it is supposed to carry — 29% of the frame, under 24% of
-       navigation. The menu gave 90px back (SideRail.astro) and the masthead
-       another 24 (Masthead.astro); this is what spends it. Capped against the
-       height as well as the width so a short window does not push the scroll
-       cue off the stage. Outside the motion query on purpose: the reader on
-       reduced motion sees this frame and nothing else, so it is the one that
-       has to be right. */
-    .hero--anchored:not(.hero--still) .hero__art img,
-    .hero--anchored:not(.hero--still) .hero__loop {
-      width: min(92vw, 62vh);
+    .hero--playing h1,
+    .hero--playing .lede,
+    .hero--playing .hero__scene,
+    .hero--playing .hero__door {
+      transition: transform 900ms var(--hero-ease);
+    }
+
+    /* Held at full strength while the script puts the title back, then
+       let go over the first half of the movement. */
+    .hero--from h1::before {
+      opacity: 1;
+    }
+
+    .hero--playing h1::before {
+      transition: opacity 480ms ease-out;
     }
   }
 
   /* ---- Phones: room for the action bar ----
      The two calls to action are fixed to the bottom of the screen below this
-     width (ActionBar.astro). The stage is a full viewport tall and the scroll
-     cue stands at the foot of it, so without this the cue — and the bottom of
-     the house — sit behind the bar. */
+     width (ActionBar.astro), so the stage keeps clear of them. */
   @media (max-width: 44rem) {
-    .hero__stage {
+    .hero[data-hero]:not(.hero--settled) .hero__stage {
       padding-bottom: max(
         clamp(var(--space-xl), 5vh, var(--space-3xl)),
         var(--action-bar-h)
@@ -1373,20 +1032,14 @@ const sizes = imageSmall
 
   /* Last, deliberately: the masthead floats over the hero at these widths (see
      Masthead.astro), and every frame above resets the stage's padding. This
-     has to outrank all of them — including the anchored composition, which is
-     the more specific selector — or the page title lands on the wordmark and
-     the artwork runs under the lift. */
+     has to outrank all of them or the title lands on the wordmark and the
+     artwork runs under the lift. */
   @media (min-width: 90rem) {
-    .hero__stage,
-    .hero--still .hero__stage,
-    .hero--stacked .hero__stage,
-    .hero--anchored .hero__stage {
+    .hero .hero__stage,
+    .hero[data-hero]:not(.hero--settled) .hero__stage {
       padding-block-start: 7.5rem;
-      /* The lift stands in the right margin from the first paint and never
-         steps back, so the hero holds the same margin the content below it
-         does. The anchored composition gives up its bleed off the right edge
-         to do it: the artwork now runs to the shaft and stops there, which is
-         the edge of the building rather than the edge of the screen. */
+      /* The lift stands in the right margin from the first paint, so the
+         hero holds the same margin the content below it does. */
       padding-inline-end: var(--rail-gutter);
     }
   }

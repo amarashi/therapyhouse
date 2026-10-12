@@ -462,19 +462,21 @@ const businessSchema = notFound
     </style>
     <script is:inline>
       /*
-       * Publishes the hero's scroll position as `--p` (0→1), and the three
-       * lengths the title's travel needs. Everything visual is CSS off those
-       * four values; this only measures. Navigation does not depend on it —
-       * the rail is present with or without this script, and since the lift
-       * became the navigation it is present over the hero too: the page keeps
-       * a margin clear for it rather than the rail standing back (see
-       * `--rail-gutter`).
+       * Settles the hero. The page opens on the hero's opening frame (the
+       * title standing on a large room); the first scroll lays out the
+       * settled frame (title larger on the left, room smaller on the right)
+       * and plays the move between the two once, on its own clock. It is not
+       * scrubbed by the scroll, so one flick of the wheel is enough.
        *
-       * Scroll reads happen inside rAF and the listener is passive, and the
-       * geometry below is read on load and on resize but never while
-       * scrolling, so scrolling never waits on layout. If the script never
-       * runs the page is still complete — the hero simply stays at its
-       * resting state.
+       * The move is a FLIP: measure every piece in the opening frame, switch
+       * to the settled layout, measure again, put each piece back where it
+       * was with a transform, then let the transforms go. Only transforms
+       * animate, and the settled title ends with no transform on it at all,
+       * so it is drawn at its true size and stays sharp.
+       *
+       * If the script never runs the page is still complete — the hero stays
+       * on its opening frame. Under reduced motion the CSS shows the settled
+       * frame from the start and nothing here moves.
        */
       (function () {
         function start() {
@@ -484,237 +486,153 @@ const businessSchema = notFound
           var root = document.documentElement;
           var stage = hero.querySelector('.hero__stage');
           var copy = hero.querySelector('.hero__copy');
-          var art = hero.querySelector('.hero__art img');
-          var artBox = hero.querySelector('.hero__art');
+          var title = hero.querySelector('h1');
+          var shell = document.querySelector('.shell');
+          var pieces = [
+            title,
+            hero.querySelector('.lede'),
+            hero.querySelector('.hero__scene'),
+            hero.querySelector('.hero__door')
+          ].filter(Boolean);
           var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
-          var ticking = false;
+          var DURATION = 900;
+          var EASE = 'cubic-bezier(0.3, 0.7, 0.2, 1)';
+          var settled = false;
+          var playing = false;
 
-          /*
-           * How far the title has to go to land in the middle of the screen,
-           * and how much it can grow on the way without running out of stage.
-           *
-           * Measured rather than written down: the same block starts in four
-           * different places across the two hero frames and three
-           * breakpoints, so any hand-written offset would be correct in one
-           * of them. `offsetLeft`/`offsetTop` are layout positions and ignore
-           * the transform already on the element, which is what makes this
-           * safe to re-run mid-scroll on a resize.
-           */
-          /* Offset of an element inside the stage, summed up the offsetParent
-             chain rather than read off `offsetParent` directly: the group the
-             picture sits in declares `will-change: transform`, which makes it a
-             containing block, and Chrome hands that back as the offset parent.
-             Summing does not depend on which ancestors happen to be containing
-             blocks. Null if the walk never reaches the stage. */
-          function offsetWithin(el, root) {
-            var x = 0;
-            var y = 0;
-            var node = el;
-            while (node && node !== root) {
-              x += node.offsetLeft;
-              y += node.offsetTop;
-              node = node.offsetParent;
-            }
-            return node === root ? { x: x, y: y } : null;
-          }
-
-          function place() {
-            if (!stage || !copy || reduced.matches) return;
-            // The stage is only the offset parent while it is pinned. If it
-            // is not — reduced motion, a `still` hero — there is no
-            // transition to measure for.
-            if (copy.offsetParent !== stage) return;
-
-            var css = getComputedStyle(stage);
-            var padLeft = parseFloat(css.paddingLeft) || 0;
-            var padRight = parseFloat(css.paddingRight) || 0;
-            var inner = stage.clientWidth - padLeft - padRight;
-            var boxW = copy.offsetWidth;
-            var boxH = copy.offsetHeight;
-            if (inner <= 0 || boxW <= 0 || boxH <= 0) return;
-
-            /*
-             * The words, not the box they are laid out in. The title is
-             * left-aligned and capped at a measure, so a heading that wraps
-             * leaves its box a good deal wider than the longest line in it —
-             * centre the box and the eye reads a title sitting left of centre,
-             * because the eye is looking at ink. So this walks the text nodes
-             * and unions their line boxes, which is the ink and nothing else.
-             * (A range over the block instead returns the block's own rect,
-             * which is the box again and the whole problem.)
-             *
-             * Taken as a fraction of the box rather than in pixels: these rects
-             * come back with the live transform already applied, and all by the
-             * same amount, so the ratio between them is the one number that
-             * survives being measured part-way through a scroll.
-             */
-            var boxRect = copy.getBoundingClientRect();
-            var inkX = 0;
-            var inkY = 0;
-            var inkW = boxW;
-            var inkH = boxH;
-            if (boxRect.width > 0 && boxRect.height > 0) {
-              var walker = document.createTreeWalker(copy, NodeFilter.SHOW_TEXT);
-              var range = document.createRange();
-              var left = Infinity;
-              var right = -Infinity;
-              var top = Infinity;
-              var bottom = -Infinity;
-              var node;
-              while ((node = walker.nextNode())) {
-                if (!node.nodeValue || !node.nodeValue.trim()) continue;
-                range.selectNodeContents(node);
-                var lines = range.getClientRects();
-                for (var i = 0; i < lines.length; i++) {
-                  var line = lines[i];
-                  if (!line.width || !line.height) continue;
-                  if (line.left < left) left = line.left;
-                  if (line.right > right) right = line.right;
-                  if (line.top < top) top = line.top;
-                  if (line.bottom > bottom) bottom = line.bottom;
-                }
-              }
-              if (right > left && bottom > top) {
-                inkX = ((left - boxRect.left) / boxRect.width) * boxW;
-                inkY = ((top - boxRect.top) / boxRect.height) * boxH;
-                inkW = ((right - left) / boxRect.width) * boxW;
-                inkH = ((bottom - top) / boxRect.height) * boxH;
+          /* The widest line of the title's ink, at the size it is set at now.
+             The h1 is capped at a measure, so its box is usually wider than
+             any line in it; the ink is what has to fit the column. */
+          function inkWidth() {
+            var walker = document.createTreeWalker(title, NodeFilter.SHOW_TEXT);
+            var range = document.createRange();
+            var left = Infinity;
+            var right = -Infinity;
+            var node;
+            while ((node = walker.nextNode())) {
+              if (!node.nodeValue || !node.nodeValue.trim()) continue;
+              range.selectNodeContents(node);
+              var lines = range.getClientRects();
+              for (var i = 0; i < lines.length; i++) {
+                if (!lines[i].width) continue;
+                if (lines[i].left < left) left = lines[i].left;
+                if (lines[i].right > right) right = lines[i].right;
               }
             }
-
-            /* Never wider than the stage can hold. On a phone the title
-               already fills most of the width, and one that grows off both
-               edges is not a flourish, it is a clipped heading. */
-            var grow = Math.min(0.38, Math.max(0, (inner * 0.9) / inkW - 1));
-
-            /* Across: the middle of the room the stage actually has, which
-               above 90rem stops at the lift's shaft rather than at the screen
-               edge. Down: three fifths rather than a half, because the masthead
-               holds the top of the frame and the room withdraws upward into it.
-               The middle of what is left to look at sits a little below the
-               middle of the screen, and landing there also keeps the title off
-               the middle of the house rather than across its floor. */
-            var toStageX = padLeft + inner / 2;
-            var toStageY = stage.offsetHeight * 0.6;
-            /* The block scales about its own centre, and that carries the ink
-               with it, so the travel is what is left over once the growth has
-               been accounted for — not simply the distance between two points. */
-            var boxCX = copy.offsetLeft + boxW / 2;
-            var boxCY = copy.offsetTop + boxH / 2;
-            var inkCX = copy.offsetLeft + inkX + inkW / 2;
-            var inkCY = copy.offsetTop + inkY + inkH / 2;
-            var toX = toStageX - boxCX - (1 + grow) * (inkCX - boxCX);
-            var toY = toStageY - boxCY - (1 + grow) * (inkCY - boxCY);
-
-            hero.style.setProperty('--copy-dx', toX.toFixed(1) + 'px');
-            hero.style.setProperty('--copy-dy', toY.toFixed(1) + 'px');
-            hero.style.setProperty('--copy-grow', grow.toFixed(3));
-
-            /* And how far the room has to come the other way. It withdraws to
-               the middle of the same stage — measured off the picture rather
-               than off the group it sits in, because on the wide layouts that
-               group is a stretched grid cell and the picture is not centred in
-               it. On every page but the homepage this lands within a pixel or
-               two of zero, which is correct: those rooms already open centred. */
-            var picAt = art && offsetWithin(art, stage);
-            var groupAt = artBox && offsetWithin(artBox, stage);
-            if (picAt && groupAt) {
-              hero.style.setProperty(
-                '--art-dx',
-                (toStageX - (picAt.x + art.offsetWidth / 2)).toFixed(1) + 'px'
-              );
-
-              /*
-               * And how far it lifts. This was a vh figure per breakpoint, and
-               * a room that cleared the title on a laptop sat across it on the
-               * next screen along — the title comes to rest where its own ink
-               * says it does, which depends on how many lines the heading takes
-               * and how much width it found to grow into. Where the room has to
-               * stop is not something one number can know for nine pages and
-               * four breakpoints.
-               *
-               * So the shrink stays written down — that is the aesthetic call,
-               * how far away the room should read — and the lift is derived
-               * from it: whatever puts the bottom edge of the settled room a
-               * clear margin above the top of the settled title. The white
-               * between the two is then the same everywhere, which is the only
-               * way it reads as a decision rather than as whatever was left
-               * over.
-               */
-              var artCss = getComputedStyle(artBox);
-              var zoom = parseFloat(artCss.getPropertyValue('--art-zoom'));
-              var shrink = parseFloat(artCss.getPropertyValue('--art-shrink'));
-              if (!isFinite(zoom)) zoom = 1;
-              if (!isFinite(shrink)) shrink = 0.6;
-              var settled = Math.max(0.05, zoom - shrink);
-
-              /* The group scales about its own centre, so every edge of the
-                 picture moves toward that centre by the same ratio. */
-              var groupCY = groupAt.y + artBox.offsetHeight / 2;
-              var edge = function (y) {
-                return groupCY + (y - groupCY) * settled;
-              };
-
-              /* Where the title stops: its ink centres on `toStageY`, at
-                 `1 + grow` times the height it was laid out at. */
-              var titleTop = toStageY - (inkH * (1 + grow)) / 2;
-              var stageH = stage.offsetHeight;
-              var rise = titleTop - stageH * 0.07 - edge(picAt.y + art.offsetHeight);
-
-              /* Never downward, and never so far up that the room leaves by the
-                 top of the frame: a clipped room reads as cropped, not as
-                 distant, and the masthead is already sitting up there. */
-              rise = Math.min(0, Math.max(rise, stageH * 0.05 - edge(picAt.y)));
-
-              artBox.style.setProperty('--art-rise', rise.toFixed(1) + 'px');
-            }
+            return right > left ? right - left : title.offsetWidth;
           }
 
-          function measure() {
-            ticking = false;
-            if (reduced.matches) {
-              root.style.setProperty('--p', '0');
-              return;
+          /* How much larger the settled title is (`--title-k`). A quarter
+             larger where the column allows, less where it does not: a title
+             that ran past its column would re-wrap, and a re-wrapped title
+             cannot be one clean scale of the one it grew from. */
+          function fitTitle() {
+            if (!settled || playing || !copy || !title) return;
+            var k = parseFloat(getComputedStyle(title).getPropertyValue('--k')) || 1;
+            var base = inkWidth() / k;
+            var room = copy.clientWidth;
+            if (!(base > 0) || !(room > 0)) return;
+            // A phone has the height for a quarter more title or the room, not both.
+            var most = window.innerWidth < 544 ? 1.12 : 1.26;
+            var next = Math.max(0.8, Math.min(most, (room * 0.98) / base));
+            hero.style.setProperty('--title-k', next.toFixed(3));
+          }
+
+          function settleInPlace() {
+            settled = true;
+            hero.classList.add('hero--settled');
+            fitTitle();
+          }
+
+          function play() {
+            settled = true;
+            var first = pieces.map(function (el) { return el.getBoundingClientRect(); });
+            var heightA = stage.offsetHeight;
+
+            /* Scroll anchoring would see the hero's insides move and scroll
+               the page to compensate, which is the opposite of what is
+               wanted. Off for the length of the move. */
+            root.style.overflowAnchor = 'none';
+            hero.classList.add('hero--settled');
+            fitTitle();
+            playing = true;
+            var heightB = stage.offsetHeight;
+            var k = parseFloat(getComputedStyle(title).getPropertyValue('--k')) || 1;
+            var last = pieces.map(function (el) { return el.getBoundingClientRect(); });
+
+            /* The stage keeps the opening frame's height (and its crop) while
+               the move plays, and the content below rises over it instead —
+               a transform, so nothing below the hero is laid out again. */
+            stage.style.height = heightA + 'px';
+            hero.classList.add('hero--from');
+            pieces.forEach(function (el, i) {
+              var a = first[i];
+              var b = last[i];
+              var scale = el === title ? 1 / k : el.classList.contains('hero__scene') ? a.width / b.width : 1;
+              el.style.transition = 'none';
+              el.style.transformOrigin = '0 0';
+              el.style.transform =
+                'translate(' + (a.left - b.left).toFixed(1) + 'px,' + (a.top - b.top).toFixed(1) + 'px) scale(' + scale.toFixed(4) + ')';
+            });
+            void stage.offsetWidth;
+
+            requestAnimationFrame(function () {
+              hero.classList.remove('hero--from');
+              hero.classList.add('hero--playing');
+              pieces.forEach(function (el) {
+                el.style.transition = '';
+                el.style.transform = '';
+              });
+              if (shell && heightA > heightB) {
+                shell.style.transition = 'transform ' + DURATION + 'ms ' + EASE;
+                shell.style.transform = 'translateY(' + (heightB - heightA) + 'px)';
+              }
+              setTimeout(finish, DURATION + 40);
+            });
+          }
+
+          /* Hand the space back for real: the stage takes its settled height
+             in the same frame the content lets go of its transform, so
+             nothing on screen moves. */
+          function finish() {
+            stage.style.height = '';
+            if (shell) {
+              shell.style.transition = '';
+              shell.style.transform = '';
             }
-            // The hero does not start at the top of the document — the nav bar
-            // sits above it below 90rem — so progress is measured from the
-            // hero's own top. Measuring from scrollY alone finished the
-            // recession early and left the stage sitting empty for the rest of
-            // its runway.
-            var heroTop = hero.getBoundingClientRect().top + window.scrollY;
-            // Runway = how far the sticky stage can be scrolled before it lets go.
-            var runway = Math.max(1, hero.offsetHeight - window.innerHeight);
-            var p = Math.min(1, Math.max(0, (window.scrollY - heroTop) / runway));
-            root.style.setProperty('--p', p.toFixed(4));
-            /* Once the title has landed it rides the scroll rather than the
-               transition, and a fraction of the runway is not a distance — so
-               the runway goes out in pixels for the CSS to convert progress
-               back into the travel it stands for. Already measured above; this
-               costs no extra read. */
-            hero.style.setProperty('--runway', runway + 'px');
+            pieces.forEach(function (el) { el.style.transformOrigin = ''; });
+            hero.classList.remove('hero--playing');
+            playing = false;
+            requestAnimationFrame(function () {
+              root.style.overflowAnchor = '';
+            });
           }
 
           function onScroll() {
-            if (!ticking) {
-              ticking = true;
-              requestAnimationFrame(measure);
+            if (settled || window.scrollY < 2) return;
+            removeEventListener('scroll', onScroll);
+            /* Only worth playing if the hero is on screen. A page restored
+               halfway down settles without a show, and scroll anchoring
+               keeps whatever is in view exactly where it was. */
+            if (!reduced.matches && hero.getBoundingClientRect().bottom > 0) play();
+            else settleInPlace();
+          }
+
+          if (reduced.matches || window.scrollY >= 2) {
+            settleInPlace();
+          } else {
+            addEventListener('scroll', onScroll, { passive: true });
+          }
+
+          reduced.addEventListener('change', function (event) {
+            if (event.matches && !settled) {
+              removeEventListener('scroll', onScroll);
+              settleInPlace();
             }
-          }
-
-          function onResize() {
-            place();
-            onScroll();
-          }
-
-          addEventListener('scroll', onScroll, { passive: true });
-          addEventListener('resize', onResize, { passive: true });
-          reduced.addEventListener('change', onResize);
-          place();
-          measure();
-          // The room carries width and height, so nothing reflows as it
-          // decodes — but a font that resolves late would move the title, and
-          // its travel is measured off where the title actually sits.
-          if (document.fonts && document.fonts.ready) document.fonts.ready.then(place);
+          });
+          addEventListener('resize', fitTitle, { passive: true });
+          // A font that resolves late changes how wide the title is.
+          if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitTitle);
         }
 
         if (document.readyState === 'loading') {
