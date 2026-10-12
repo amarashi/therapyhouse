@@ -104,9 +104,25 @@ const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComp
       </p>
       <div class="finding__body">
         <LocationMap sizes="(min-width: 62rem) 46vw, calc(100vw - clamp(1.5rem, 5vw, 7rem))" />
-        <ul class="tick-list finding__notes">
-          {practicalNotes?.map((note) => <li>{note}</li>)}
-        </ul>
+        <div class="finding__side">
+          <ul class="tick-list finding__notes">
+            {practicalNotes?.map((note) => <li>{note}</li>)}
+          </ul>
+          {/* The front gate, the same picture the home page puts beside its
+              map: what you walk up to once the map has got you here.
+              Decorative; the notes beside it say everything. */}
+          <img
+            class="finding__art"
+            src={withBase("/assets/home/gate-360.webp")}
+            srcset={`${withBase("/assets/home/gate-360.webp")} 360w, ${withBase("/assets/home/gate-720.webp")} 720w`}
+            sizes="(min-width: 62rem) 300px, 240px"
+            alt=""
+            width="720"
+            height="553"
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
       </div>
     </section>
   </div>
@@ -268,5 +284,12 @@ const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComp
 
   .finding__notes li:last-child {
     margin-bottom: 0;
+  }
+
+  .finding__art {
+    display: block;
+    width: min(300px, 80%);
+    height: auto;
+    margin-top: var(--space-xl);
   }
 </style>

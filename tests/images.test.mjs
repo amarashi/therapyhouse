@@ -64,6 +64,9 @@ const DECORATIVE = {
   // The telephone over "Talk to us" and the garden strip on the footer rule:
   // atmosphere only, next to a heading and links that say everything.
   "src/layouts/PlainLayout.astro": 2,
+  // The garden gate beside the map on /contact/, next to notes that say
+  // everything about arriving.
+  "src/pages/contact.astro": 1,
   // The object beside each service link (a teddy, two teacups): the link
   // beside it already names the page.
   "src/components/ServiceList.astro": 1,
