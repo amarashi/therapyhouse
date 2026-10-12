@@ -10,7 +10,7 @@ import {
   insideEdgeFallbackColors,
   insideImageSize,
   insideParallaxDepths
-} from "./site-data.js";
+} from "./site-data.js?v=20261013-exterior";
 import { requestIdleTask } from "./utils.js";
 import { exteriorHotspots, formerRoomIds, houseContent, previews, roomNavigation, roomSceneDefaults, teamMembers } from "./content-data.js?v=20261013-exterior";
 import { createDogEyeController } from "./dog-eye-controller.js?v=20261013-motion";

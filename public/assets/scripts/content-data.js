@@ -1,4 +1,4 @@
-import { asset } from "./site-data.js";
+import { asset } from "./site-data.js?v=20261013-exterior";
 
 /*
  * The words a visitor reads are not written in this file (issue #94). Clinic
