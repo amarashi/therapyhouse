@@ -28,3 +28,6 @@ ChatGPT Image *.png
 
 # graft's local graph cache — regenerable, not committed (run `graft build`).
 /graft/
+
+# Claude Code agent worktrees: separate checkouts of other branches, never content.
+.claude/worktrees/
