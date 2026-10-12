@@ -55,7 +55,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
    a sign whose preview is missing is left off its room by `content-data.js`.
    See src/lib/house-content.js. */
 assertRebatesCurrent(medicare);
-const pageIds = ['services', 'fees', 'assessments', 'group-therapy', 'library', 'philosophy', 'work-with-us', 'contact'];
+const pageIds = ['services', 'fees', 'assessments', 'group-therapy', 'library', 'philosophy', 'work-with-us', 'contact', 'telehealth'];
 const pages = Object.fromEntries(
   await Promise.all(
     pageIds.map(async (id) => {
@@ -75,6 +75,7 @@ const content = houseContent({
   services: await getCollection('services', shown),
   articles: await getCollection('articles', shown),
   team: await getCollection('team', shown),
+  towns: await getCollection('towns', shown),
   books,
   videos,
   clinic,
@@ -302,7 +303,7 @@ const contactPreview = {
 
   {/* Development only: the tuning panel and its scripts never reach the build. */}
   {import.meta.env.DEV && <DebugPanel />}
-  <script type="module" src={withBase("/assets/scripts/app.js?v=20261013-rooms")}></script>
+  <script type="module" src={withBase("/assets/scripts/app.js?v=20261013-telehealth")}></script>
 </body>
 </html>
 

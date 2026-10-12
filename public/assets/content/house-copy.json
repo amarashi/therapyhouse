@@ -15,7 +15,8 @@
     "book": "Book online",
     "call": "Call reception",
     "email": "Email reception",
-    "map": "Open in Google Maps"
+    "map": "Open in Google Maps",
+    "telehealth": "Read about video sessions"
   },
   "menu": {
     "button": "Rooms",

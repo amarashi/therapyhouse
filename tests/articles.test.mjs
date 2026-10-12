@@ -80,8 +80,10 @@ test("every old article address has a redirect to its library page", () => {
 /* Every address the new site has: its static pages, service pages, team profiles and articles. */
 const { collection } = await import("./helpers/house-content.mjs");
 const { servicePath } = await import("../src/lib/services.js");
+const { townPath } = await import("../src/lib/towns.js");
 const routes = new Set([
   ...collection("services").map((e) => servicePath(e.data.kind, e.id, e.data.path)),
+  ...collection("towns").filter((e) => e.data.kind === "page").map((e) => townPath(e.id)),
   "/",
   ...list("src/pages/")
     .filter((f) => f.endsWith(".astro") && !["index.astro", "404.astro"].includes(f))
@@ -111,7 +113,9 @@ test("the house content has no Current Site links, and every internal link resol
   walk(siteContent.rooms);
   // Under node there is no asset base: the built links are root paths and the
   // rooms' records bare relative ones.
-  const internal = links.filter((url) => !/^[a-z]+:/.test(url)).map((url) => (url.startsWith("/") ? url : `/${url}`));
+  const internal = links
+    .filter((url) => !/^[a-z]+:/.test(url))
+    .map((url) => (url.startsWith("/") ? url : `/${url}`).replace(/#.*$/, ""));
   assert.ok(internal.length >= 60, `expected the house's links, found ${internal.length}`);
   for (const url of internal) {
     assert.ok(routes.has(url), `the house links to ${url}, which is not a page`);

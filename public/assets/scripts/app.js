@@ -12,7 +12,7 @@ import {
   insideParallaxDepths
 } from "./site-data.js";
 import { requestIdleTask } from "./utils.js";
-import { exteriorHotspots, houseContent, previews, roomNavigation, roomSceneDefaults, teamMembers } from "./content-data.js?v=20261013-rooms";
+import { exteriorHotspots, houseContent, previews, roomNavigation, roomSceneDefaults, teamMembers } from "./content-data.js?v=20261013-telehealth";
 import { createDogEyeController } from "./dog-eye-controller.js?v=20260529-eye-scale";
 import { createEntranceVideoController } from "./entrance-video.js?v=20261013-rooms";
 import { createFirelightController } from "./firelight-controller.js";

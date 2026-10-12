@@ -2117,6 +2117,10 @@ content:
                 label: To the work with us page
                 type: string
                 required: true
+              - name: telehealth
+                label: To the telehealth page
+                type: string
+                required: true
               - name: book
                 label: Book online
                 type: string
@@ -2167,8 +2171,8 @@ content:
             label: Rooms
             type: object
             list:
-              min: 10
-              max: 10
+              min: 11
+              max: 11
               collapsible:
                 collapsed: true
                 summary: "{fields.title}"

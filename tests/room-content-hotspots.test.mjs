@@ -35,7 +35,14 @@ for (const [roomId, roomScene] of Object.entries(roomSceneDefaults.rooms)) {
 const contactRoomHotspots = roomSceneDefaults.rooms.contact.hotspots
   .filter((hotspot) => hotspot.id !== "back")
   .map((hotspot) => hotspot.action);
-assert.deepEqual(contactRoomHotspots, ["content", "content", "content", "content", "content"]);
+assert.deepEqual(contactRoomHotspots, ["content", "content", "content", "content", "content", "content"]);
+
+// Reception leads through to the telehealth room (docs/house-plan.md, phase D).
+const telehealthDoor = roomSceneDefaults.rooms.contact.hotspots.find((hotspot) => hotspot.id === "telehealth");
+assert.equal(telehealthDoor.targetRoom, "telehealth");
+for (const hotspot of roomSceneDefaults.rooms.telehealth.hotspots.filter((h) => h.action !== "back")) {
+  assert.match(previews[hotspot.contentKey].link.href, /^\/telehealth\//, `${hotspot.id} should lead to /telehealth/`);
+}
 
 const assessmentRoomEntry = roomSceneDefaults.rooms.services.hotspots.find((hotspot) => hotspot.id === "assessment-room");
 assert.equal(assessmentRoomEntry.targetRoom, "assessments");

@@ -60,7 +60,7 @@ function roomLayer(roomId, path, className) {
     : { src: asset(path), alt: image.alt };
 }
 
-export const roomIds = ["exterior", "welcome", "team", "services", "assessments", "groups", "library", "philosophy", "contact", "work-with-us"];
+export const roomIds = ["exterior", "welcome", "team", "services", "assessments", "groups", "library", "philosophy", "contact", "telehealth", "work-with-us"];
 
 function navigationRoom(id) {
   const { title, label, description, exteriorEntry } = roomText(id);
@@ -418,7 +418,34 @@ export const roomSceneDefaults = {
         hotspot({ room: "contact", id: "email", contentKey: "contact.email", x: 940, y: 280 }),
         hotspot({ room: "contact", id: "address", contentKey: "contact.address", x: 880, y: 485 }),
         hotspot({ room: "contact", id: "parking", contentKey: "contact.intro", x: 290, y: 550 }),
+        hotspot({ room: "contact", id: "telehealth", targetRoom: "telehealth", contentKey: "rooms.telehealth", x: 1250, y: 600 }),
         hotspot({ room: "contact", id: "back", action: "back", x: 180, y: 180 })
+      ]
+    },
+
+    /*
+     * The telehealth room, through reception (docs/house-plan.md, phase D): a
+     * study in the cottage set up for video sessions, its window onto gum
+     * trees and hills. Every sign leads to /telehealth/. The /telehealth/
+     * page has no door of its own into the house: it is written for people
+     * who will see a psychologist by video, and stays answer-first.
+     */
+    telehealth: {
+      id: "telehealth",
+      imageSize: roomImageSize,
+      background: {
+        layers: [
+          roomLayer("telehealth", "assets/rooms/telehealth-room.webp")
+        ]
+      },
+      effects: { firelight: false, dogEyes: false },
+      hotspots: [
+        hotspot({ room: "telehealth", id: "how-it-works", contentKey: "telehealth.process", x: 830, y: 455 }),
+        hotspot({ room: "telehealth", id: "medicare", contentKey: "telehealth.medicare", x: 460, y: 300 }),
+        hotspot({ room: "telehealth", id: "regional", contentKey: "telehealth.regional", x: 840, y: 270 }),
+        hotspot({ room: "telehealth", id: "clinicians", contentKey: "telehealth.clinicians", x: 1215, y: 640 }),
+        hotspot({ room: "telehealth", id: "booking", contentKey: "telehealth.booking", x: 640, y: 650 }),
+        hotspot({ room: "telehealth", id: "back", action: "back", x: 150, y: 330 })
       ]
     },
 
@@ -595,7 +622,16 @@ export const siteContent = {
       roomLink("contact", "phone", "contact.phone"),
       roomLink("contact", "email", "contact.email"),
       roomLink("contact", "address", "contact.address"),
-      roomLink("contact", "parking", "contact.intro")
+      roomLink("contact", "parking", "contact.intro"),
+      roomLink("contact", "telehealth", "rooms.telehealth", { targetRoom: "telehealth" })
+    ]),
+
+    telehealth: roomRecord("telehealth", [asset("telehealth/")], [
+      roomLink("telehealth", "how-it-works", "telehealth.process"),
+      roomLink("telehealth", "medicare", "telehealth.medicare"),
+      roomLink("telehealth", "regional", "telehealth.regional"),
+      roomLink("telehealth", "clinicians", "telehealth.clinicians"),
+      roomLink("telehealth", "booking", "telehealth.booking")
     ]),
 
     "work-with-us": roomRecord("work-with-us", [asset("work-with-us/")], [

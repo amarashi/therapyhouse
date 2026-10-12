@@ -23,6 +23,8 @@
 import { articlePath } from './articles.js';
 import { servicePath } from './services.js';
 import { houseFacts, packagePrice } from './house-facts.js';
+import { formatRebate } from '../data/medicare.js';
+import { townPath } from './towns.js';
 
 /** The id of the JSON script element in /house/ that `content-data.js` reads. */
 export const HOUSE_CONTENT_ID = 'house-content';
@@ -31,6 +33,8 @@ export const HOUSE_CONTENT_ID = 'house-content';
 export const PREVIEW_ITEMS = 6;
 
 const short = (list, count = PREVIEW_ITEMS) => (list ?? []).slice(0, count);
+/* A CMS sentence may carry a link written [words](/page/); a preview keeps the words. */
+const plainWords = (text) => String(text ?? '').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
 const asDate = (value) => (value instanceof Date ? value : new Date(value));
 const dateLabel = (value) =>
   asDate(value).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
@@ -52,6 +56,7 @@ const dateLabel = (value) =>
  * @param {Array<{id: string, data: any}>} input.services  Service entries this build shows.
  * @param {Array<{id: string, data: any}>} input.articles  Articles this build shows.
  * @param {Array<{id: string, data: any}>} input.team  Team entries this build shows.
+ * @param {Array<{id: string, data: any}>} [input.towns]  Town entries this build shows.
  * @param {Array<{title: string, note?: string}>} input.books
  * @param {Array<{title: string}>} input.videos
  * @param {any} input.clinic  public/assets/content/clinic.json
@@ -65,6 +70,7 @@ export function houseContent({
   services,
   articles,
   team,
+  towns = [],
   books = [],
   videos = [],
   clinic,
@@ -91,6 +97,7 @@ export function houseContent({
   const philosophyPage = page('philosophy');
   const workPage = page('work-with-us');
   const contactPage = page('contact');
+  const telehealthPage = page('telehealth');
 
   const facts = houseFacts({
     fees: feesPage.fees ?? [],
@@ -296,6 +303,53 @@ export function houseContent({
   previews['workWithUs.enquiry'] = {
     text: [clinic.email],
     link: { href: `mailto:${clinic.email}`, label: label('email') },
+  };
+
+  /* ---- Telehealth room (docs/house-plan.md, phase D) ----
+     Every sign leads to /telehealth/, the page written for people who will
+     see a psychologist by video and may never see the house. The Medicare
+     sentence states figures, so it is written here beside them, as the
+     /telehealth/ template writes its own (PRODUCT.md: the rebate is stated
+     plainly wherever fees are discussed). */
+  const tele = telehealthPage.telehealthText ?? {};
+  const toTelehealth = (hash = '') => ({ href: href(`/telehealth/${hash}`), label: label('telehealth') });
+  previews['telehealth.process'] = {
+    title: tele.processHeading,
+    text: [telehealthPage.lede],
+    items: short(telehealthPage.process, 3).map((title) => ({ title })),
+    link: toTelehealth(),
+  };
+  previews['telehealth.medicare'] = {
+    title: tele.medicareHeading,
+    text: [
+      'Medicare pays the same rebate for a video session as for a session in the room. With a referral and ' +
+        `a Mental Health Treatment Plan from your GP, Medicare pays back part of the fee for up to ${medicare.sessionsPerYear} ` +
+        'individual sessions a calendar year.',
+    ],
+    items: medicare.rebates.map((row) => ({ title: row.label, detail: `${formatRebate(row.rebate)} a session` })),
+    link: toTelehealth('#medicare'),
+  };
+  previews['telehealth.regional'] = {
+    title: tele.regionalHeading,
+    text: [tele.regionalText],
+    items: towns
+      .filter((entry) => entry.data.kind === 'page')
+      .map((entry) => ({ title: entry.data.h1, href: href(townPath(entry.id)) }))
+      .sort((a, b) => a.title.localeCompare(b.title, 'en-AU')),
+    link: toTelehealth(),
+  };
+  previews['telehealth.clinicians'] = {
+    title: tele.cliniciansHeading,
+    text: [plainWords(tele.cliniciansText)],
+    items: people
+      .filter((entry) => entry.data.kind === 'practitioner')
+      .map((entry) => ({ title: entry.data.name, detail: entry.data.availability ?? entry.data.role, href: profile(entry) })),
+    link: toTelehealth('#who'),
+  };
+  previews['telehealth.booking'] = {
+    title: tele.bookingHeading,
+    text: [plainWords(tele.bookingText)],
+    link: toTelehealth('#booking'),
   };
 
   /* The team carousel: everyone this build shows, in the team page's order. */

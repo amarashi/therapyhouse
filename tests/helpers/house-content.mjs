@@ -26,6 +26,7 @@ export function builtHouseContent() {
     services: collection("services"),
     articles: collection("articles"),
     team: collection("team"),
+    towns: collection("towns"),
     books,
     videos,
     clinic: JSON.parse(read("public/assets/content/clinic.json")),
