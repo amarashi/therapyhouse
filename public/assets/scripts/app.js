@@ -12,14 +12,14 @@ import {
   insideParallaxDepths
 } from "./site-data.js";
 import { requestIdleTask } from "./utils.js";
-import { exteriorHotspots, houseContent, previews, roomNavigation, roomSceneDefaults, teamMembers } from "./content-data.js?v=20261013-telehealth";
-import { createDogEyeController } from "./dog-eye-controller.js?v=20260529-eye-scale";
+import { exteriorHotspots, houseContent, previews, roomNavigation, roomSceneDefaults, teamMembers } from "./content-data.js?v=20261013-motion";
+import { createDogEyeController } from "./dog-eye-controller.js?v=20261013-motion";
 import { createEntranceVideoController } from "./entrance-video.js?v=20261013-rooms";
 import { createFirelightController } from "./firelight-controller.js";
-import { createInsideScene } from "./inside-scene.js";
+import { createInsideScene } from "./inside-scene.js?v=20261013-motion";
 import { createModalDialog } from "./modal-dialog.js";
-import { createTeamCarousel } from "./team-carousel.js";
-import { createTurntableViewer } from "./turntable-viewer.js";
+import { createTeamCarousel } from "./team-carousel.js?v=20261013-motion";
+import { createTurntableViewer } from "./turntable-viewer.js?v=20261013-motion";
 
 const stage = document.getElementById("stage");
 const canvas = document.getElementById("viewerCanvas");
@@ -176,6 +176,7 @@ const entranceVideo = createEntranceVideoController({
     teamCarousel.preloadImages();
     recordVisit(roomId);
     markMenuRoom(roomId);
+    preloadNeighbours(roomId);
   },
   reducedMotionQuery
 });
@@ -250,6 +251,31 @@ function showRoom(roomId) {
   closeDialogs();
   insideScene.setActiveRoom(roomId);
   markMenuRoom(roomId);
+  preloadNeighbours(roomId);
+}
+
+/*
+ * The rooms a visitor can reach from this one load while the house is idle,
+ * so the cross-fade into them starts at once (docs/house-plan.md, phase G).
+ * Reaching for a door (hovering or focusing a sign or a menu item) loads
+ * that room straight away.
+ */
+function preloadNeighbours(roomId) {
+  const room = roomSceneDefaults.rooms[roomId];
+  if (!room) return;
+  requestIdleTask(() => {
+    room.hotspots.filter((spot) => spot.targetRoom).forEach((spot) => insideScene.preloadRoom(spot.targetRoom));
+  });
+}
+
+function bindDoorPreloading() {
+  const reachFor = (event) => {
+    const door = event.target.closest?.("[data-target-room], .room-menu__room");
+    const roomId = door?.dataset.targetRoom || door?.dataset.room;
+    if (roomId && roomId !== "exterior") insideScene.preloadRoom(roomId);
+  };
+  document.addEventListener("pointerover", reachFor, { passive: true });
+  document.addEventListener("focusin", reachFor);
 }
 
 /** Go to a room, inside or from the exterior, as a step the visitor can take back. */
@@ -537,6 +563,7 @@ function init() {
   bindHouseExit();
 
   bindRoomMenu();
+  bindDoorPreloading();
   const requestedRoom = readRequestedRoom();
   window.history.replaceState({ house: true, room: requestedRoom || "exterior", depth: 0 }, "", houseAddress(requestedRoom));
   window.addEventListener("popstate", followHistory);

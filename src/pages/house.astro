@@ -130,7 +130,7 @@ const contactPreview = {
   <script is:inline define:vars={{ assetBase }}>window.__ASSET_BASE__ = assetBase;</script>
   <script is:inline type="application/json" id={HOUSE_CONTENT_ID} set:html={contentJson}></script>
   <title>Explore the House | Therapy House, The Gap, Brisbane</title>
-  <link rel="stylesheet" href={withBase("/assets/styles/main.css?v=20261013-text")}>
+  <link rel="stylesheet" href={withBase("/assets/styles/main.css?v=20261013-motion")}>
   <script type="application/ld+json" set:html={JSON.stringify(businessSchema)} />
   <Analytics />
 </head>
@@ -300,7 +300,7 @@ const contactPreview = {
 
   {/* Development only: the tuning panel and its scripts never reach the build. */}
   {import.meta.env.DEV && <DebugPanel />}
-  <script type="module" src={withBase("/assets/scripts/app.js?v=20261013-telehealth")}></script>
+  <script type="module" src={withBase("/assets/scripts/app.js?v=20261013-motion")}></script>
 </body>
 </html>
 

@@ -96,3 +96,23 @@ between rooms instead of a cut, room pictures preloaded for the room you are
 likely to visit next, parallax and sign movement driven by one animation frame
 loop with eased values, no layout reads inside it, and everything respecting
 `prefers-reduced-motion`.
+
+## Status
+
+All seven phases landed on the `feat/house-one-source` branch on 2026-10-13,
+one commit each.
+
+| Phase | What changed |
+| --- | --- |
+| A | `src/lib/house-content.js` builds every sign's preview from the plain pages' files; `house-copy.json` keeps only the house's own wording. The team carousel reads the team collection. |
+| B | Pop-ups are short previews on solid cream, each with a link to its page and the booking and calling pair. |
+| C | `?room=<id>` addresses, history entries for every move, a Back sign that steps back one room, and the Rooms menu. |
+| D | The telehealth room (`public/assets/rooms/telehealth-room.webp`; master in `art-src/rooms-inside/`, untracked), reached from a sign in reception and from the menu. |
+| E | The CMS House screen explains where its words come from; the unused `houseProgram` component is gone. |
+| F | `CODEBASE.md`, `HOTSPOT_CONTENT_MAP.md`, `AGENTS.md` and `SITE_CONTENT.md` describe the site as it is; `tests/house-text-source.test.mjs` keeps typed text out of `house.astro`. |
+| G | Room changes cross-fade after the next picture decodes; reachable rooms preload; no layout reads per pointer move; parallax easing is timed. |
+
+Still open:
+
+- The new room's master image is local only, like the other masters in `art-src/`.
+- Removing a sign in the CMS stops the build (a missing id throws), so the live site keeps its last good version and a deploy alert goes out. A friendlier guard would need Pages CMS to fix each room's list of signs.

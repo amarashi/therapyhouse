@@ -2900,3 +2900,36 @@
         display: none;
       }
     }
+
+    /* Moving between rooms (docs/house-plan.md, phase G): the next room's
+       picture fades in over the last once it has decoded (inside-scene.js),
+       and the signs step out and back in with it. Opacity only, so the
+       browser composites it without repainting the room. */
+    .inside-parallax__layer {
+      transition: opacity 460ms cubic-bezier(0.3, 0.7, 0.2, 1);
+    }
+
+    .inside-parallax__layer.is-entering {
+      opacity: 0;
+    }
+
+    .scene-sign-layer {
+      transition: opacity 260ms ease;
+    }
+
+    .scene-sign-layer.is-switching {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .scene-sign {
+      transition: background-color 180ms ease, box-shadow 180ms ease;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .inside-parallax__layer,
+      .scene-sign-layer,
+      .scene-sign {
+        transition: none;
+      }
+    }

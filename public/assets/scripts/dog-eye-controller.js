@@ -143,7 +143,21 @@ export function createDogEyeController({
   function init() {
     applyDocument(readStoredDogEyeSettings(storageKey) || defaultSettings);
     loadExternalSettings();
-    insideView?.addEventListener("pointermove", (event) => updatePupils(event.clientX, event.clientY));
+    /* At most once a frame, and only in the room the dog is in: the eyes'
+       layer is hidden everywhere else, and following the pointer there would
+       measure the page on every move for nothing. */
+    let pending = null;
+    insideView?.addEventListener("pointermove", (event) => {
+      if (!layer || layer.hidden) return;
+      const firstThisFrame = !pending;
+      pending = { x: event.clientX, y: event.clientY };
+      if (!firstThisFrame) return;
+      requestAnimationFrame(() => {
+        const { x, y } = pending;
+        pending = null;
+        updatePupils(x, y);
+      });
+    });
     insideView?.addEventListener("pointerleave", resetPupils);
   }
 

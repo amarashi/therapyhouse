@@ -48,6 +48,7 @@ export function createTurntableViewer({
   let lastRenderedFrame = "";
   let animationFrameId = 0;
   let lastHoverInputTime = 0;
+  let stageRect = null;
 
   function getSceneRectCss() {
     const rect = stage.getBoundingClientRect();
@@ -148,6 +149,7 @@ export function createTurntableViewer({
 
   function resizeCanvas() {
     const rect = stage.getBoundingClientRect();
+    stageRect = rect;
     const ratio = Math.min(window.devicePixelRatio || 1, 2);
     const width = Math.max(1, Math.round(rect.width * ratio));
     const height = Math.max(1, Math.round(rect.height * ratio));
@@ -431,7 +433,8 @@ export function createTurntableViewer({
     stage.addEventListener("pointermove", (event) => {
       if (isInteractionLocked) return;
 
-      const rect = stage.getBoundingClientRect();
+      // Measured on resize (`resizeCanvas`), not on every move.
+      const rect = stageRect || stage.getBoundingClientRect();
 
       if (isDragging) {
         const dx = event.clientX - dragStartX;
