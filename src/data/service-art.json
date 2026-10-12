@@ -31,6 +31,10 @@
     "width": 640,
     "height": 530
   },
+  "cairns": {
+    "width": 640,
+    "height": 678
+  },
   "cancellations": {
     "width": 640,
     "height": 690
@@ -119,6 +123,14 @@
     "width": 640,
     "height": 621
   },
+  "not-found": {
+    "width": 640,
+    "height": 620
+  },
+  "privacy": {
+    "width": 640,
+    "height": 566
+  },
   "private-health": {
     "width": 640,
     "height": 719
@@ -127,6 +139,10 @@
     "width": 640,
     "height": 611
   },
+  "rockhampton": {
+    "width": 640,
+    "height": 629
+  },
   "telehealth-setup": {
     "width": 640,
     "height": 604
@@ -134,6 +150,14 @@
   "therapy-intro": {
     "width": 640,
     "height": 563
+  },
+  "toowoomba": {
+    "width": 640,
+    "height": 664
+  },
+  "townsville": {
+    "width": 640,
+    "height": 537
   },
   "trauma": {
     "width": 640,

@@ -1,6 +1,7 @@
 ---
 import { withBase } from '../lib/base.js';
 import PlainLayout from '../layouts/PlainLayout.astro';
+import IllustratedHead from '../components/IllustratedHead.astro';
 import { footerNav, contact, callsToAction } from '../data/site.js';
 
 /**
@@ -16,13 +17,12 @@ import { footerNav, contact, callsToAction } from '../data/site.js';
   description="That page isn't here. Every part of Therapy House is one link away, and reception can point you at the rest."
 >
   <div class="wrap notfound">
-    <div class="prose--flush prose">
-      <h1>That page isn't here.</h1>
-      <p class="lede">
-        It may have moved, or the address may have a typo in it. Everything on the
-        site is one link away below.
-      </p>
-    </div>
+    {/* A signpost at a fork in the path: the way on, not an error. */}
+    <IllustratedHead
+      title="That page isn't here."
+      lede="It may have moved, or the address may have a typo in it. Everything on the site is one link away below."
+      art="not-found"
+    />
 
     <section aria-labelledby="everywhere">
       <div class="section-head"><h2 id="everywhere">Where you can go</h2></div>
@@ -52,14 +52,6 @@ import { footerNav, contact, callsToAction } from '../data/site.js';
 </PlainLayout>
 
 <style>
-  .notfound {
-    margin-top: var(--space-3xl);
-  }
-
-  .notfound h1 {
-    margin-bottom: var(--space-lg);
-  }
-
   .doors {
     list-style: none;
     padding: 0;

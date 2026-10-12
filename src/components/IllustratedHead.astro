@@ -42,8 +42,13 @@ const hasArt = Boolean(name && name in art);
 <style>
   /* No hero on these pages, so the heading band needs room of its own below
      the masthead. */
+  /* The bottom margin is the page's section gap. The pages' own
+     `.page > * + *` rule cannot give it: their scoped styles do not match this
+     component's element, so the body used to start flush under the pills. In a
+     block flow it collapses with any margin the next section sets itself. */
   .head {
     padding-top: var(--space-2xl);
+    margin-bottom: var(--space-section);
     display: grid;
     gap: var(--space-lg);
     align-items: center;

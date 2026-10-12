@@ -8,10 +8,17 @@
  * here (the Medicare rebate, the clinicians line, the sources) are kept short
  * on purpose, because the doorway rule allows no more than a third of a Town
  * Page's text to be shared with another (tests/towns.test.mjs).
+ *
+ * Laid out like a service page: the town's own picture in the heading band
+ * (named after its file in src/content/towns/), the body as chapters with an
+ * "On this page" list beside it on wide screens, and the rebate and the
+ * clinicians as a pair of boxes, each with its object.
  */
 import { getCollection, render } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
 import PlainLayout from '../../layouts/PlainLayout.astro';
+import IllustratedHead from '../../components/IllustratedHead.astro';
+import Vignette from '../../components/Vignette.astro';
 import { withBase } from '../../lib/base.js';
 import { builtPaths } from '../../lib/links.js';
 import { businessId } from '../../lib/services.js';
@@ -43,7 +50,15 @@ const services = await getCollection('services', (e) => includeInBuild(e.data, p
 const built = builtPaths(Object.keys(import.meta.glob('/src/pages/**/*.astro')), services);
 const couplesHref = built.has('/therapy/couples/') ? withBase('/therapy/couples/') : null;
 
-const { Content } = await render(entry);
+const { Content, headings } = await render(entry);
+
+/* "On this page": the town's own headings, then the three sections below. */
+const contents = [
+  ...headings.filter((h) => h.depth === 2).map((h) => ({ id: h.slug, label: h.text })),
+  { id: 'medicare', label: 'Medicare rebate' },
+  { id: 'clinicians', label: 'The clinicians' },
+  { id: 'sources', label: 'Where these facts come from' },
+];
 
 const [psychologist, clinical] = medicare.rebates;
 
@@ -69,50 +84,75 @@ const schema = {
   <script type="application/ld+json" set:html={JSON.stringify(schema)} slot="head" />
 
   <div class="wrap page town-page">
-    <header class="town-page__head">
+    {/* The heading band, with the facts a person checks first under the lede. */}
+    <IllustratedHead title={data.h1!} lede={data.lede} art={entry.id}>
       {data.draft && (
-        <p class="town-page__draft">Draft for review. This page is not on the clinic's website.</p>
+        <p slot="before" class="town-page__draft">Draft for review. This page is not on the clinic's website.</p>
       )}
-      <h1>{data.h1}</h1>
-      <p class="lede">{data.lede}</p>
-    </header>
-
-    <div class="prose--flush prose stack" data-town-body>
-      <Content />
-    </div>
-
-    <section aria-labelledby="medicare" data-town-body>
-      <h2 id="medicare">Medicare rebate</h2>
-      <p>
-        Per video session of 50 minutes or more, as at {formatAsAt(medicare.asAt)}:{' '}
-        {formatRebate(psychologist.rebate)} with a psychologist, {formatRebate(clinical.rebate)} with
-        a clinical psychologist.{' '}
-        <a href={withBase('/fees/')}>Fees and Medicare rebates</a>
-        {couplesHref && <>{' · '}<a href={couplesHref}>Couples therapy</a></>}
-      </p>
-    </section>
-
-    <section aria-labelledby="clinicians" data-town-body>
-      <h2 id="clinicians">The clinicians</h2>
-      <p>
-        <a href={withBase('/team/')}>Meet the team</a>, or read{' '}
-        <a href={withBase('/telehealth/')}>how video sessions work</a>.
-      </p>
-    </section>
-
-    <section aria-labelledby="sources" data-town-body>
-      <h2 id="sources">Where these facts come from</h2>
-      <ul class="town-page__sources">
-        {data.facts.map((fact) => (
-          <li>{fact.text} <a href={fact.sourceUrl}>{fact.sourceName}</a></li>
-        ))}
+      <ul class="town-page__facts" aria-label="At a glance">
+        <li class="fact">50-minute video sessions</li>
+        <li class="fact fact--fee"><a href="#medicare">{formatRebate(psychologist.rebate)} Medicare rebate</a></li>
+        <li class="fact fact--link"><a href="#clinicians">The clinicians</a></li>
       </ul>
-    </section>
+    </IllustratedHead>
+
+    <div class="town-page__layout">
+      <div class="town-page__main">
+        <div class="prose--flush prose prose--chapters stack" data-town-body>
+          <Content />
+        </div>
+
+        {/* What Medicare pays back, and who you would see: two boxes side by
+            side, each with the object it is about. */}
+        <div class="money">
+          <section class="money__box" aria-labelledby="medicare" data-town-body>
+            <Vignette class="money__art" name="medicare" sizes="104px" />
+            <h2 id="medicare">Medicare rebate</h2>
+            <p>
+              Per video session of 50 minutes or more, as at {formatAsAt(medicare.asAt)}:{' '}
+              {formatRebate(psychologist.rebate)} with a psychologist, {formatRebate(clinical.rebate)} with
+              a clinical psychologist.{' '}
+              <a href={withBase('/fees/')}>Fees and Medicare rebates</a>
+              {couplesHref && <>{' · '}<a href={couplesHref}>Couples therapy</a></>}
+            </p>
+          </section>
+
+          <section class="money__box" aria-labelledby="clinicians" data-town-body>
+            <Vignette class="money__art" name="video" sizes="104px" />
+            <h2 id="clinicians">The clinicians</h2>
+            <p>
+              <a href={withBase('/team/')}>Meet the team</a>, or read{' '}
+              <a href={withBase('/telehealth/')}>how video sessions work</a>.
+            </p>
+          </section>
+        </div>
+
+        {/* The footnotes: small print on a card of their own. */}
+        <section class="town-page__sources-box" aria-labelledby="sources" data-town-body>
+          <h2 id="sources">Where these facts come from</h2>
+          <ul class="town-page__sources">
+            {data.facts.map((fact) => (
+              <li>{fact.text} <a href={fact.sourceUrl}>{fact.sourceName}</a></li>
+            ))}
+          </ul>
+        </section>
+      </div>
+
+      <nav class="toc" aria-labelledby="toc-title">
+        <p class="toc__title" id="toc-title">On this page</p>
+        <ol class="toc__list">
+          {contents.map((item) => (
+            <li><a href={`#${item.id}`}>{item.label}</a></li>
+          ))}
+        </ol>
+      </nav>
+    </div>
   </div>
 </PlainLayout>
 
 <style>
-  .page > * + * {
+  .page > * + *,
+  .town-page__main > * + * {
     margin-top: var(--space-section);
   }
 
@@ -120,11 +160,7 @@ const schema = {
     margin-top: 0;
   }
 
-  .town-page__head {
-    padding-top: var(--space-2xl);
-    max-width: var(--content-max);
-  }
-
+  /* Loud on purpose: a reviewer must never mistake a draft for the real page. */
   .town-page__draft {
     display: inline-block;
     background: var(--surface-sunk);
@@ -136,8 +172,189 @@ const schema = {
     color: var(--heading);
   }
 
-  .town-page__sources {
+  /* ---- At a glance: the same pills as a service page ---- */
+
+  .town-page__facts {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+  }
+
+  .fact {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    min-height: 36px;
+    padding: 0 var(--space-md);
+    border-radius: var(--radius-pill);
+    background: var(--surface-accent);
+    color: var(--hedge-green);
+    font-size: var(--text-secondary);
+    font-weight: 600;
+  }
+
+  .fact::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: var(--radius-pill);
+    background: var(--hedge-sage);
+  }
+
+  .fact--fee {
+    background: var(--surface-sunk);
+    box-shadow: inset 0 0 0 1px var(--line);
+    color: var(--ink);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+
+  .fact--fee::before {
+    background: var(--chestnut);
+  }
+
+  .fact--link {
+    background: transparent;
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+
+  .fact--link::before {
+    content: none;
+  }
+
+  .fact a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .fact a:hover {
+    text-decoration: underline;
+  }
+
+  /* ---- The body, and the contents list beside it ---- */
+
+  .town-page__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2xl);
+    align-items: start;
+  }
+
+  .toc {
+    display: none;
+  }
+
+  @media (min-width: 72rem) {
+    .town-page__layout {
+      grid-template-columns: minmax(0, 1fr) 12.5rem;
+      column-gap: clamp(var(--space-2xl), 3vw, 3.5rem);
+    }
+
+    .toc {
+      display: block;
+      position: sticky;
+      top: var(--space-2xl);
+      max-height: calc(100vh - var(--space-3xl));
+      overflow-y: auto;
+      padding: var(--space-xs) 0 var(--space-xs) var(--space-lg);
+      border-left: 2px solid var(--line);
+    }
+  }
+
+  .toc__title {
+    margin: 0 0 var(--space-sm);
+    font-size: var(--text-meta);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .toc__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-xs);
+  }
+
+  .toc__list a {
+    display: block;
+    padding: 2px 0;
+    font-size: var(--text-secondary);
+    line-height: var(--lh-compact);
+    color: var(--ink-soft);
+    text-decoration: none;
+  }
+
+  .toc__list a:hover {
+    color: var(--hedge-green);
+    text-decoration: underline;
+  }
+
+  /* ---- Medicare and the clinicians ---- */
+
+  .money {
+    display: grid;
+    gap: var(--space-2xl) var(--space-xl);
+    align-items: start;
+  }
+
+  @media (min-width: 52rem) {
+    .money {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .money__box {
+    position: relative;
+    padding: var(--space-2xl) var(--space-xl) var(--space-xl);
+    background: var(--surface-sunk);
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--edge-lit);
+  }
+
+  .money__box :global(.money__art) {
+    position: absolute;
+    top: 0;
+    right: var(--space-xl);
+    width: 6rem;
+    height: auto;
+    transform: translateY(-55%);
+    filter: drop-shadow(0 8px 10px rgba(48, 25, 8, 0.16));
+    pointer-events: none;
+  }
+
+  .money__box h2 {
+    padding-right: 6.5rem;
+    font-size: var(--text-subhead);
+    line-height: var(--lh-subhead);
+  }
+
+  .money__box > :last-child {
+    margin-bottom: 0;
+  }
+
+  /* ---- Sources ---- */
+
+  .town-page__sources-box {
     max-width: var(--content-max);
+    padding: var(--space-xl);
+    background: var(--surface-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+  }
+
+  .town-page__sources-box h2 {
+    font-size: var(--text-subhead);
+    line-height: var(--lh-subhead);
+  }
+
+  .town-page__sources {
+    margin: 0;
     padding-left: 1.2em;
     font-size: var(--text-secondary);
   }

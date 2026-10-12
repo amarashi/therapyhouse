@@ -1,6 +1,7 @@
 ---
 import { getEntry, render } from 'astro:content';
 import PlainLayout from '../layouts/PlainLayout.astro';
+import IllustratedHead from '../components/IllustratedHead.astro';
 
 const page = await getEntry('pages', 'privacy-policy');
 if (!page) throw new Error('Missing content: src/content/pages/privacy-policy.md');
@@ -19,15 +20,15 @@ const reviewedLabel = lastReviewed
     to read it, and a "Talk to us" block under a legal text reads as a pitch. */}
 <PlainLayout title={title} description={description} showClosing={false}>
   <div class="wrap policy">
-    <header class="policy__head">
-      <h1>{title}</h1>
-      <p class="lede">{lede}</p>
+    {/* The heading band every plain page opens with; its object is a locked
+        card box, the records this policy is about. */}
+    <IllustratedHead title={title} lede={lede} art="privacy">
       {reviewedLabel && (
         <p class="policy__reviewed">
           Last updated <time datetime={lastReviewed?.toISOString().slice(0, 10)}>{reviewedLabel}</time>
         </p>
       )}
-    </header>
+    </IllustratedHead>
 
     <div class="prose--flush prose stack">
       <Content />
@@ -36,12 +37,6 @@ const reviewedLabel = lastReviewed
 </PlainLayout>
 
 <style>
-  /* No hero, so the heading band needs room of its own below the masthead. */
-  .policy__head {
-    padding-top: var(--space-2xl);
-    max-width: var(--content-max);
-  }
-
   .policy__reviewed {
     color: var(--ink-faint);
     font-size: var(--text-secondary);
