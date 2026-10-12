@@ -19,6 +19,7 @@ worksOn:
   - "Trauma"
 availability: "On leave"
 sourceUrl: https://www.therapyhouse.com.au/staff-member/letitia-mcvey/
+draft: false
 ---
 
 Letitia supports neurodevelopmental differences, learning difficulties, autism, ADHD, anxiety, depression, trauma and specific phobias. Her style is attachment-informed, creative and non-judgemental, with parents involved where useful for wrap-around support.

@@ -7,7 +7,8 @@ import PersonPortrait from '../components/PersonPortrait.astro';
 import LocationMap from '../components/LocationMap.astro';
 import { contact, callsToAction, isAcceptingNewClients, nearbySuburbs } from '../data/site.js';
 import { listOf } from '../lib/seo.js';
-import { hubLinks, includeInBuild, isProductionSite } from '../lib/services.js';
+import { hubLinks } from '../lib/services.js';
+import { includeInBuild, isProductionSite, shownItems } from '../lib/drafts.js';
 // PROTOTYPE — throwaway, remove with WelcomeHeroPrototype.astro.
 import WelcomeHeroPrototype from '../components/WelcomeHeroPrototype.astro';
 
@@ -21,7 +22,10 @@ const { Content } = await render(page);
    that says what the clinic actually is, now opens the body of `home.md`, in
    place of a line that claimed the rooms were "purposefully and elegantly
    designed" — PRODUCT.md's "show the place, don't claim it". */
-const { title, description, routes, practicalNotes } = page.data;
+const { title, description, practicalNotes } = page.data;
+const production = isProductionSite(Astro.site);
+/* Route cards switched off ("Show on the live website") stay on the Preview only. */
+const routes = shownItems(page.data.routes, production);
 
 const philosophy = await getEntry('pages', 'philosophy');
 
@@ -29,10 +33,12 @@ const philosophy = await getEntry('pages', 'philosophy');
    than by service. Read from the collection, so a hub that is still a draft is
    never linked from the production home page. */
 const audienceHubs = hubLinks(
-  await getCollection('services', (entry) => includeInBuild(entry.data, isProductionSite(Astro.site)))
+  await getCollection('services', (entry) => includeInBuild(entry.data, production))
 );
 
-const everyone = (await getCollection('team')).sort((a, b) => a.data.order - b.data.order);
+const everyone = (await getCollection('team', (entry) => includeInBuild(entry.data, production))).sort(
+  (a, b) => a.data.order - b.data.order
+);
 const practitioners = everyone.filter((p) => p.data.kind === 'practitioner');
 const acceptingNow = practitioners.filter((p) => isAcceptingNewClients(p.data.availability));
 
@@ -217,7 +223,7 @@ const faces = [
     <section class="rooms-section" aria-labelledby="what-we-do">
       <div class="section-head"><h2 id="what-we-do">What we do</h2></div>
       <ul class="rooms">
-        {routes?.map((route) => (
+        {routes.map((route) => (
           <li class="room">
             <a class="room__link" href={withBase(route.href)}>
               {/* The heading and description name the destination; a described

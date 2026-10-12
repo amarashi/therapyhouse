@@ -19,12 +19,11 @@ import { site } from '../data/site.js';
 import {
   assertFeesPublishable,
   hubMembers,
-  includeInBuild,
-  isProductionSite,
   missingIds,
   serviceSchema,
   servicePath,
 } from '../lib/services.js';
+import { includeInBuild, isProductionSite, shownEntries, shownItems } from '../lib/drafts.js';
 
 interface Props {
   entry: CollectionEntry<'services'>;
@@ -36,18 +35,23 @@ const production = isProductionSite(Astro.site);
 
 assertFeesPublishable({ id: entry.id, feeStatus: data.feeStatus, fees: data.fees }, production);
 
-/* A clinician slug that matches nobody is a build error, not an empty card. */
+/* A clinician slug that matches nobody is a build error, not an empty card.
+   Checked against the whole team, switched-off members included, so a typo
+   is caught on every build. */
 const teamIds = (await getCollection('team')).map((p) => p.id);
 const unknown = missingIds(data.clinicians.map((c) => c.id), teamIds);
 if (unknown.length) {
   throw new Error(`Service "${entry.id}" names clinicians who are not in the team: ${unknown.join(', ')}`);
 }
-const clinicians = await getEntries(data.clinicians);
+/* A clinician switched off ("Show on the live website") is dropped in
+   production rather than stopping the build; the Preview still shows them. */
+const clinicians = shownEntries(await getEntries(data.clinicians), production);
 
 /* Related pages are links, so a draft is only linked from where it is visible. */
-const related = (await getEntries(data.related)).filter(
-  (other) => other && !(other.data.draft && production)
-);
+const related = shownEntries(await getEntries(data.related), production);
+
+/* Fee rows switched off ("Show on the live website") stay on the Preview only. */
+const fees = shownItems(data.fees, production);
 
 /* An audience hub lists every page that shares its audience, read from the
    collection so a new page is linked from its hub without anyone editing the
@@ -137,15 +141,15 @@ const reviewedLabel = data.lastReviewed
       </section>
     )}
 
-    {!(isHub && !data.fees?.length) && (
+    {!(isHub && !fees.length) && (
     <section aria-labelledby="fees">
       <h2 id="fees">What it costs</h2>
-      {data.sessionFees && !data.fees?.length ? (
+      {data.sessionFees && !fees.length ? (
         <p>
           Sessions are charged at the clinic's usual session fees, which are listed with what
           Medicare pays back on the fees page.
         </p>
-      ) : data.feeStatus === 'quote' || !data.fees?.length ? (
+      ) : data.feeStatus === 'quote' || !fees.length ? (
         <p>
           Call reception for a quote. Fees depend on what is involved, and reception will tell
           you before anything is booked.
@@ -166,7 +170,7 @@ const reviewedLabel = data.lastReviewed
               </tr>
             </thead>
             <tbody>
-              {data.fees.map((fee) => (
+              {fees.map((fee) => (
                 <tr>
                   <th scope="row">
                     {fee.label}

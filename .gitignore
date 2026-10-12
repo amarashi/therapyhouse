@@ -26,6 +26,8 @@ team-room.png
 prompt_test.txt
 ChatGPT Image *.png
 
+# Team portrait sizes the build makes from a CMS upload (src/lib/team-portraits.js)
+public/assets/team/generated/
 # graft's local graph cache — regenerable, not committed (run `graft build`).
 /graft/
 

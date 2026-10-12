@@ -13,7 +13,7 @@ import {
   teamMembers
 } from "./site-data.js";
 import { requestIdleTask } from "./utils.js";
-import { exteriorHotspots, roomSceneDefaults, siteContent } from "./content-data.js";
+import { exteriorHotspots, phoneHref, roomSceneDefaults, siteContent, teamOnSite } from "./content-data.js?v=20261012-show-on-site";
 import { createDogEyeController } from "./dog-eye-controller.js?v=20260529-eye-scale";
 import { createEntranceVideoController } from "./entrance-video.js?v=20261011-reduced-door";
 import { createFirelightController } from "./firelight-controller.js";
@@ -124,7 +124,8 @@ const teamCarousel = createTeamCarousel({
   previousButton: teamCarouselPrev,
   nextButton: teamCarouselNext,
   closeButton: teamCarouselClose,
-  teamMembers,
+  // Team members switched off for this build stay out of the carousel (issue #95).
+  teamMembers: teamMembers.filter((member) => teamOnSite(member.id)),
   canOpen: () => insideScene.isActive,
   fallbackFocus: () => insideScene.getSceneSigns().find((sign) => sign.dataset.action === "about")
 });
@@ -239,7 +240,7 @@ function getContentLink(contentKey, value) {
   const text = String(value || "");
 
   if (contentKey === "contact.phone") {
-    return { href: "tel:+61733002170", label: `Call Therapy House on ${text}` };
+    return { href: phoneHref(text), label: `Call Therapy House on ${text}` };
   }
   if (contentKey === "contact.email" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text)) {
     return { href: `mailto:${text}`, label: `Email ${text}` };

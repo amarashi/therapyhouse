@@ -4,9 +4,10 @@ import { defineConfig } from 'astro/config';
 import { rehypeBaseLinks } from './src/lib/rehype-base-links.js';
 import sitemap from '@astrojs/sitemap';
 
-import { draftServicePaths, sitemapFilter } from './src/lib/sitemap.js';
+import { draftPaths, sitemapFilter } from './src/lib/sitemap.js';
 import { securityHeaders } from './src/integrations/security-headers.js';
 import { redirectsFileIntegration } from './src/integrations/redirects-file.js';
+import { teamPortraits } from './src/integrations/team-portraits.js';
 
 // Therapy House — static site.
 //
@@ -82,6 +83,9 @@ export default defineConfig({
   base,
   integrations: [
     guardBase,
+    /* The four portrait files for anyone whose photo came in through the CMS
+       as one upload in src/assets/team/ (issue #96). */
+    teamPortraits(),
     /* dist/_headers for Cloudflare: security and cache headers (issue #44). */
     securityHeaders(),
     /* sitemap-index.xml at the site root, named in robots.txt. Drafts, the
@@ -91,7 +95,7 @@ export default defineConfig({
         base,
         excluded: [
           ...Object.keys(redirects),
-          ...draftServicePaths(fileURLToPath(new URL('./src/content/services/', import.meta.url))),
+          ...draftPaths(fileURLToPath(new URL('./src/content/', import.meta.url))),
         ],
       }),
     }),

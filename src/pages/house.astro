@@ -2,7 +2,7 @@
 import { withBase, basePrefix } from '../lib/base.js';
 import { getCollection, getEntry } from 'astro:content';
 import { site, contact, businessFacts } from '../data/site.js';
-import { includeInBuild, isProductionSite } from '../lib/services.js';
+import { includeInBuild, isProductionSite, shownItems } from '../lib/drafts.js';
 import { businessSchema as buildBusinessSchema } from '../lib/structured-data.js';
 import { assertRebatesCurrent, medicare } from '../data/medicare.js';
 import { HOUSE_FACTS_ID, houseFacts, houseFactsJson } from '../lib/house-facts.js';
@@ -23,6 +23,7 @@ const assetBase = `${basePrefix}/`;
 // Same preview guard as PlainLayout.astro: the GitHub Pages build must not
 // be indexed as a second copy of the clinic's site.
 const isPreview = (Astro.site?.hostname ?? '').endsWith('github.io');
+const production = isProductionSite(Astro.site);
 
 /* The same clinic record as every reading page (src/lib/structured-data.js),
    rather than a hand-written copy that drifts from it. */
@@ -31,7 +32,7 @@ const businessSchema = buildBusinessSchema({
   contact,
   facts: businessFacts,
   services: await getCollection('services', (entry) =>
-    entry.data.kind !== 'hub' && includeInBuild(entry.data, isProductionSite(Astro.site))
+    entry.data.kind !== 'hub' && includeInBuild(entry.data, production)
   ),
   siteUrl: Astro.site ?? site.origin,
   pageBase: withBase,
@@ -49,16 +50,34 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 assertRebatesCurrent(medicare);
 const feesPage = await getEntry('pages', 'fees');
 const assessmentsPage = await getEntry('pages', 'assessments');
-if (!feesPage || !assessmentsPage) {
-  throw new Error('Missing content: src/content/pages/fees.md or src/content/pages/assessments.md');
+const groupsPage = await getEntry('pages', 'group-therapy');
+if (!feesPage || !assessmentsPage || !groupsPage) {
+  throw new Error('Missing content: src/content/pages/fees.md, assessments.md or group-therapy.md');
 }
+
+/* The house keeps its own copy of the team, packages and group programs
+   (house-copy.json and site-data.js), so it cannot filter them from the
+   collections. It is told instead what this build switches off ("Show on the
+   live website", issue #95), by the ids the house's copies share: team
+   members by their collection id, and packages and programs by the `id` on
+   the item in assessments.md and group-therapy.md, which is their key in
+   house-copy.json. Titles stay free to reword. content-data.js leaves them out. */
+const switchedOff = (items) =>
+  (items ?? []).filter((item) => item.id && !includeInBuild(item, production)).map((item) => item.id);
+const hidden = {
+  team: (await getCollection('team', (entry) => !includeInBuild(entry.data, production))).map((e) => e.id),
+  packages: switchedOff(assessmentsPage.data.packages),
+  programs: switchedOff(groupsPage.data.programs),
+};
+
 const facts = houseFactsJson(
   houseFacts({
-    fees: feesPage.data.fees ?? [],
+    fees: shownItems(feesPage.data.fees, production),
     sessionLength: feesPage.data.sessionLength,
     privateHealth: feesPage.data.privateHealth,
-    packages: assessmentsPage.data.packages ?? [],
+    packages: shownItems(assessmentsPage.data.packages, production),
     medicare,
+    hidden,
   })
 );
 ---
@@ -255,7 +274,7 @@ const facts = houseFactsJson(
 
   {/* Development only: the tuning panel and its scripts never reach the build. */}
   {import.meta.env.DEV && <DebugPanel />}
-  <script type="module" src={withBase("/assets/scripts/app.js?v=20261011-reduced-door")}></script>
+  <script type="module" src={withBase("/assets/scripts/app.js?v=20261012-show-on-site")}></script>
 </body>
 </html>
 

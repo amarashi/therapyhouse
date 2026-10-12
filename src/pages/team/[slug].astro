@@ -6,15 +6,20 @@ import CallToAction from '../../components/CallToAction.astro';
 import { site, isAcceptingNewClients } from '../../data/site.js';
 import { practitionerTitle, personDescription } from '../../lib/seo.js';
 import { personSchema as buildPersonSchema } from '../../lib/structured-data.js';
+import { teamPortrait } from '../../lib/team-portraits.js';
+import { includeInBuild, isProductionSite } from '../../lib/drafts.js';
 
 export async function getStaticPaths() {
-  const everyone = await getCollection('team');
+  /* A team member switched off ("Show on the live website") gets no page in
+     production; the Preview builds it with a draft marker for review. */
+  const production = isProductionSite(import.meta.env.SITE);
+  const everyone = await getCollection('team', (entry) => includeInBuild(entry.data, production));
   return everyone.map((person) => ({ params: { slug: person.id }, props: { person } }));
 }
 
 const { person } = Astro.props;
 const { Content } = await render(person);
-const { name, role, image, imageAlt, credentials, worksWith, worksOn, languages, availability, kind, summary } =
+const { name, role, image, imageAlt, credentials, worksWith, worksOn, languages, availability, kind, summary, draft } =
   person.data;
 
 /* Built per person, from their own published summary, so no two profiles
@@ -32,6 +37,12 @@ const facts = [
 
 const accepting = isAcceptingNewClients(availability);
 
+/* The photograph's two steps: hand-made, or made by the build from the one
+   upload the CMS takes (src/lib/team-portraits.js). */
+const portrait = teamPortrait(image);
+const photo = portrait.photo ?? image;
+const photo280 = portrait.photo280 ?? photo;
+
 /**
  * Person-level structured data. This is the page a parent lands on from a
  * search for a named practitioner, so the machine-readable identity belongs
@@ -39,7 +50,7 @@ const accepting = isAcceptingNewClients(availability);
  * record by its id; the AHPRA number goes in only once the clinic supplies it.
  * See src/lib/structured-data.js.
  */
-const personSchema = buildPersonSchema(person.data, {
+const personSchema = buildPersonSchema({ ...person.data, image: photo }, {
   id: person.id,
   origin: site.origin,
   siteUrl: Astro.site ?? site.origin,
@@ -66,8 +77,8 @@ const personSchema = buildPersonSchema(person.data, {
           takes a photograph wider than the page can paint. */}
       <img
         class="profile__photo"
-        src={withBase(image)}
-        srcset={`${withBase(image.replace(/\.webp$/, '-280.webp'))} 280w, ${withBase(image)} 560w`}
+        src={withBase(photo)}
+        srcset={`${withBase(photo280)} 280w, ${withBase(photo)} 560w`}
         sizes="(max-width: 46rem) 14rem, 18rem"
         alt={imageAlt}
         width="420"
@@ -76,6 +87,9 @@ const personSchema = buildPersonSchema(person.data, {
       />
 
       <div class="profile__body">
+        {draft && (
+          <p class="profile__draft">Draft for review. This page is not on the clinic's website.</p>
+        )}
         <h1>{name}</h1>
         <p class="profile__role">{role}</p>
         {credentials && credentials !== role && <p class="profile__creds">{credentials}</p>}
@@ -118,6 +132,18 @@ const personSchema = buildPersonSchema(person.data, {
 
   .profile__back {
     margin-bottom: var(--space-xl);
+  }
+
+  /* Loud on purpose: a reviewer must never mistake a draft for the real page. */
+  .profile__draft {
+    display: inline-block;
+    background: var(--surface-sunk);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    padding: var(--space-xs) var(--space-md);
+    font-size: var(--text-secondary);
+    font-weight: 700;
+    color: var(--heading);
   }
 
   .profile__grid {

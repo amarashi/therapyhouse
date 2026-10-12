@@ -22,6 +22,7 @@ languages:
   - "Filipino (Tagalog)"
 availability: "Active waitlist for new clients"
 sourceUrl: https://www.therapyhouse.com.au/staff-member/sahar-h-fattahi-general-psychologist/
+draft: false
 ---
 
 Sahar has experience with mood and anxiety concerns, diagnostic assessment, neurodevelopmental conditions, emotional and behavioural dysregulation, and parent coaching. She uses approaches such as CBT, ACT and DBT, and can work in English, Persian/Farsi and Filipino/Tagalog.

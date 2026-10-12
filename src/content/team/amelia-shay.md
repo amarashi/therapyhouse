@@ -17,6 +17,7 @@ languages:
   - "Persian (Farsi)"
 availability: "Not currently accepting new clients"
 sourceUrl: https://www.therapyhouse.com.au/staff-member/dr-amelia-shay/
+draft: false
 ---
 
 Amelia has worked in psychology since the early 2000s and holds several psychology qualifications, including a PhD in Developmental Psychology. Her therapy work includes individual therapy, couples counselling, EMDR-informed trauma work, and support in English and Persian/Farsi.

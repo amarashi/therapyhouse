@@ -3,17 +3,18 @@
  *
  * The contact details are imported from `content-data.js` rather than copied.
  * That module is the single content model both experiences read from — the
- * house renders it as hotspots, these pages render it as sections — so the
- * phone number exists in exactly one place.
+ * house renders it as hotspots, these pages render it as sections. It reads
+ * them in turn from public/assets/content/clinic.json, the file clinic staff
+ * edit, so the phone number exists in exactly one place (issue #94).
  */
-import { siteContent } from '../../public/assets/scripts/content-data.js';
+import { clinic, phoneHref, siteContent } from '../../public/assets/scripts/content-data.js';
 
 export const contact = siteContent.contact;
 
 export const site = {
   name: 'Therapy House',
   origin: 'https://www.therapyhouse.com.au',
-  tagline: "Help that doesn't feel like help",
+  tagline: clinic.tagline,
 };
 
 /**
@@ -22,7 +23,7 @@ export const site = {
  * The Gap", and a suburb named nowhere on the site cannot be matched. These are
  * neighbouring suburbs, not a claim about where clients come from.
  */
-export const nearbySuburbs = ['Ashgrove', 'Bardon', 'Keperra', 'Ferny Grove', 'Mitchelton'];
+export const nearbySuburbs = clinic.nearbySuburbs;
 
 /**
  * @typedef {object} OpeningHours One row of `openingHoursSpecification`.
@@ -37,18 +38,14 @@ export const nearbySuburbs = ['Ashgrove', 'Bardon', 'Keperra', 'Ferny Grove', 'M
  * Every value here is published by the clinic or is a public fact about its
  * address. Opening hours are an empty list on purpose: the clinic has not
  * published them, and a search result showing wrong hours sends a parent to a
- * locked door. Fill the list once the clinic confirms its hours, and the
- * structured data picks them up.
+ * locked door. Fill the list in clinic.json once the clinic confirms its
+ * hours, and the structured data picks them up.
  */
 export const businessFacts = {
-  telephone: '+61-7-3300-2170',
-  address: {
-    streetAddress: '1290 Waterworks Rd',
-    addressLocality: 'The Gap',
-    addressRegion: 'QLD',
-    postalCode: '4061',
-    addressCountry: 'AU',
-  },
+  /* The international form of the one phone number in clinic.json: the
+     leading 0 becomes +61 and the spaces become dashes. */
+  telephone: `+61-${contact.phone.trim().replace(/^0/, '').replace(/\s+/g, '-')}`,
+  address: clinic.postalAddress,
   /* The address point for 1290 Waterworks Road in OpenStreetMap (node
      6255279194), from the Nominatim geocoder, rounded to five decimal places
      (about one metre). */
@@ -69,7 +66,9 @@ export const businessFacts = {
      on /therapy/ and stay there, where they carry their review date. */
   priceRange: '$$',
   /** @type {OpeningHours[]} */
-  openingHours: [],
+  /* Pages CMS drops an empty list from the file when it saves, so "no hours
+     published" can arrive as a missing key. */
+  openingHours: clinic.openingHours ?? [],
 };
 
 /**
@@ -85,7 +84,7 @@ export const callsToAction = {
   },
   call: {
     label: `Call ${contact.phone}`,
-    href: 'tel:+61733002170',
+    href: phoneHref(contact.phone),
     external: false,
   },
 };

@@ -15,7 +15,8 @@
  */
 import { getCollection } from 'astro:content';
 import ServicePage from '../layouts/ServicePage.astro';
-import { builtAtOwnPath, includeInBuild, isProductionSite, servicePath } from '../lib/services.js';
+import { builtAtOwnPath, servicePath } from '../lib/services.js';
+import { includeInBuild, isProductionSite } from '../lib/drafts.js';
 
 export async function getStaticPaths() {
   const production = isProductionSite(import.meta.env.SITE);

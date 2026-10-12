@@ -1,0 +1,157 @@
+{
+  "volumes": [
+    {
+      "id": "little-koala",
+      "title": "The Little Koala",
+      "note": "A koala who cannot say goodbye in the mornings.",
+      "deck": "The story of a little koala who does not want to leave his mother. He explores his own fears, meets a friend who has felt them too, and learns to name them and get past them.",
+      "audience": "For children — a bedtime story, or one for a kindergarten shelf",
+      "facts": [
+        {
+          "term": "Written by",
+          "value": "Dr Amelia Shay"
+        },
+        {
+          "term": "Illustrated by",
+          "value": "Nafiseh Ebrahiminejad"
+        },
+        {
+          "term": "Helps with",
+          "value": "Separation anxiety, fear of sleeping alone, fear of the dark"
+        },
+        {
+          "term": "Last page",
+          "value": "Short tips for parents and educators on using the story"
+        }
+      ],
+      "action": {
+        "label": "Buy with card",
+        "href": "https://checkout.square.site/buy/HKWVROXO2C2SCQXGZVVWEBL2?src=embed"
+      },
+      "spreads": [
+        {
+          "id": "koala-spread-1",
+          "label": "The koala who would not go"
+        },
+        {
+          "id": "koala-spread-2",
+          "label": "Asking his mother"
+        },
+        {
+          "id": "koala-spread-3",
+          "label": "The queasy feeling"
+        },
+        {
+          "id": "koala-spread-4",
+          "label": "Listening for sounds"
+        }
+      ]
+    },
+    {
+      "id": "what-is-going-on-in-my-head",
+      "title": "What Is Going On In My Head",
+      "note": "A working book for the therapist and the child to fill in together.",
+      "deck": "Written for therapists who work with children. The book guides the clinician through CBT and ACT techniques so a child can name their own emotions and the thoughts underneath them, a chapter at a time, with practice to take home.",
+      "audience": "For clinicians who work with children",
+      "facts": [
+        {
+          "term": "Extent",
+          "value": "68 pages, six chapters"
+        },
+        {
+          "term": "Structure",
+          "value": "Three phases — insight, therapy, maintenance"
+        },
+        {
+          "term": "Size",
+          "value": "28 × 21 cm"
+        },
+        {
+          "term": "Paper",
+          "value": "Premium heavy stock, lay-flat binding"
+        },
+        {
+          "term": "Price",
+          "value": "$120"
+        }
+      ],
+      "action": {
+        "label": "Email to order",
+        "href": "mailto:admin@therapyhouse.com.au?subject=Order%3A%20What%20Is%20Going%20On%20In%20My%20Head"
+      },
+      "spreads": [
+        {
+          "id": "head-spread-1",
+          "label": "The Woop Woop in my head"
+        },
+        {
+          "id": "head-spread-2",
+          "label": "What is your body doing?"
+        }
+      ]
+    },
+    {
+      "id": "-MQe65WaRYk",
+      "title": "A note on happiness",
+      "note": "Dr Amelia, on what happiness is and is not.",
+      "deck": "A short talk on happiness — what it actually is, and why chasing it as a constant state is the wrong thing to ask of yourself or of a child."
+    },
+    {
+      "id": "5oZEYLYYVv0",
+      "title": "A welcome message from Dr Amelia",
+      "note": "The approaches used here, and who they are for.",
+      "deck": "An introduction to Therapy House from Dr Amelia Shay: the approaches the clinic works with, and how a first visit tends to go."
+    },
+    {
+      "id": "_W046Li7XAs",
+      "title": "The Lockdown Challenge",
+      "series": "The Lockdown Challenge · 1 of 3",
+      "note": "A daily challenge for children stuck at home.",
+      "deck": "From the Kooky Clinic's daily lockdown challenge — small things for children to do at home when the days have stopped being ordinary."
+    },
+    {
+      "id": "nKIlFyBCYIM",
+      "title": "The Lockdown Challenge 2",
+      "series": "The Lockdown Challenge · 2 of 3",
+      "note": "The second in the series.",
+      "deck": "The second daily challenge in the series, for children at home."
+    },
+    {
+      "id": "jtFkqdkSwMw",
+      "title": "The Lockdown Challenge 3",
+      "series": "The Lockdown Challenge · 3 of 3",
+      "note": "The third in the series.",
+      "deck": "The third daily challenge in the series, for children at home."
+    },
+    {
+      "id": "RiT7kP-nL_A",
+      "title": "There is a magic in stories",
+      "series": "There is a magic in stories · 1 of 2",
+      "note": "Why reading together does more than teach words.",
+      "deck": "On shared reading — the thing Dr Amelia's own research keeps landing on as the single most useful thing a parent can do with a child."
+    },
+    {
+      "id": "-xwW34R1FhA",
+      "title": "There is a magic in stories, part two",
+      "series": "There is a magic in stories · 2 of 2",
+      "note": "More on reading with your child.",
+      "deck": "The second part, on how to read with a child rather than at them."
+    },
+    {
+      "id": "kU9D2yGPivU",
+      "title": "یادگیری زبان برای کودکان دوزبانه",
+      "titleLang": "fa",
+      "gloss": "Language learning for bilingual children",
+      "note": "In Persian — raising a child in two languages.",
+      "deck": "In Persian. How children learn two languages at once, and what parents can stop worrying about."
+    },
+    {
+      "id": "opuPbYFSiQ0",
+      "title": "اشتباهات رایج افراد در صحبت کردن انگلیسی",
+      "titleLang": "fa",
+      "gloss": "Common mistakes people make speaking English",
+      "note": "In Persian — speaking English more confidently.",
+      "deck": "In Persian. The mistakes Persian speakers most often make in English, and how to hear them in your own speech."
+    }
+  ]
+}

@@ -30,6 +30,10 @@
  * Re-run after adding a person:
  *   node tools/portraits.mjs
  *
+ * A person added through the CMS needs none of this: their one upload in
+ * `src/assets/team/` is turned into the missing files by the build (see
+ * src/lib/team-portraits.js). Files written here are hand-made and win.
+ *
  * sharp comes in with Astro, so there is no dependency to add.
  */
 import { createRequire } from 'node:module';

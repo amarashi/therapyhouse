@@ -19,6 +19,7 @@ worksOn:
   - "Depression"
 availability: "Active waitlist for new clients"
 sourceUrl: https://www.therapyhouse.com.au/staff-member/jazmin-squire/
+draft: false
 ---
 
 Jazmin values safe therapeutic relationships and believes people can build insight, skills and more fulfilling ways of living. She has experience with children, young people, parents and couples, including complex trauma, grief, domestic and family violence, depression, anxiety and emotional dysregulation.

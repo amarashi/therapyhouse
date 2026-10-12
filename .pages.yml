@@ -1,0 +1,2074 @@
+# Pages CMS configuration (issue #97): the editing screens clinic staff use.
+# Docs: https://pagescms.org/docs/configuration/
+#
+# Who reads this: reception and the practice manager see its labels and help
+# text, so those are written in plain clinic language. Field names (`lede`,
+# `draft`, ...) are the developer's and never shown.
+#
+# Kept in step with the build by tests/pages-cms-config.test.mjs:
+#   - every field of a Markdown collection here exists in the schema in
+#     src/lib/content-schemas.js, and every schema field is here (or on the
+#     short list in the test of fields no page uses);
+#   - every select offers exactly the values the schema or the build accepts;
+#   - every JSON file's fields match the keys in the file;
+#   - fields only the developer may change (ids, addresses, `sourceUrl`,
+#     `documentTitle`) are `hidden` or `readonly`.
+# A failing test names the field. Change the schema, the content and this file
+# together.
+#
+# Developer-only and therefore not here at all: Medicare amounts
+# (src/data/medicare.js), redirects (docs/redirects.md), the house's scene
+# positions and tuning (public/assets/scripts/), and the library shelf's shapes
+# and colours (src/data/library-shelf.js).
+#
+# "Show on the live website" (issue #95): the files store `draft: true` for
+# "switched off". Pages CMS shows a boolean as one switch and cannot invert it
+# or relabel its two positions, and a select would save the text "false"
+# instead of the boolean false, which the build rejects. So the switch is
+# labelled for what `true` means: "Hidden from the live website".
+
+settings:
+  content:
+    # Keep any key the form does not list (YAML comments are still lost when
+    # a file is saved; Pages CMS rewrites the whole front matter).
+    merge: true
+
+media:
+  - name: team
+    label: Team photos
+    # One photograph per person; the build makes the four sizes the site uses
+    # (src/lib/team-portraits.js, issue #96). Never served as uploaded.
+    input: src/assets/team
+    output: /assets/team
+    extensions: [jpg, jpeg, png, webp]
+    rename: safe
+  - name: library
+    label: Article pictures
+    # Article header pictures and pictures inside articles. Keep each under
+    # 300 KB (tests/articles.test.mjs); WebP is smallest.
+    input: public/assets/library
+    output: /assets/library
+    extensions: [jpg, jpeg, png, webp]
+    rename: safe
+
+components:
+  draft:
+    label: Hidden from the live website
+    description: >-
+      Switch on to keep this off the clinic's real website without deleting
+      it. It still appears on the Preview site, marked as a draft, so it can be
+      checked first. Switch off to publish it.
+    type: boolean
+  feeRow:
+    label: Fees
+    type: object
+    list:
+      collapsible:
+        collapsed: true
+        summary: "{fields.label}: {fields.amount}"
+    fields:
+      - name: label
+        label: What the fee is for
+        type: string
+        required: true
+      - name: amount
+        label: Price
+        description: As written on the page, for example "$260", "from $1,000" or "+$10".
+        type: string
+        required: true
+      - name: note
+        label: Note under the price
+        type: string
+      - name: adjustment
+        label: Added on top of a session fee
+        description: Switch on for extras such as the evening fee, so they are listed apart from the session prices.
+        type: boolean
+      - name: group
+        label: Group in the fee table
+        description: Leave empty for the psychologists' session fees, which head the table.
+        type: select
+        options:
+          values:
+            - value: provisional
+              label: Provisional psychologists
+            - value: couples-family
+              label: Couples and family sessions
+      - name: draft
+        component: draft
+  houseProgram:
+    type: object
+    fields:
+      - name: title
+        label: Name
+        type: string
+        required: true
+      - name: audience
+        label: Who it is for
+        type: string
+      - name: description
+        label: Description
+        type: text
+        required: true
+
+content:
+  # ------------------------------------------------------------------ Team
+  - name: team
+    label: Team
+    description: >-
+      One page per person. Add a new person with "Add an entry"; they start
+      hidden from the live website so the clinic can check their page on the
+      Preview first. People cannot be deleted here: switch them to hidden
+      instead, because articles and service pages may name them.
+    type: collection
+    path: src/content/team
+    filename: "{name}.md"
+    format: yaml-frontmatter
+    subfolders: false
+    operations:
+      rename: false
+      delete: false
+    view:
+      primary: name
+      fields: [name, role, draft]
+      sort: [order, name]
+      default:
+        sort: order
+        order: asc
+    fields:
+      - name: name
+        label: Name
+        description: As it should appear on the website, for example "Dr Amelia Shay".
+        type: string
+        required: true
+      - name: role
+        label: Job title
+        type: string
+        required: true
+      - name: kind
+        label: Type of team member
+        description: Practitioners are listed first, then support staff, then the clinic dogs.
+        type: select
+        required: true
+        options:
+          values:
+            - value: practitioner
+              label: Practitioner (sees clients)
+            - value: support
+              label: Support staff
+            - value: dog
+              label: Clinic dog
+      - name: order
+        label: Position on the team page
+        description: 1 is first. People of the same type are listed in this order.
+        type: number
+        required: true
+        options:
+          min: 1
+      - name: image
+        label: Photo
+        description: >-
+          One clear portrait photo (JPG, PNG or WebP). The website crops it to a
+          tall rectangle and makes the smaller sizes itself.
+        type: image
+        required: true
+        options:
+          media: team
+      - name: imageAlt
+        label: Photo description
+        description: >-
+          One sentence describing the photo for people who cannot see it, for
+          example "Portrait of Dr Amelia Shay, developmental psychologist at
+          Therapy House in Brisbane".
+        type: string
+        required: true
+      - name: summary
+        label: Short introduction
+        description: Two or three sentences shown on the team card and at the top of their page.
+        type: text
+        required: true
+      - name: credentials
+        label: Qualifications
+        description: For example "PhD, MPsy, BPsySc". Leave empty if not published.
+        type: string
+      - name: worksWith
+        label: Works with
+        description: >-
+          Practitioners only, up to 4. Each choice is one the clinic has signed
+          off in docs/team-specialisms-review.md; a new person needs a section
+          there (ask the developer) before they can be shown on the live
+          website.
+        type: select
+        options:
+          multiple: true
+          max: 4
+          values:
+            - Adolescents
+            - Adults
+            - All ages
+            - Children
+            - Couples
+            - Families
+            - Parents
+            - Young adults
+            - Young people
+      - name: worksOn
+        label: Works on
+        description: >-
+          Practitioners only, up to 5. Same sign-off rule as "Works with".
+        type: select
+        options:
+          multiple: true
+          max: 5
+          values:
+            - ADHD
+            - Anxiety
+            - Assessment
+            - Autism
+            - Chronic health
+            - Complex trauma
+            - Depression
+            - Developmental delay
+            - Domestic and family violence
+            - Early intervention
+            - Eating disorders
+            - Emotional dysregulation
+            - Grief
+            - Learning difficulties
+            - Low mood
+            - Neurodevelopmental conditions
+            - Trauma
+      - name: languages
+        label: Languages they work in
+        description: Include English. Leave empty for support staff and the dogs.
+        type: string
+        list: true
+      - name: availability
+        label: Availability for new clients
+        description: >-
+          Use the clinic's usual wording: "Accepting new clients", "Active
+          waitlist for new clients", "Not currently accepting new clients" or
+          "On leave". Leave empty to say nothing. Change it in House > House
+          text > Team as well, so the illustrated house agrees.
+        type: string
+      - name: ahpra
+        label: AHPRA registration number
+        type: string
+      - name: sourceUrl
+        label: Address on the old website
+        type: string
+        hidden: true
+      - name: draft
+        component: draft
+        description: >-
+          Switch on to keep this person off the clinic's real website: the team
+          page, the home page, service pages, article bylines and the house.
+          Their page still appears on the Preview site, marked as a draft. New
+          people start switched on.
+        default: true
+      - name: body
+        label: Full biography
+        type: rich-text
+
+  # -------------------------------------------------------------- Articles
+  - name: articles
+    label: Articles
+    description: >-
+      The library's articles. New articles start hidden from the live website
+      until a clinician has reviewed them. To take an article down, prefer
+      hiding it: deleting one of the articles that came from the old website
+      stops the website from updating, because its old address must keep
+      working.
+    type: collection
+    path: src/content/articles
+    filename: "{title}.md"
+    format: yaml-frontmatter
+    subfolders: false
+    operations:
+      rename: false
+    view:
+      primary: title
+      fields: [title, date, category, draft]
+      sort: [date, title]
+      default:
+        sort: date
+        order: desc
+    fields:
+      - name: title
+        label: Title
+        description: >-
+          The heading. The page's address is made from it when the article is
+          first saved and does not change afterwards.
+        type: string
+        required: true
+      - name: documentTitle
+        label: Title in search results
+        type: string
+        hidden: true
+      - name: description
+        label: Summary for search results
+        description: One or two sentences, under 160 characters. Must be different from every other article's.
+        type: text
+        required: true
+        options:
+          maxlength: 159
+      - name: date
+        label: Date first published
+        type: date
+        required: true
+      - name: updated
+        label: Date last updated
+        description: Leave empty unless the article has been meaningfully revised.
+        type: date
+        default: ""
+      - name: author
+        label: Written by
+        description: >-
+          Leave empty for articles from the clinic as a whole. Someone newly
+          added to the team appears here after the developer adds them.
+        type: select
+        options:
+          values:
+            - value: amelia-shay
+              label: Dr Amelia Shay
+            - value: kaya-beinke
+              label: Dr Kaya Beinke
+            - value: letitia-mcvey
+              label: Letitia McVey
+            - value: sahar-fattahi
+              label: Sahar Fattahi
+            - value: rani-banks
+              label: Rani Banks
+            - value: jazmin-squire
+              label: Jazmin Squire
+            - value: laura-storey
+              label: Laura Storey
+            - value: genevieve-hussey
+              label: Genevieve Hussey
+      - name: category
+        label: Topic
+        description: >-
+          One of the topics already in use where possible: Therapy, Children,
+          Assessments, Emotion Regulation, Parenting, Relationships, News or
+          Blog.
+        type: string
+        required: true
+      - name: sourceUrl
+        label: Address on the old website
+        type: string
+        hidden: true
+      - name: image
+        label: Header picture
+        description: Under 300 KB. WebP is smallest.
+        type: image
+        options:
+          media: library
+      - name: imageAlt
+        label: Header picture description
+        description: Required when there is a header picture. One sentence describing it for people who cannot see it.
+        type: string
+      - name: crisisNote
+        label: Show the crisis support note
+        description: Adds the Lifeline and 000 note. Switch on for articles about depression, trauma or self-harm.
+        type: boolean
+      - name: draft
+        component: draft
+        description: >-
+          Switch on to keep this article off the clinic's real website. It
+          still appears on the Preview site, marked as a draft. New articles
+          start switched on.
+        default: true
+      - name: body
+        label: Article
+        description: Every picture needs a description (its alt text).
+        type: rich-text
+        options:
+          media: library
+
+  # -------------------------------------------------------------- Services
+  - name: services
+    label: Therapy and assessment pages
+    description: >-
+      One page per therapy or assessment. New pages are added by the
+      developer, because each needs an address and a place in the menus.
+      Each page is written to be found in Google by one phrase, which must
+      stay in its "Title in search results", "Summary for search results" and
+      opening, and its main word in the heading (the help on those fields
+      lists them).
+    type: collection
+    path: src/content/services
+    format: yaml-frontmatter
+    subfolders: false
+    operations:
+      create: false
+      rename: false
+      delete: false
+    view:
+      primary: h1
+      fields: [h1, kind, feeStatus, draft]
+      sort: [h1]
+    fields:
+      - name: title
+        label: Title in search results
+        description: >-
+          Shown in Google results and the browser tab. Under 60 characters,
+          different from every other page's, and containing each word of the
+          page's search phrase: Adult and Child ADHD assessment "ADHD
+          assessment"; Adult and Child autism assessment "autism assessment";
+          Learning "dyslexia"; Cognitive "cognitive"; Adults "psychologist for
+          adults"; Children "child psychologist"; Trauma "trauma therapy";
+          Anxiety "anxiety psychologist"; Depression "depression counselling";
+          Grief "grief counselling"; Couples "couples counselling"; Our
+          approaches "CBT"; NDIS "NDIS psychologist"; Circle of Security
+          "circle of security parenting program"; Family "family therapy".
+        type: string
+        required: true
+        options:
+          maxlength: 60
+      - name: h1
+        label: Heading on the page
+        description: >-
+          Must contain the page's main word: on the assessment pages the whole
+          search phrase (for example "ADHD assessment"); otherwise "adults",
+          "children", "trauma", "anxiety", "counselling" (Depression), "grief",
+          "couples", "therap" (Our approaches), "NDIS", "circle of security" or
+          "family".
+        type: string
+        required: true
+      - name: description
+        label: Summary for search results
+        description: >-
+          One or two sentences, under 160 characters, different from every
+          other page's. Must contain each word of the search phrase listed
+          under "Title in search results" (Depression: "depression" and
+          "psychologist"; NDIS: "NDIS" and "psycholog").
+        type: text
+        required: true
+        options:
+          maxlength: 160
+      - name: lede
+        label: Opening sentence (shown larger)
+        description: >-
+          The search phrase listed under "Title in search results" must appear
+          here. On pages other than assessments it may instead be in the first
+          paragraph of the page text.
+        type: text
+        required: true
+      - name: kind
+        label: Kind of page
+        type: select
+        hidden: true
+        options:
+          values: [therapy, assessment, hub]
+      - name: path
+        label: Address
+        type: string
+        hidden: true
+      - name: hubGroup
+        label: Heading it sits under on the Therapy page
+        description: Leave empty if unsure; the page is then listed under the last heading.
+        type: select
+        options:
+          values:
+            - value: adults
+              label: Adults
+            - value: children-families
+              label: Children and families
+            - value: couples
+              label: Couples
+            - value: how-we-work
+              label: How we work
+      - name: audiences
+        label: Written for
+        description: Not shown on the page. Used to group pages behind the scenes.
+        type: select
+        required: true
+        options:
+          multiple: true
+          values:
+            - value: local-family
+              label: Local families
+            - value: telehealth
+              label: People seen by video
+            - value: adult
+              label: Adults seeking help for themselves
+      - name: clinicians
+        label: Clinicians who offer this
+        description: Someone newly added to the team appears here after the developer adds them.
+        type: select
+        options:
+          multiple: true
+          values:
+            - value: amelia-shay
+              label: Dr Amelia Shay
+            - value: kaya-beinke
+              label: Dr Kaya Beinke
+            - value: letitia-mcvey
+              label: Letitia McVey
+            - value: sahar-fattahi
+              label: Sahar Fattahi
+            - value: rani-banks
+              label: Rani Banks
+            - value: jazmin-squire
+              label: Jazmin Squire
+            - value: laura-storey
+              label: Laura Storey
+            - value: genevieve-hussey
+              label: Genevieve Hussey
+      - name: formats
+        label: How sessions happen
+        type: select
+        options:
+          multiple: true
+          values:
+            - value: in-room
+              label: In person at the clinic
+            - value: video
+              label: By video
+      - name: diagnoses
+        label: Conditions this assessment can diagnose
+        description: Assessment pages only. Not shown as a list; tells search engines what the assessment is for.
+        type: string
+        list: true
+      - name: process
+        label: Steps, in order
+        type: text
+        list: true
+      - name: fees
+        component: feeRow
+      - name: feeStatus
+        label: Are these prices published?
+        description: >-
+          "Not yet confirmed" shows the prices on the Preview only, marked, and
+          stops the live website from updating until it is changed.
+        type: select
+        options:
+          values:
+            - value: published
+              label: Published by the clinic
+            - value: quote
+              label: No price published (call for a quote)
+            - value: needs-confirmation
+              label: Not yet confirmed by the clinic
+      - name: sessionFees
+        label: Charged at the usual session fees
+        description: Switch on to point to the Fees page instead of listing prices here.
+        type: boolean
+      - name: medicare
+        label: Medicare notes
+        description: Plain sentences. Rebate amounts are kept by the developer and are not typed here.
+        type: text
+        list: true
+      - name: faqs
+        label: Questions and answers
+        description: Only questions the clinic has actually answered.
+        type: object
+        list:
+          collapsible:
+            collapsed: true
+            summary: "{fields.question}"
+        fields:
+          - name: question
+            label: Question
+            type: string
+            required: true
+          - name: answer
+            label: Answer
+            type: text
+            required: true
+      - name: related
+        label: Related pages
+        type: select
+        options:
+          multiple: true
+          values:
+            - value: adult-adhd
+              label: Adult ADHD assessment
+            - value: adult-autism
+              label: Adult autism assessment
+            - value: adults
+              label: Therapy for adults
+            - value: anxiety
+              label: Anxiety
+            - value: approaches
+              label: Our approaches
+            - value: child-adhd
+              label: Child ADHD assessment
+            - value: child-autism
+              label: Child autism assessment
+            - value: children
+              label: Therapy for children
+            - value: circle-of-security
+              label: Circle of Security
+            - value: cognitive
+              label: Cognitive assessment
+            - value: couples
+              label: Couples therapy
+            - value: depression
+              label: Depression
+            - value: family
+              label: Family therapy
+            - value: grief
+              label: Grief
+            - value: learning
+              label: Learning assessment
+            - value: ndis
+              label: NDIS
+            - value: trauma
+              label: Trauma
+      - name: sourceUrl
+        label: Address on the old website
+        type: string
+        hidden: true
+      - name: lastReviewed
+        label: Facts last checked on
+        description: The date someone at the clinic last confirmed the facts and prices on this page. Shown on the page.
+        type: date
+        default: ""
+      - name: redirectFrom
+        label: Old addresses that lead here
+        type: string
+        list: true
+        hidden: true
+      - name: crisisNote
+        label: Show the crisis support note
+        description: Adds the Lifeline and 000 note under the opening. Switch on for pages about depression, trauma or self-harm.
+        type: boolean
+      - name: draft
+        component: draft
+      - name: body
+        label: Page text
+        type: rich-text
+
+  # ----------------------------------------------------------------- Towns
+  - name: towns
+    label: Telehealth towns
+    description: >-
+      Queensland towns named on the Telehealth page. Every fact needs the web
+      page it came from. A town with its own page needs at least three facts.
+    type: collection
+    path: src/content/towns
+    format: yaml-frontmatter
+    subfolders: false
+    operations:
+      create: false
+      rename: false
+      delete: false
+    view:
+      primary: name
+      fields: [name, kind, draft]
+      sort: [order, name]
+      default:
+        sort: order
+        order: asc
+    fields:
+      - name: name
+        label: Town
+        type: string
+        required: true
+      - name: kind
+        label: Own page or a paragraph
+        type: select
+        hidden: true
+        options:
+          values: [page, section]
+      - name: order
+        label: Position on the Telehealth page
+        type: number
+        required: true
+      - name: facts
+        label: Facts about the town
+        type: object
+        required: true
+        list:
+          collapsible:
+            collapsed: true
+            summary: "{fields.text}"
+        fields:
+          - name: text
+            label: The fact, as one plain sentence
+            type: text
+            required: true
+          - name: sourceName
+            label: Where it comes from
+            description: The publisher and date, for example "Mount Isa City Council".
+            type: string
+            required: true
+          - name: sourceUrl
+            label: Web address of the source
+            description: The page the fact was read on, starting https://. Listed on the page as a source.
+            type: string
+            required: true
+            pattern:
+              regex: ^https?://\S+$
+              message: A full web address, starting https://
+      - name: title
+        label: Title in search results
+        description: >-
+          Towns with their own page only. Under 60 characters, and must contain
+          the words "psychologist", "video" and the town's name.
+        type: string
+        options:
+          maxlength: 60
+      - name: h1
+        label: Heading on the page
+        description: Towns with their own page only. Must contain the town's name.
+        type: string
+      - name: description
+        label: Summary for search results
+        description: Towns with their own page only. Under 160 characters, and must contain the town's name.
+        type: text
+        options:
+          maxlength: 160
+      - name: lede
+        label: Opening sentence (shown larger)
+        description: Towns with their own page only.
+        type: text
+      - name: draft
+        component: draft
+      - name: body
+        label: Page text
+        description: >-
+          Towns with their own page: the first paragraph must name the town and
+          say "psychologist", and the page must keep a section mentioning a "GP
+          referral in" the town (for example "A GP referral in Cairns").
+        type: rich-text
+
+  # ----------------------------------------------------------------- Pages
+  - name: pages
+    label: Pages
+    type: group
+    items:
+      - name: page-home
+        label: Home
+        type: file
+        path: src/content/pages/home.md
+        format: yaml-frontmatter
+        operations:
+          delete: false
+        fields:
+          - name: title
+            label: Page name
+            type: string
+            required: true
+          - name: documentTitle
+            label: Title in search results
+            type: string
+            hidden: true
+          - name: description
+            label: Summary for search results
+            description: One or two sentences, under 160 characters.
+            type: text
+            required: true
+            options:
+              maxlength: 160
+          # Not shown on the home page today (src/pages/index.astro); kept in
+          # the file for when the clinic decides where the sentence goes.
+          - name: lede
+            label: Opening sentence
+            type: text
+            hidden: true
+          - name: headline
+            label: Headline
+            type: string
+            hidden: true
+          - name: headlineAccent
+            label: Headline, second part
+            type: string
+            hidden: true
+          - name: routes
+            label: Cards linking to the main sections
+            description: >-
+              Each card leads to one section of the site; the picture and the
+              link are set by the developer. Prices in the note must be ones
+              already published on that section's page.
+            type: object
+            list:
+              min: 4
+              max: 4
+              collapsible:
+                collapsed: true
+                summary: "{fields.title}"
+            fields:
+              - name: title
+                label: Card heading
+                type: string
+                required: true
+              - name: description
+                label: Card text
+                type: text
+                required: true
+              - name: note
+                label: Price or ages line
+                type: string
+              - name: href
+                label: Link
+                type: string
+                hidden: true
+              - name: linkText
+                label: Link wording
+                type: string
+                required: true
+              - name: image
+                label: Picture
+                type: string
+                hidden: true
+              - name: draft
+                component: draft
+          - name: practicalNotes
+            label: Practical notes (location and parking)
+            type: string
+            list: true
+          - name: body
+            label: Page text
+            type: rich-text
+
+      - name: page-services
+        label: Therapy (overview page)
+        type: file
+        path: src/content/pages/services.md
+        format: yaml-frontmatter
+        operations:
+          delete: false
+        fields:
+          - name: title
+            label: Heading on the page
+            type: string
+            required: true
+          - name: documentTitle
+            label: Title in search results
+            type: string
+            hidden: true
+          - name: description
+            label: Summary for search results
+            description: One or two sentences, under 160 characters.
+            type: text
+            required: true
+            options:
+              maxlength: 160
+          - name: lede
+            label: Opening sentence (shown larger)
+            type: text
+            required: true
+          - name: sourceUrl
+            label: Address on the old website
+            type: string
+            hidden: true
+          - name: offerings
+            label: Services offered
+            description: The illustrated house shows the same list (House > House text > Services); change both the same way.
+            type: text
+            list: true
+          - name: therapyModels
+            label: Therapy approaches
+            description: The illustrated house shows the same list (House > House text > Services); change both the same way.
+            type: text
+            list: true
+          - name: body
+            label: Page text
+            type: rich-text
+
+      - name: page-fees
+        label: Fees
+        type: file
+        path: src/content/pages/fees.md
+        format: yaml-frontmatter
+        operations:
+          delete: false
+        fields:
+          - name: title
+            label: Heading on the page
+            type: string
+            required: true
+          - name: documentTitle
+            label: Title in search results
+            type: string
+            hidden: true
+          - name: description
+            label: Summary for search results
+            description: >-
+              Under 160 characters, and must include the words "Medicare
+              rebates". The first paragraph of the page text must also contain
+              the words "fees and Medicare rebates".
+            type: text
+            required: true
+            options:
+              maxlength: 159
+          - name: lede
+            label: Opening sentence (shown larger)
+            type: text
+            required: true
+          - name: sourceUrl
+            label: Address on the old website
+            type: string
+            hidden: true
+          - name: lastReviewed
+            label: Fees last confirmed on
+            description: >-
+              The date the clinic last confirmed this fee list. Shown on the
+              page, and only once it is set do search engines receive the
+              prices. Leave empty until the list is confirmed.
+            type: date
+            default: ""
+          - name: sessionLength
+            label: How long a session is
+            type: string
+          - name: fees
+            component: feeRow
+            label: Session fees
+            description: Medicare rebate amounts are kept by the developer and are not typed here.
+          - name: privateHealth
+            label: Private health insurance
+            type: text
+            list: true
+          - name: ndis
+            label: NDIS
+            type: text
+            list: true
+          - name: reports
+            label: Reports and letters
+            description: The illustrated house shows the same notes (House > House text > Services); change both the same way.
+            type: text
+            list: true
+          - name: cancellation
+            label: Cancellation policy
+            description: Copied word for word from the clinic's own published policy.
+            type: object
+            fields:
+              - name: published
+                label: When the policy was published
+                description: For example "May 2023".
+                type: string
+                required: true
+              - name: sourceUrl
+                label: Where the policy is published
+                type: string
+                hidden: true
+              - name: rules
+                label: Charges by notice given
+                type: text
+                list: true
+                required: true
+              - name: notes
+                label: Notes
+                type: text
+                list: true
+                required: true
+          - name: body
+            label: Page text
+            type: rich-text
+
+      - name: page-assessments
+        label: Assessments
+        type: file
+        path: src/content/pages/assessments.md
+        format: yaml-frontmatter
+        operations:
+          delete: false
+        fields:
+          - name: title
+            label: Heading on the page
+            type: string
+            required: true
+          - name: documentTitle
+            label: Title in search results
+            type: string
+            hidden: true
+          - name: description
+            label: Summary for search results
+            description: One or two sentences, under 160 characters.
+            type: text
+            required: true
+            options:
+              maxlength: 160
+          - name: lede
+            label: Opening sentence (shown larger)
+            type: text
+            required: true
+          - name: sourceUrl
+            label: Address on the old website
+            type: string
+            hidden: true
+          - name: lastReviewed
+            label: Prices last confirmed on
+            description: The date the clinic last confirmed these prices. Shown on the page.
+            type: date
+            default: ""
+          - name: process
+            label: Steps, in order
+            description: The illustrated house shows the same steps (House > House text > Assessments); change both the same way.
+            type: text
+            list: true
+          - name: documents
+            label: What to bring
+            description: The illustrated house shows the same list (House > House text > Assessments); change both the same way.
+            type: string
+            list: true
+          - name: packages
+            label: Assessment packages
+            description: >-
+              To take a package off the website, use its "Hidden from the live
+              website" switch rather than removing it: the illustrated house
+              shows the first five, with these prices.
+            type: object
+            list:
+              collapsible:
+                collapsed: true
+                summary: "{fields.title}: {fields.price}"
+            fields:
+              - name: id
+                label: House key
+                type: string
+                hidden: true
+              - name: title
+                label: Package name
+                type: string
+                required: true
+              - name: price
+                label: Price
+                description: For example "from $1,000".
+                type: string
+                required: true
+              - name: provisionalPrice
+                label: Price with a provisional psychologist
+                type: string
+              - name: description
+                label: Description
+                type: text
+              - name: inclusions
+                label: What is included
+                type: string
+                list: true
+              - name: addOn
+                label: Bought alongside an assessment
+                description: Switch on for extras such as a school observation, so they are not read as a cheaper assessment.
+                type: boolean
+              - name: draft
+                component: draft
+          - name: goodToKnow
+            label: Good to know
+            type: text
+            list: true
+          - name: body
+            label: Page text
+            type: rich-text
+
+      - name: page-group-therapy
+        label: Group therapy
+        type: file
+        path: src/content/pages/group-therapy.md
+        format: yaml-frontmatter
+        operations:
+          delete: false
+        fields:
+          - name: title
+            label: Heading on the page
+            type: string
+            required: true
+          - name: documentTitle
+            label: Title in search results
+            type: string
+            hidden: true
+          - name: description
+            label: Summary for search results
+            description: One or two sentences, under 160 characters, that include the words "emotion regulation".
+            type: text
+            required: true
+            options:
+              maxlength: 160
+          - name: lede
+            label: Opening sentence (shown larger)
+            type: text
+            required: true
+          - name: sourceUrl
+            label: Address on the old website
+            type: string
+            hidden: true
+          - name: programs
+            label: Group programs
+            description: >-
+              To take a program off the website, use its "Hidden from the live
+              website" switch rather than removing it: the illustrated house
+              has a sign for each of the first four.
+            type: object
+            list:
+              collapsible:
+                collapsed: true
+                summary: "{fields.title}"
+            fields:
+              - name: id
+                label: House key
+                type: string
+                hidden: true
+              - name: title
+                label: Program name
+                type: string
+                required: true
+              - name: audience
+                label: Who it is for
+                description: Name the ages, for example "Children aged 7–12".
+                type: string
+              - name: description
+                label: Description
+                type: text
+                required: true
+              - name: draft
+                component: draft
+          - name: circleOfSecurity
+            label: Circle of Security Parenting Program
+            type: object
+            fields:
+              - name: title
+                label: Program name
+                type: string
+                required: true
+              - name: audience
+                label: Who it is for
+                type: string
+              - name: description
+                label: Description
+                type: text
+                required: true
+              - name: details
+                label: Details (place, schedule, group size, cost)
+                type: string
+                list: true
+                required: true
+          - name: workshopTopics
+            label: Workshop and seminar topics
+            type: string
+            list: true
+          - name: body
+            label: Page text
+            description: The first paragraph must contain the words "group therapy in The Gap, Brisbane".
+            type: rich-text
+
+      - name: page-telehealth
+        label: Telehealth
+        type: file
+        path: src/content/pages/telehealth.md
+        format: yaml-frontmatter
+        operations:
+          delete: false
+        fields:
+          - name: title
+            label: Heading on the page
+            type: string
+            required: true
+          - name: documentTitle
+            label: Title in search results
+            type: string
+            hidden: true
+          - name: description
+            label: Summary for search results
+            description: One or two sentences, under 160 characters, that include the word "Australia".
+            type: text
+            required: true
+            options:
+              maxlength: 160
+          - name: lede
+            label: Opening sentence (shown larger)
+            type: text
+            required: true
+          - name: process
+            label: Steps, in order
+            type: text
+            list: true
+          - name: body
+            label: Page text
+            description: The first paragraph must contain the words "psychologist", "video" and "online psychologist".
+            type: rich-text
+
+      - name: page-philosophy
+        label: Our philosophy
+        type: file
+        path: src/content/pages/philosophy.md
+        format: yaml-frontmatter
+        operations:
+          delete: false
+        fields:
+          - name: title
+            label: Heading on the page
+            type: string
+            required: true
+          - name: documentTitle
+            label: Title in search results
+            type: string
+            hidden: true
+          - name: description
+            label: Summary for search results
+            description: One or two sentences, under 160 characters.
+            type: text
+            required: true
+            options:
+              maxlength: 160
+          - name: lede
+            label: Opening sentence (shown larger)
+            type: text
+            required: true
+          - name: sourceUrl
+            label: Address on the old website
+            type: string
+            hidden: true
+          - name: principles
+            label: Principles
+            type: object
+            list:
+              collapsible:
+                collapsed: true
+                summary: "{fields.title}"
+            fields:
+              - name: title
+                label: Principle
+                type: string
+                required: true
+              - name: body
+                label: What it means
+                type: text
+                required: true
+          - name: closing
+            label: Closing sentence
+            type: text
+          - name: body
+            label: Page text
+            type: rich-text
+
+      - name: page-contact
+        label: Contact
+        type: file
+        path: src/content/pages/contact.md
+        format: yaml-frontmatter
+        operations:
+          delete: false
+        fields:
+          - name: title
+            label: Heading on the page
+            type: string
+            required: true
+          - name: documentTitle
+            label: Title in search results
+            type: string
+            hidden: true
+          - name: description
+            label: Summary for search results
+            description: One or two sentences, under 160 characters.
+            type: text
+            required: true
+            options:
+              maxlength: 160
+          - name: lede
+            label: Opening sentence (shown larger)
+            type: text
+            required: true
+          - name: sourceUrl
+            label: Address on the old website
+            type: string
+            hidden: true
+          - name: practicalNotes
+            label: Practical notes (parking, getting here)
+            type: text
+            list: true
+          - name: body
+            label: Page text
+            type: rich-text
+
+      - name: page-library
+        label: Library
+        type: file
+        path: src/content/pages/library.md
+        format: yaml-frontmatter
+        operations:
+          delete: false
+        fields:
+          - name: title
+            label: Heading on the page
+            type: string
+            required: true
+          - name: documentTitle
+            label: Title in search results
+            type: string
+            hidden: true
+          - name: description
+            label: Summary for search results
+            description: One or two sentences, under 160 characters.
+            type: text
+            required: true
+            options:
+              maxlength: 160
+          - name: lede
+            label: Opening sentence (shown larger)
+            type: text
+            required: true
+          - name: sourceUrl
+            label: Address on the old website
+            type: string
+            hidden: true
+          - name: publicationsNote
+            label: Publications
+            type: text
+          - name: mediaItems
+            label: In the media
+            type: text
+            list: true
+          - name: body
+            label: Page text
+            type: rich-text
+
+      - name: page-work-with-us
+        label: Work with us
+        type: file
+        path: src/content/pages/work-with-us.md
+        format: yaml-frontmatter
+        operations:
+          delete: false
+        fields:
+          - name: title
+            label: Heading on the page
+            type: string
+            required: true
+          - name: documentTitle
+            label: Title in search results
+            type: string
+            hidden: true
+          - name: description
+            label: Summary for search results
+            description: One or two sentences, under 160 characters.
+            type: text
+            required: true
+            options:
+              maxlength: 160
+          - name: lede
+            label: Opening sentence (shown larger)
+            type: text
+            required: true
+          - name: sourceUrl
+            label: Address on the old website
+            type: string
+            hidden: true
+          - name: values
+            label: Values
+            type: string
+            list: true
+          - name: culture
+            label: What it is like to work here
+            type: text
+            list: true
+          - name: body
+            label: Page text
+            type: rich-text
+
+      - name: page-privacy-policy
+        label: Privacy policy
+        type: file
+        path: src/content/pages/privacy-policy.md
+        format: yaml-frontmatter
+        operations:
+          delete: false
+        fields:
+          - name: title
+            label: Heading on the page
+            type: string
+            required: true
+          - name: documentTitle
+            label: Title in search results
+            type: string
+            hidden: true
+          - name: description
+            label: Summary for search results
+            description: One or two sentences, under 160 characters.
+            type: text
+            required: true
+            options:
+              maxlength: 160
+          - name: lede
+            label: Opening sentence (shown larger)
+            type: text
+            required: true
+          - name: sourceUrl
+            label: Address on the old website
+            type: string
+            hidden: true
+          - name: lastReviewed
+            label: Policy last reviewed on
+            type: date
+            default: ""
+          - name: body
+            label: Policy
+            type: rich-text
+
+  # --------------------------------------------------------- Clinic details
+  - name: clinic
+    label: Clinic details
+    description: Phone, email, address and the short notes about getting here. Used on every page and in the house.
+    type: file
+    path: public/assets/content/clinic.json
+    format: json
+    operations:
+      delete: false
+    fields:
+      - name: tagline
+        label: Tagline
+        type: string
+        required: true
+      - name: phone
+        label: Phone
+        description: Written the way it should be read, for example "07 3300 2170".
+        type: string
+        required: true
+        pattern:
+          regex: ^0\d \d{4} \d{4}$
+          message: Ten digits as "07 3300 2170"
+      - name: fax
+        label: Fax
+        type: string
+      - name: email
+        label: Email
+        type: string
+        required: true
+        pattern:
+          regex: ^[^@\s]+@[^@\s]+\.[a-z]{2,}$
+          message: An email address
+      - name: address
+        label: Address, on one line
+        type: string
+        required: true
+      - name: postalAddress
+        label: Address, in parts (for search engines)
+        description: The same address as above, split up. Keep the two the same.
+        type: object
+        fields:
+          - name: streetAddress
+            label: Street
+            type: string
+            required: true
+          - name: addressLocality
+            label: Suburb
+            type: string
+            required: true
+          - name: addressRegion
+            label: State
+            type: string
+            required: true
+          - name: postalCode
+            label: Postcode
+            type: string
+            required: true
+          - name: addressCountry
+            label: Country code
+            type: string
+            readonly: true
+      - name: bookingUrl
+        label: Online booking link
+        description: Ask the developer to change it.
+        type: string
+        readonly: true
+      - name: intro
+        label: About the location
+        type: text
+        list: true
+      - name: nearbySuburbs
+        label: Nearby suburbs
+        description: Named on the home and contact pages, as in "a short drive from Ashgrove, Bardon and Keperra".
+        type: string
+        list: true
+      - name: openingHours
+        label: Opening hours
+        description: >-
+          Leave empty until the clinic has confirmed its hours. Search engines
+          show these to people, so wrong hours send a parent to a locked door.
+        type: object
+        list: true
+        fields:
+          - name: dayOfWeek
+            label: Days
+            type: select
+            required: true
+            options:
+              multiple: true
+              values: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday]
+          - name: opens
+            label: Opens at
+            description: 24-hour time, for example "08:00".
+            type: string
+            required: true
+            pattern:
+              regex: ^([01]\d|2[0-3]):[0-5]\d$
+              message: A 24-hour time such as 08:00
+          - name: closes
+            label: Closes at
+            description: 24-hour time, for example "18:00".
+            type: string
+            required: true
+            pattern:
+              regex: ^([01]\d|2[0-3]):[0-5]\d$
+              message: A 24-hour time such as 18:00
+
+  # ------------------------------------------------------------------ House
+  - name: house
+    label: House
+    description: The words in the illustrated house. Where a sign or picture sits is set by the developer.
+    type: group
+    items:
+      - name: house-copy
+        label: House text
+        type: file
+        path: public/assets/content/house-copy.json
+        format: json
+        operations:
+          delete: false
+        fields:
+          - name: philosophy
+            label: Our philosophy (attic)
+            type: object
+            fields:
+              - name: title
+                label: Heading
+                type: string
+                required: true
+              - name: intro
+                label: Introduction
+                type: text
+                required: true
+              - name: principles
+                label: The five principles
+                description: Each principle has its own sign in the attic, so there are always five.
+                type: object
+                list:
+                  min: 5
+                  max: 5
+                  collapsible:
+                    collapsed: true
+                    summary: "{fields.title}"
+                fields:
+                  - name: id
+                    label: Sign
+                    type: string
+                    hidden: true
+                  - name: title
+                    label: Principle
+                    type: string
+                    required: true
+                  - name: description
+                    label: What it means
+                    type: text
+                    required: true
+              - name: closing
+                label: Closing sentence
+                type: text
+          - name: services
+            label: Services (consulting room)
+            type: object
+            fields:
+              - name: intro
+                label: Introduction
+                type: text
+              - name: offerings
+                label: Services offered
+                description: Must match the list on the Therapy page (Pages > Therapy); change both the same way.
+                type: text
+                list: true
+              - name: therapyModels
+                label: Therapy approaches
+                description: Must match the list on the Therapy page (Pages > Therapy); change both the same way.
+                type: text
+                list: true
+              - name: reports
+                label: Reports and letters
+                description: Must match the notes on the Fees page (Pages > Fees); change both the same way.
+                type: text
+                list: true
+              - name: feesPointer
+                label: Link to the Fees page
+                type: object
+                fields:
+                  - name: title
+                    label: Heading
+                    type: string
+                    required: true
+                  - name: description
+                    label: Text
+                    type: text
+                    required: true
+                  - name: linkLabel
+                    label: Link wording
+                    type: string
+                    required: true
+          - name: assessments
+            label: Assessments (assessment room)
+            description: Prices come from Pages > Assessments.
+            type: object
+            fields:
+              - name: intro
+                label: Introduction
+                type: text
+                list: true
+              - name: process
+                label: Steps, in order
+                description: Must match the steps on the Assessments page (Pages > Assessments); change both the same way.
+                type: text
+                list: true
+              - name: documents
+                label: What to bring
+                description: Must match the list on the Assessments page (Pages > Assessments); change both the same way.
+                type: string
+                list: true
+              - name: packages
+                label: Assessment packages
+                type: object
+                fields:
+                  - name: psychoeducational
+                    label: Psycho-educational assessment
+                    type: object
+                    fields:
+                      - name: title
+                        label: Name
+                        type: string
+                        required: true
+                      - name: inclusions
+                        label: What is included
+                        type: string
+                        list: true
+                  - name: cognitive
+                    label: Cognitive assessment
+                    type: object
+                    fields:
+                      - name: title
+                        label: Name
+                        type: string
+                        required: true
+                      - name: description
+                        label: Description
+                        type: text
+                  - name: adhd
+                    label: ADHD assessment
+                    type: object
+                    fields:
+                      - name: title
+                        label: Name
+                        type: string
+                        required: true
+                      - name: description
+                        label: Description
+                        type: text
+                  - name: autism
+                    label: Autism assessment
+                    type: object
+                    fields:
+                      - name: title
+                        label: Name
+                        type: string
+                        required: true
+                      - name: description
+                        label: Description
+                        type: text
+              - name: schoolObservations
+                label: School observations
+                type: object
+                fields:
+                  - name: title
+                    label: Name
+                    type: string
+                    required: true
+                  - name: description
+                    label: Description
+                    type: text
+              - name: faq
+                label: Good to know
+                type: text
+                list: true
+          - name: groups
+            label: Group therapy (group room)
+            type: object
+            fields:
+              - name: overview
+                label: Introduction
+                type: text
+                list: true
+              - name: programs
+                label: Group programs
+                description: Each program has its own sign in the room.
+                type: object
+                fields:
+                  - name: emotionRegulation
+                    component: houseProgram
+                    label: Emotion regulation workshop
+                  - name: hunterRemote
+                    component: houseProgram
+                    label: Hunter and his amazing remote control
+                  - name: socialRelationships
+                    component: houseProgram
+                    label: Navigating social relationships
+                  - name: legoClub
+                    component: houseProgram
+                    label: Lego Club
+              - name: circleOfSecurity
+                label: Circle of Security
+                type: object
+                fields:
+                  - name: title
+                    label: Name
+                    type: string
+                    required: true
+                  - name: description
+                    label: Description
+                    type: text
+                    required: true
+                  - name: details
+                    label: Details
+                    type: string
+                    list: true
+              - name: workshops
+                label: Workshops
+                type: object
+                fields:
+                  - name: title
+                    label: Heading
+                    type: string
+                    required: true
+                  - name: topics
+                    label: Topics
+                    type: string
+                    list: true
+          - name: team
+            label: Team (team parlour)
+            description: >-
+              The house's own short list of the team. Someone new appears in
+              the house once the developer has placed them there; until then
+              they are on the Team page only.
+            type: object
+            fields:
+              - name: availability
+                label: Availability
+                description: Keep the same as each person's availability under Team.
+                type: object
+                list:
+                  min: 8
+                  max: 8
+                  collapsible:
+                    collapsed: true
+                    summary: "{fields.name}: {fields.status}"
+                fields:
+                  - name: id
+                    label: Person
+                    type: string
+                    hidden: true
+                  - name: name
+                    label: Name
+                    type: string
+                    required: true
+                  - name: status
+                    label: Availability
+                    type: string
+                    required: true
+              - name: dogs
+                label: Clinic dogs
+                description: Matched to the team list below by name. Ask the developer to change it.
+                type: string
+                list: true
+                readonly: true
+              - name: members
+                label: Team members
+                type: object
+                list:
+                  min: 12
+                  max: 12
+                  collapsible:
+                    collapsed: true
+                    summary: "{fields.name}"
+                fields:
+                  - name: id
+                    label: Person
+                    type: string
+                    hidden: true
+                  - name: name
+                    label: Name
+                    description: For the dogs, the name must stay the same as in "Clinic dogs".
+                    type: string
+                    required: true
+                  - name: role
+                    label: Job title
+                    type: string
+                    required: true
+                  - name: credentials
+                    label: Qualifications
+                    type: string
+                  - name: summary
+                    label: Short introduction
+                    type: text
+                    required: true
+          - name: library
+            label: Library (library room)
+            type: object
+            fields:
+              - name: products
+                label: Books
+                type: object
+                list:
+                  min: 2
+                  max: 2
+                  collapsible:
+                    collapsed: true
+                    summary: "{fields.title}"
+                fields:
+                  - name: id
+                    label: Book
+                    type: string
+                    hidden: true
+                  - name: title
+                    label: Title
+                    type: string
+                    required: true
+                  - name: description
+                    label: Description
+                    type: text
+                    required: true
+              - name: videos
+                label: Videos
+                type: object
+                fields:
+                  - name: topics
+                    label: Topics
+                    type: string
+                    list: true
+              - name: publications
+                label: Publications
+                type: object
+                fields:
+                  - name: description
+                    label: Description
+                    type: text
+                    required: true
+              - name: media
+                label: In the media
+                type: object
+                fields:
+                  - name: items
+                    label: Items
+                    type: text
+                    list: true
+              - name: blogArticles
+                label: Articles
+                description: >-
+                  The articles the house lists. Each leads to its page in the
+                  library; new articles are added here by the developer.
+                type: object
+                list:
+                  min: 25
+                  max: 25
+                  collapsible:
+                    collapsed: true
+                    summary: "{fields.title}"
+                fields:
+                  - name: id
+                    label: Article
+                    type: string
+                    hidden: true
+                  - name: title
+                    label: Title
+                    type: string
+                    required: true
+                  - name: date
+                    label: Date
+                    type: date
+                    required: true
+                  - name: excerpt
+                    label: Summary
+                    type: text
+                    required: true
+          - name: workWithUs
+            label: Work with us (side door)
+            type: object
+            fields:
+              - name: values
+                label: Values
+                type: string
+                list: true
+              - name: culture
+                label: What it is like to work here
+                type: text
+                list: true
+              - name: opportunities
+                label: Opportunities
+                type: text
+                list: true
+
+      - name: house-rooms
+        label: Rooms and signs
+        description: >-
+          The name, short description and sign wording for each room. Signs
+          are spots in the pictures: change their words, but do not add or
+          remove signs or pictures.
+        type: file
+        path: public/assets/content/house-rooms.json
+        format: json
+        operations:
+          delete: false
+        fields:
+          - name: rooms
+            label: Rooms
+            type: object
+            list:
+              min: 10
+              max: 10
+              collapsible:
+                collapsed: true
+                summary: "{fields.title}"
+            fields:
+              - name: id
+                label: Room
+                type: string
+                hidden: true
+              - name: title
+                label: Room name
+                type: string
+                required: true
+              - name: label
+                label: Short name (on signs and menus)
+                type: string
+                required: true
+              - name: description
+                label: Description
+                type: text
+              - name: exteriorEntry
+                label: Where you enter from outside
+                type: string
+              - name: summary
+                label: Summary
+                type: text
+                required: true
+              - name: intro
+                label: Welcome text
+                type: text
+                list: true
+              - name: images
+                label: Pictures
+                type: object
+                list:
+                  collapsible:
+                    collapsed: true
+                    summary: "{fields.alt}"
+                fields:
+                  - name: id
+                    label: Picture
+                    type: string
+                    hidden: true
+                  - name: alt
+                    label: Picture description
+                    type: string
+                    required: true
+              - name: signs
+                label: Signs
+                type: object
+                list:
+                  collapsible:
+                    collapsed: true
+                    summary: "{fields.label}"
+                fields:
+                  - name: id
+                    label: Sign
+                    type: string
+                    hidden: true
+                  - name: label
+                    label: Wording on the sign
+                    type: string
+                    required: true
+                  - name: ariaLabel
+                    label: Wording read aloud to screen reader users
+                    type: string
+
+  # -------------------------------------------------------- Library shelf
+  - name: library-shelf
+    label: Library shelf
+    description: >-
+      The books and videos on the library's shelf. Change their words and
+      their order; adding or removing one is done by the developer, because
+      each needs its own shape and colours.
+    type: file
+    path: src/data/library-shelf.json
+    format: json
+    operations:
+      delete: false
+    fields:
+      - name: volumes
+        label: Books and videos, in shelf order
+        type: object
+        list:
+          min: 11
+          max: 11
+          collapsible:
+            collapsed: true
+            summary: "{fields.title}"
+        fields:
+          - name: id
+            label: Volume
+            type: string
+            hidden: true
+          - name: title
+            label: Title
+            type: string
+            required: true
+          - name: titleLang
+            label: Language of the title
+            type: string
+            hidden: true
+          - name: gloss
+            label: English translation of the title
+            description: Videos with a Persian title only.
+            type: string
+          - name: series
+            label: Series
+            description: For example "The Lockdown Challenge · 1 of 3".
+            type: string
+          - name: note
+            label: One-line note
+            type: string
+            required: true
+          - name: deck
+            label: Description
+            type: text
+            required: true
+          - name: audience
+            label: Who it is for
+            description: Books only.
+            type: string
+          - name: facts
+            label: Facts
+            description: Books only. Only facts the clinic has published.
+            type: object
+            list: true
+            fields:
+              - name: term
+                label: Label
+                type: string
+                required: true
+              - name: value
+                label: Value
+                type: string
+                required: true
+          - name: action
+            label: Buy or order link
+            description: Books only.
+            type: object
+            fields:
+              - name: label
+                label: Button wording
+                type: string
+              - name: href
+                label: Link
+                description: Ask the developer to change it.
+                type: string
+                readonly: true
+          - name: spreads
+            label: Pages shown inside the book
+            description: Books only. The pictures are set by the developer; change the captions.
+            type: object
+            list:
+              collapsible: false
+            fields:
+              - name: id
+                label: Picture
+                type: string
+                hidden: true
+              - name: label
+                label: Caption
+                type: string
+                required: true
