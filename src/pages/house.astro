@@ -8,7 +8,7 @@ import { assertRebatesCurrent, medicare } from '../data/medicare.js';
 import { HOUSE_CONTENT_ID, houseContent, houseContentJson } from '../lib/house-content.js';
 import { teamPortrait } from '../lib/team-portraits.js';
 import { books, videos } from '../data/library-shelf.js';
-import { clinic, phoneHref } from '../../public/assets/scripts/content-data.js';
+import { clinic, phoneHref, roomNavigation } from '../../public/assets/scripts/content-data.js';
 import houseCopy from '../../public/assets/content/house-copy.json';
 import Analytics from '../components/Analytics.astro';
 import DebugPanel from '../house-debug/DebugPanel.astro';
@@ -85,6 +85,12 @@ const content = houseContent({
 });
 const contentJson = houseContentJson(content);
 const philosophy = pages.philosophy;
+/* The rooms menu: every room the house has, in the order the house lists
+   them, with the exterior named as the way outside. */
+const menuRooms = roomNavigation.roomOrder.map((id) => ({
+  id,
+  name: id === 'exterior' ? houseCopy.menu.outside : roomNavigation.rooms[id].title,
+}));
 const contactPreview = {
   phone: contact.phone,
   tel: phoneHref(contact.phone),
@@ -113,7 +119,7 @@ const contactPreview = {
   <script is:inline define:vars={{ assetBase }}>window.__ASSET_BASE__ = assetBase;</script>
   <script is:inline type="application/json" id={HOUSE_CONTENT_ID} set:html={contentJson}></script>
   <title>Explore the House | Therapy House, The Gap, Brisbane</title>
-  <link rel="stylesheet" href={withBase("/assets/styles/main.css?v=20261013-previews")}>
+  <link rel="stylesheet" href={withBase("/assets/styles/main.css?v=20261013-rooms")}>
   <script type="application/ld+json" set:html={JSON.stringify(businessSchema)} />
   <Analytics />
 </head>
@@ -130,6 +136,27 @@ const contactPreview = {
     </svg>
     <span>Back to the website</span>
   </a>
+  {/* Any room, from anywhere in the house, without walking back outside to
+      find its door (docs/house-plan.md, phase C). `app.js` moves the visit
+      and marks the room you are in. */}
+  <nav class="room-menu" id="roomMenu" aria-label={houseCopy.menu.heading}>
+    <button class="room-menu__toggle" id="roomMenuToggle" type="button" aria-expanded="false" aria-controls="roomMenuList">
+      <svg class="room-menu__mark" width="16" height="14" viewBox="0 0 16 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M1.5 6.5 8 1.5l6.5 5"></path>
+        <path d="M3.2 5.4v7.1h9.6V5.4"></path>
+        <path d="M6.6 12.5V9h2.8v3.5"></path>
+      </svg>
+      <span>{houseCopy.menu.button}</span>
+    </button>
+    <div class="room-menu__panel" id="roomMenuList" hidden>
+      <p class="room-menu__heading">{houseCopy.menu.heading}</p>
+      <ul class="room-menu__list">
+        {menuRooms.map((room) => (
+          <li><button class="room-menu__room" type="button" data-room={room.id}>{room.name}</button></li>
+        ))}
+      </ul>
+    </div>
+  </nav>
   <aside class="orientation-lock" aria-live="polite">
     <div class="orientation-lock__content">
       <div class="orientation-lock__logo-frame" aria-hidden="true">
@@ -275,7 +302,7 @@ const contactPreview = {
 
   {/* Development only: the tuning panel and its scripts never reach the build. */}
   {import.meta.env.DEV && <DebugPanel />}
-  <script type="module" src={withBase("/assets/scripts/app.js?v=20261013-previews")}></script>
+  <script type="module" src={withBase("/assets/scripts/app.js?v=20261013-rooms")}></script>
 </body>
 </html>
 

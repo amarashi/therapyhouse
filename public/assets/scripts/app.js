@@ -12,9 +12,9 @@ import {
   insideParallaxDepths
 } from "./site-data.js";
 import { requestIdleTask } from "./utils.js";
-import { exteriorHotspots, houseContent, previews, roomNavigation, roomSceneDefaults, teamMembers } from "./content-data.js?v=20261013-one-source";
+import { exteriorHotspots, houseContent, previews, roomNavigation, roomSceneDefaults, teamMembers } from "./content-data.js?v=20261013-rooms";
 import { createDogEyeController } from "./dog-eye-controller.js?v=20260529-eye-scale";
-import { createEntranceVideoController } from "./entrance-video.js?v=20261011-reduced-door";
+import { createEntranceVideoController } from "./entrance-video.js?v=20261013-rooms";
 import { createFirelightController } from "./firelight-controller.js";
 import { createInsideScene } from "./inside-scene.js";
 import { createModalDialog } from "./modal-dialog.js";
@@ -55,6 +55,8 @@ const contactModal = document.getElementById("contactModal");
 const contactModalClose = document.getElementById("contactModalClose");
 const cursorSparkleLayer = document.getElementById("cursorSparkleLayer");
 const houseExit = document.getElementById("houseExit");
+const roomMenuToggle = document.getElementById("roomMenuToggle");
+const roomMenuList = document.getElementById("roomMenuList");
 const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 /*
  * Save-Data is the browser passing on "this visitor is on a metered or slow
@@ -91,7 +93,7 @@ const turntable = createTurntableViewer({
   onExteriorHotspot: (hotspot) => {
     if (!hotspot.targetRoom || insideScene.isActive) return;
 
-    entranceVideo.enterInsideView(hotspot.targetRoom);
+    goToRoom(hotspot.targetRoom);
   },
   frames,
   frameCount,
@@ -170,8 +172,10 @@ const entranceVideo = createEntranceVideoController({
   doorVideo,
   turntable,
   insideScene,
-  onEnterInside: () => {
+  onEnterInside: (roomId) => {
     teamCarousel.preloadImages();
+    recordVisit(roomId);
+    markMenuRoom(roomId);
   },
   reducedMotionQuery
 });
@@ -196,14 +200,139 @@ function scheduleResize() {
 function returnToExteriorView() {
   if (!insideScene.isActive) return;
 
-  teamCarousel.close();
-  philosophyDialog.close();
-  contentDialog.close();
-  contactDialog.close();
+  closeDialogs();
   entranceVideo.reset();
   insideScene.leave();
   turntable.unlockInteraction();
   turntable.resizeCanvas();
+}
+
+function closeDialogs() {
+  teamCarousel.close();
+  philosophyDialog.close();
+  contentDialog.close();
+  contactDialog.close();
+}
+
+/*
+ * Moving through the house (docs/house-plan.md, phase C). Each room has its
+ * own address, `?room=<id>`, beside the `from` page the exit leads back to,
+ * and every move is a browser history entry: the browser's Back button steps
+ * back through the rooms, and so does the Back sign in a room. A visit that
+ * began in a room has nothing behind it, so there the Back sign goes outside.
+ *
+ * `restoring` is set while the house is following the history (arriving on a
+ * room's address, or the visitor pressing Back) so that following it does not
+ * write a new entry on top.
+ */
+let restoring = false;
+
+function houseAddress(roomId) {
+  const url = new URL(window.location.href);
+  if (roomId && roomId !== "exterior") url.searchParams.set("room", roomId);
+  else url.searchParams.delete("room");
+  return url;
+}
+
+function recordVisit(roomId) {
+  if (restoring) return;
+  const depth = (window.history.state?.house ? window.history.state.depth : 0) + 1;
+  window.history.pushState({ house: true, room: roomId || "exterior", depth }, "", houseAddress(roomId));
+}
+
+function showRoom(roomId) {
+  if (!roomSceneDefaults.rooms[roomId]) return;
+  if (!insideScene.isActive) {
+    entranceVideo.enterInsideView(roomId);
+    return;
+  }
+  if (insideScene.activeRoomId === roomId) return;
+  closeDialogs();
+  insideScene.setActiveRoom(roomId);
+  markMenuRoom(roomId);
+}
+
+/** Go to a room, inside or from the exterior, as a step the visitor can take back. */
+function goToRoom(roomId) {
+  const wasInside = insideScene.isActive;
+  showRoom(roomId);
+  // Walking in from outside is recorded by `onEnterInside`.
+  if (wasInside) recordVisit(roomId);
+}
+
+function goOutside() {
+  if (!insideScene.isActive) return;
+  returnToExteriorView();
+  markMenuRoom("exterior");
+  recordVisit("exterior");
+}
+
+/* The Back sign: one step back while there is a step inside the house to take. */
+function stepBack() {
+  if (window.history.state?.house && window.history.state.depth > 0) {
+    window.history.back();
+  } else {
+    goOutside();
+  }
+}
+
+function followHistory(event) {
+  const state = event.state;
+  if (!state?.house) return;
+  restoring = true;
+  try {
+    if (state.room === "exterior") {
+      returnToExteriorView();
+      markMenuRoom("exterior");
+    } else {
+      showRoom(state.room);
+    }
+  } finally {
+    restoring = false;
+  }
+}
+
+/* The rooms menu: a disclosure button and a list of rooms (house.astro). */
+function markMenuRoom(roomId) {
+  roomMenuList?.querySelectorAll(".room-menu__room").forEach((button) => {
+    if (button.dataset.room === (roomId || "exterior")) button.setAttribute("aria-current", "location");
+    else button.removeAttribute("aria-current");
+  });
+}
+
+function setMenuOpen(open) {
+  if (!roomMenuToggle || !roomMenuList) return;
+  roomMenuToggle.setAttribute("aria-expanded", String(open));
+  roomMenuList.hidden = !open;
+}
+
+function bindRoomMenu() {
+  if (!roomMenuToggle || !roomMenuList) return;
+
+  roomMenuToggle.addEventListener("click", () => {
+    setMenuOpen(roomMenuList.hidden);
+    if (!roomMenuList.hidden) roomMenuList.querySelector('[aria-current="location"], .room-menu__room')?.focus();
+  });
+
+  roomMenuList.addEventListener("click", (event) => {
+    const button = event.target.closest(".room-menu__room");
+    if (!button) return;
+    setMenuOpen(false);
+    roomMenuToggle.focus();
+    if (button.dataset.room === "exterior") goOutside();
+    else goToRoom(button.dataset.room);
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !roomMenuList.hidden) {
+      setMenuOpen(false);
+      roomMenuToggle.focus();
+    }
+  });
+
+  document.addEventListener("pointerdown", (event) => {
+    if (!roomMenuList.hidden && !event.target.closest("#roomMenu")) setMenuOpen(false);
+  });
 }
 
 function createTextElement(tagName, text, className) {
@@ -275,7 +404,7 @@ function renderContentModal(sign) {
 function bindSceneActions() {
   insideScene.setSceneActionHandler((action, sign) => {
     if (action === "back") {
-      returnToExteriorView();
+      stepBack();
     } else if (action === "about") {
       teamCarousel.open();
     } else if (action === "philosophy") {
@@ -283,7 +412,7 @@ function bindSceneActions() {
     } else if (action === "contact") {
       if (insideScene.isActive) contactDialog.open();
     } else if (sign.dataset.targetRoom) {
-      insideScene.setActiveRoom(sign.dataset.targetRoom);
+      goToRoom(sign.dataset.targetRoom);
     } else if (sign.dataset.contentKey) {
       renderContentModal(sign);
     }
@@ -407,9 +536,18 @@ function init() {
   turntable.resizeCanvas();
   bindHouseExit();
 
+  bindRoomMenu();
   const requestedRoom = readRequestedRoom();
+  window.history.replaceState({ house: true, room: requestedRoom || "exterior", depth: 0 }, "", houseAddress(requestedRoom));
+  window.addEventListener("popstate", followHistory);
+  markMenuRoom(requestedRoom || "exterior");
   if (requestedRoom) {
-    entranceVideo.enterInsideView(requestedRoom);
+    restoring = true;
+    try {
+      entranceVideo.enterInsideView(requestedRoom);
+    } finally {
+      restoring = false;
+    }
   }
   turntable.stageFrameLoads();
   scheduleInteriorLoad();

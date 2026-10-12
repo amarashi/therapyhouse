@@ -2133,6 +2133,23 @@ content:
                 label: Open the address in a map
                 type: string
                 required: true
+          - name: menu
+            label: Rooms menu
+            description: The menu that takes a visitor to any room.
+            type: object
+            fields:
+              - name: button
+                label: Menu button
+                type: string
+                required: true
+              - name: heading
+                label: Menu heading
+                type: string
+                required: true
+              - name: outside
+                label: Name for the outside of the house
+                type: string
+                required: true
 
       - name: house-rooms
         label: Rooms and signs

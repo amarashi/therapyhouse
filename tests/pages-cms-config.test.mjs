@@ -331,16 +331,19 @@ test("every JSON file's form matches the keys in the file", () => {
   }
 });
 
-test("the house text is only the wording of its links, one field per link", () => {
+test("the house text is only its own wording, one field per key", () => {
   // What a sign opens is built from the plain pages' own files
-  // (src/lib/house-content.js); house-copy.json holds nothing else.
-  const links = entry("house-copy").fields.find((f) => f.name === "links");
-  assert.ok(links, "house-copy has no links");
-  assert.equal(links.type, "object");
-  assert.ok(!isList(links), "links must not be a list");
+  // (src/lib/house-content.js); house-copy.json holds only the words that
+  // belong to the house: its links and its rooms menu.
   const data = JSON.parse(read(JSON_FILES["house-copy"]));
-  assert.deepEqual(Object.keys(data), ["links"]);
-  assert.deepEqual(links.fields.map((f) => f.name).sort(), Object.keys(data.links).sort());
+  assert.deepEqual(Object.keys(data).sort(), ["links", "menu"]);
+  for (const name of Object.keys(data)) {
+    const group = entry("house-copy").fields.find((f) => f.name === name);
+    assert.ok(group, `house-copy has no ${name}`);
+    assert.equal(group.type, "object");
+    assert.ok(!isList(group), `${name} must not be a list`);
+    assert.deepEqual(group.fields.map((f) => f.name).sort(), Object.keys(data[name]).sort());
+  }
 });
 
 test("lists the developer must grow are fixed at their current length", () => {

@@ -16,5 +16,10 @@
     "call": "Call reception",
     "email": "Email reception",
     "map": "Open in Google Maps"
+  },
+  "menu": {
+    "button": "Rooms",
+    "heading": "Go to a room",
+    "outside": "Outside the house"
   }
 }

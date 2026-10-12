@@ -49,7 +49,7 @@ export function createEntranceVideoController({
     doorVideo.pause();
     doorVideo.currentTime = 0;
     stage.classList.remove("is-playing");
-    onEnterInside?.();
+    onEnterInside?.(roomId);
     insideScene.enter({ roomId });
   }
 
