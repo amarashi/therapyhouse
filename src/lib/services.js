@@ -38,7 +38,7 @@ export function builtAtOwnPath(data) {
 /**
  * The fee guard.
  *
- * A wrong fee is worse than no fee (see `lastReviewed` in content.config.ts),
+ * A wrong fee is worse than no fee (see `lastReviewed` in src/lib/content-schemas.js),
  * so a page whose fees are still awaiting the clinic's confirmation can be
  * reviewed on the preview but cannot be built for the real domain at all. This
  * throws rather than hiding the table, because a quietly missing price is a

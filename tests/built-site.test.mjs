@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import { before, after, test } from "node:test";
+import { readFileSync } from "node:fs";
 
 import { buildPages, cleanUp, schemaTypes, textOf } from "./helpers/built-site.mjs";
 import { TITLE_MAX, DESCRIPTION_MAX } from "../src/lib/seo.js";
 import { nearbySuburbs } from "../src/data/site.js";
+import { frontmatter } from "./helpers/markdown.mjs";
 
 /**
  * Checks on the built HTML of the Preview build (see the helper).
@@ -49,7 +51,8 @@ test("every built page has a description under 160 characters, and no two share 
 
 test("the home page says psychologist and The Gap in its title and its heading", () => {
   const home = preview.get("/");
-  assert.equal(home.title, "Psychologist The Gap, Brisbane | Therapy House");
+  assert.match(home.title, /psychologist/i);
+  assert.match(home.title, /The Gap/);
   assert.match(home.h1, /psychologist/i);
   assert.match(home.h1, /The Gap/);
   for (const word of ["children", "adults", "couples", "assessments", "video"]) {
@@ -67,10 +70,14 @@ test("the home and contact pages name The Gap and the neighbouring suburbs in pl
 });
 
 test("practitioner pages are titled with the person's name and profession", () => {
-  const kaya = preview.get("/team/kaya-beinke/");
-  assert.match(kaya.title, /^Dr Kaya Beinke, Clinical Psychologist \| Therapy House/);
-  const jazmin = preview.get("/team/jazmin-squire/");
-  assert.equal(jazmin.title, "Jazmin Squire, Psychologist | Therapy House, The Gap");
+  // Staff edit names and job titles in the CMS, so the check is the shape:
+  // the person's name first, then their profession, then the clinic.
+  for (const id of ["kaya-beinke", "jazmin-squire"]) {
+    const { name } = frontmatter(readFileSync(new URL(`../src/content/team/${id}.md`, import.meta.url), "utf8"));
+    const page = preview.get(`/team/${id}/`);
+    assert.ok(page.title.startsWith(`${name}, `), `/team/${id}/ title should start with the name: "${page.title}"`);
+    assert.match(page.title, /psycholog.* \| Therapy House/i, `/team/${id}/ title should name the profession`);
+  }
 });
 
 /* ---- Structured data (issue #34) ---- */

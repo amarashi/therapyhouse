@@ -8,16 +8,20 @@ description: "Group programs in The Gap, Brisbane for children's emotion regulat
 lede: Group therapy is an effective and affordable way to seek help.
 sourceUrl: https://www.therapyhouse.com.au/group-therapy/
 programs:
-  - title: Emotion Regulation and Social Skills Workshop
+  - id: emotionRegulation
+    title: Emotion Regulation and Social Skills Workshop
     audience: Children aged 7–12
     description: Helps children identify emotions, body signals, triggers and ways to regulate thoughts, emotions and behaviours.
-  - title: Hunter and His Amazing Remote Control
+  - id: hunterRemote
+    title: Hunter and His Amazing Remote Control
     audience: Children aged 6–10
     description: Uses a brain remote control metaphor to teach attention, problem-solving and regulation skills across eight sessions. These skills support emotion regulation, and the group gives children a place to practise them with others.
-  - title: Navigating Social Relationships
+  - id: socialRelationships
+    title: Navigating Social Relationships
     audience: Young people aged 12–15
     description: Eight-week program based on the PEERS framework, focusing on friendships, conversation skills, rejection, humour, electronic communication and conflict management.
-  - title: Lego Club
+  - id: legoClub
+    title: Lego Club
     audience: Children aged 6–12
     description: Eight-week program using Lego therapy to support social communication, turn-taking, sharing, listening, teamwork and problem-solving.
 circleOfSecurity:

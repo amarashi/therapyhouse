@@ -16,6 +16,7 @@ worksOn:
   - "Autism"
 availability: "Accepting new clients"
 sourceUrl: https://www.therapyhouse.com.au/staff-member/rani-banks/
+draft: false
 ---
 
 Rani provides assessment and therapy for concerns including anxiety, low mood, trauma, learning difficulties, ADHD, autism, relationship and family challenges, anger, bullying and identity questions. Their practice is neuroaffirming, trauma-informed and attentive to wider cultural and social context.

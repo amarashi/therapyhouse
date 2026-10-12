@@ -15,24 +15,17 @@ import { sharedShare } from "../src/lib/towns.js";
 
 const MAX_SHARED = 1 / 3;
 
-/** Title, H1 and description each Town Page must carry (from its issue). */
-const EXPECTED = {
-  toowoomba: {
-    title: "Psychologist Toowoomba by Video | Therapy House",
-    h1: "A psychologist for Toowoomba, by video",
-  },
-  townsville: {
-    title: "Psychologist Townsville by Video | Therapy House",
-    h1: "A psychologist for Townsville, by video",
-  },
-  cairns: {
-    title: "Psychologist Cairns by Video | Therapy House",
-    h1: "A psychologist for Cairns, by video",
-  },
-  rockhampton: {
-    title: "Psychologist Rockhampton by Video | Therapy House",
-    h1: "A psychologist for Rockhampton, by video",
-  },
+/**
+ * The agreed Town Pages and the town each one is for. Staff may reword a
+ * page's title, H1 and description in the CMS; each issue's phrase is
+ * "psychologist <town>", so the title must still say "psychologist", "video"
+ * and the town, and the H1 and description the town.
+ */
+const TOWNS = {
+  toowoomba: "Toowoomba",
+  townsville: "Townsville",
+  cairns: "Cairns",
+  rockhampton: "Rockhampton",
 };
 
 let pages;
@@ -60,28 +53,25 @@ test("at least one Town Page is built", () => {
   assert.ok(pages.size >= 1, "no pages under /telehealth/<town>/");
 });
 
-test("each Town Page has its issue's title, H1 and description", () => {
+test("each Town Page's title, H1 and description name its town and fit a search result", () => {
   for (const [path, page] of pages) {
-    const town = townOf(path);
-    const expected = EXPECTED[town];
-    assert.ok(expected, `${path} is not one of the agreed Town Pages`);
-    assert.equal(page.title, expected.title);
-    assert.equal(page.h1, expected.h1);
+    const name = TOWNS[townOf(path)];
+    assert.ok(name, `${path} is not one of the agreed Town Pages`);
+    for (const word of ["psychologist", "video", name.toLowerCase()]) {
+      assert.ok(page.title.toLowerCase().includes(word), `${path}: the title must contain "${word}"`);
+    }
+    assert.ok(page.h1.includes(name), `${path}: the H1 must name ${name}`);
+    assert.ok(page.description.includes(name), `${path}: the description must name ${name}`);
     assert.equal((page.html.match(/<h1[\s>]/g) ?? []).length, 1, `${path} has more than one H1`);
-    const name = expected.h1.match(/for (.+), by video/)[1];
-    assert.equal(
-      page.description,
-      `Video sessions with Therapy House psychologists for people in ${name}: children, teens, adults and couples. Medicare rebates with a GP referral.`
-    );
     assert.ok(page.title.length < 60 && page.description.length < 160);
   }
 });
 
 test("each Town Page names its town in the first paragraph and the GP referral section", () => {
   for (const [path, page] of pages) {
-    const name = EXPECTED[townOf(path)].h1.match(/for (.+), by video/)[1];
+    const name = TOWNS[townOf(path)];
     const body = bodyText(page);
-    assert.ok(body.includes(`A GP referral in ${name}`), `${path} has no GP referral section naming ${name}`);
+    assert.match(body, new RegExp(`GP referral in ${name}`, "i"), `${path} has no GP referral section naming ${name}`);
     const firstParagraph = page.html.match(/data-town-body[^>]*>\s*<p>([\s\S]*?)<\/p>/)?.[1] ?? "";
     assert.ok(firstParagraph.includes(name), `${path}: the first paragraph should name ${name}`);
     assert.match(firstParagraph, /psychologist/i);
@@ -102,7 +92,7 @@ test("each Town Page is a Service for its city, provided by the clinic", () => {
     assert.ok(schemaTypes(page).includes("Service"), `${path} has no Service`);
     const service = page.jsonLd.find((node) => node["@type"] === "Service");
     assert.equal(service.areaServed["@type"], "City");
-    assert.equal(service.areaServed.name, EXPECTED[townOf(path)].h1.match(/for (.+), by video/)[1]);
+    assert.equal(service.areaServed.name, TOWNS[townOf(path)]);
     assert.match(service.provider["@id"], /#business$/);
   }
 });

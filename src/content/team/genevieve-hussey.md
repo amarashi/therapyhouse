@@ -15,6 +15,7 @@ worksOn:
   - "Early intervention"
 availability: "Not currently accepting new clients"
 sourceUrl: https://www.therapyhouse.com.au/staff-member/genevieve-hussey/
+draft: false
 ---
 
 Gen has experience supporting children with autism-related needs and brings a background in nursing and psychology. She has worked as a Mental Health Registered Nurse in a private psychiatric hospital and values multidisciplinary, compassionate care.

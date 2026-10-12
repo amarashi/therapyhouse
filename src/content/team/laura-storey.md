@@ -13,6 +13,7 @@ worksOn:
   - "Eating disorders"
 availability: "Accepting new clients"
 sourceUrl: https://www.therapyhouse.com.au/staff-member/laura-storey-counsellor/
+draft: false
 ---
 
 Laura has worked in mental health since 2011 and also practices in the eating disorder field. Her work draws on developmental psychology, narrative therapy, schema therapy, feminist frameworks, ACT, grief and loss frameworks, and a strong commitment to safety, trust and humour.

@@ -66,7 +66,9 @@ export const businessFacts = {
      on /therapy/ and stay there, where they carry their review date. */
   priceRange: '$$',
   /** @type {OpeningHours[]} */
-  openingHours: clinic.openingHours,
+  /* Pages CMS drops an empty list from the file when it saves, so "no hours
+     published" can arrive as a missing key. */
+  openingHours: clinic.openingHours ?? [],
 };
 
 /**

@@ -37,16 +37,22 @@ export function packagePrice(pkg) {
  * @param {Array<{label: string, amount: string, note?: string}>} input.fees  fees.md `fees`
  * @param {string} [input.sessionLength]  fees.md `sessionLength`
  * @param {string[]} [input.privateHealth]  fees.md `privateHealth`
- * @param {Array<{title: string, price: string, provisionalPrice?: string}>} input.packages  assessments.md `packages`
+ * @param {Array<{id?: string, title: string, price: string, provisionalPrice?: string}>} input.packages
+ *   assessments.md `packages`. Priced in the house by `id`, the package's key
+ *   in house-copy.json; a package with no id is not in the house.
  * @param {object} input.medicare  src/data/medicare.js `medicare`
- * @param {{team?: string[], titles?: string[]}} [input.hidden]  what this build
- *   switches off (src/lib/drafts.js): team members by collection id, and
- *   package and program titles. The house's own copies of those lists leave
- *   them out. Absent from the result when nothing is switched off.
+ * @param {{team?: string[], packages?: string[], programs?: string[]}} [input.hidden]
+ *   what this build switches off (src/lib/drafts.js): team members by
+ *   collection id, packages and programs by their house-copy.json key. The
+ *   house's own copies of those lists leave them out. Absent from the result
+ *   when nothing is switched off.
  */
 export function houseFacts({ fees, sessionLength, privateHealth = [], packages, medicare, hidden = {} }) {
-  const team = hidden.team ?? [];
-  const titles = hidden.titles ?? [];
+  const switchedOff = {
+    team: hidden.team ?? [],
+    packages: hidden.packages ?? [],
+    programs: hidden.programs ?? [],
+  };
   const feeCards = fees.map((row) => ({
     title: row.label,
     price: row.amount,
@@ -67,13 +73,15 @@ export function houseFacts({ fees, sessionLength, privateHealth = [], packages, 
     ...privateHealth.slice(0, 1),
   ];
 
-  const packagePrices = Object.fromEntries(packages.map((pkg) => [pkg.title, packagePrice(pkg)]));
+  const packagePrices = Object.fromEntries(
+    packages.filter((pkg) => pkg.id).map((pkg) => [pkg.id, packagePrice(pkg)])
+  );
 
   return {
     fees: sessionLength ? [sessionLength, ...feeCards] : feeCards,
     rebates,
     packagePrices,
-    ...(team.length || titles.length ? { hidden: { team, titles } } : {}),
+    ...(Object.values(switchedOff).some((ids) => ids.length) ? { hidden: switchedOff } : {}),
   };
 }
 

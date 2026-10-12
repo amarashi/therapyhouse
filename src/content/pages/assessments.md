@@ -21,7 +21,8 @@ documents:
   - Relevant intervention documentation such as reading intervention, occupational therapy or speech assessment
   - Any letters with prior diagnoses
 packages:
-  - title: Comprehensive Psycho-educational Assessment
+  - id: psychoeducational
+    title: Comprehensive Psycho-educational Assessment
     price: from $2,400
     provisionalPrice: from $1,900
     inclusions:
@@ -30,19 +31,23 @@ packages:
       - Questionnaires
       - Assessment scoring and report writing
       - Feedback session
-  - title: Cognitive Assessment
+  - id: cognitive
+    title: Cognitive Assessment
     price: from $1,621
     provisionalPrice: from $1,366
     description: Aims to understand a child's cognitive strengths and weaknesses.
-  - title: ADHD Assessment
+  - id: adhd
+    title: ADHD Assessment
     price: from $1,000
     provisionalPrice: from $846
     description: Includes intake, diagnostic interview, questionnaires, scoring and a feedback session.
-  - title: Autism Assessment
+  - id: autism
+    title: Autism Assessment
     price: from $1,000
     provisionalPrice: from $846
     description: Explores social communication differences, routine reliance and related presentation.
-  - title: School Observations
+  - id: schoolObservations
+    title: School Observations
     price: $250 plus travel
     description: Optional add-on where school context is clinically useful.
     addOn: true

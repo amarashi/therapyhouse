@@ -17,6 +17,7 @@ worksOn:
   - "Assessment"
 availability: "Not currently accepting new clients"
 sourceUrl: https://www.therapyhouse.com.au/staff-member/dr-kaya-beinke/
+draft: false
 ---
 
 Kaya trained as a clinical psychologist and is a board approved supervisor. Her practice draws on approaches including CBT, trauma-focused CBT, ACT, DBT and Dyadic Developmental Psychotherapy, with experience across chronic health, developmental delay, assessment and family support.
