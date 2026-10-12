@@ -1,5 +1,13 @@
 import { clamp, getImageHeight, getImageWidth, requestIdleTask } from "./utils.js";
 
+/*
+ * The size of every turntable frame (public/assets/turntable/). The frames
+ * are drawn whole, and the exterior hotspots in content-data.js are fractions
+ * of this picture, so a new set of frames at another size changes these.
+ */
+const FRAME_WIDTH = 1108;
+const FRAME_HEIGHT = 756;
+
 export function createTurntableViewer({
   stage,
   canvas,
@@ -10,8 +18,8 @@ export function createTurntableViewer({
   frames,
   frameCount,
   /*
-   * Hold the house still on its front view: one frame instead of 48 (about
-   * 2.8 MB), and no rotation by drag, hover, wheel or keys. For visitors who
+   * Hold the house still on its front view: one frame instead of 61 (about
+   * 5.5 MB), and no rotation by drag, hover, wheel or keys. For visitors who
    * ask for reduced motion or for reduced data (Save-Data). The doors and the
    * other exterior hotspots work exactly as before.
    */
@@ -22,7 +30,7 @@ export function createTurntableViewer({
   const imageLoadPromises = new Array(frameCount);
   const loadedFrameIndexes = new Set();
   const centreAngle = (frameCount - 1) / 2;
-  const hoverMaxFramesPerSecond = 22;
+  const hoverMaxFramesPerSecond = 28; // about as fast round as 22 was with 48 frames
   const hoverMinimumStrength = 0.22;
   const hoverVelocitySmoothing = 14;
   const springStiffness = 92;
@@ -39,6 +47,11 @@ export function createTurntableViewer({
   let inertialVelocity = 0;
   let isInteractionLocked = false;
   let isDragging = false;
+  // The pointer pressed on the house that may yet become a drag, and how far
+  // it must move first (`init`).
+  let pressPointerId = null;
+  const dragThreshold = 6;
+  let hoverPaused = false;
   let dragStartX = 0;
   let dragStartAngle = 0;
   let lastDragAngle = 0;
@@ -52,10 +65,8 @@ export function createTurntableViewer({
 
   function getSceneRectCss() {
     const rect = stage.getBoundingClientRect();
-    const effectiveImageWidth = 960 - 8 - 28;
-    const effectiveImageHeight = 540 - 8 - 28;
     const stageRatio = rect.width / rect.height;
-    const imageRatio = effectiveImageWidth / effectiveImageHeight;
+    const imageRatio = FRAME_WIDTH / FRAME_HEIGHT;
     const isMobilePortrait = window.matchMedia("(max-width: 720px) and (orientation: portrait)").matches;
     let width = rect.width;
     let height = rect.height;
@@ -140,6 +151,11 @@ export function createTurntableViewer({
       const hotspot = exteriorHotspots.find((candidate) => candidate.id === button.dataset.exteriorHotspotId);
       if (!hotspot) return;
       applyHotspotRect(button, getHotspotRect(hotspot));
+      /* A spot whose door turns out of sight behind something nearer (the
+         side door behind the cloud sign) goes when it does, and leaves the
+         nearer thing clickable. */
+      const until = hotspot.position?.visibleUntil;
+      button.hidden = until != null && displayAngle / (frameCount - 1) > until;
     });
   }
 
@@ -181,13 +197,7 @@ export function createTurntableViewer({
 
     const x = (canvas.width - drawWidth) / 2;
     const y = (canvas.height - drawHeight) / 2;
-    const cropLeft = 8;
-    const cropTop = 8;
-    const cropRight = 28;
-    const cropBottom = 28;
-    const sourceWidth = Math.max(1, getImageWidth(image) - cropLeft - cropRight);
-    const sourceHeight = Math.max(1, getImageHeight(image) - cropTop - cropBottom);
-    context.drawImage(image, cropLeft, cropTop, sourceWidth, sourceHeight, x, y, drawWidth, drawHeight);
+    context.drawImage(image, x, y, drawWidth, drawHeight);
   }
 
   function renderFrame(value, force = false) {
@@ -410,31 +420,52 @@ export function createTurntableViewer({
 
     stage.addEventListener("pointerdown", (event) => {
       if (isInteractionLocked) return;
-      if (event.target.closest(".door-hotspot, .exterior-hotspot")) return;
+      if (event.button !== undefined && event.button !== 0) return;
 
-      isDragging = true;
+      /*
+       * A press anywhere on the house can turn it, a door or a sign included:
+       * they cover much of the house, and a drag that could not start on one
+       * felt like the house would not turn. It becomes a drag once the pointer
+       * has moved `dragThreshold` pixels. A press that stays put is a click,
+       * and the door or sign under it opens as before.
+       */
+      pressPointerId = event.pointerId;
       dragStartX = event.clientX;
       dragStartAngle = targetAngle;
       lastDragAngle = targetAngle;
       lastDragTime = performance.now();
       dragVelocity = 0;
+      inertialVelocity = 0;
+    });
+
+    function beginDrag(event) {
+      isDragging = true;
+      // Once someone turns the house by hand, hover stops turning it for them
+      // until the pointer leaves the house; it used to start up again the
+      // moment they let go, and fought them.
+      hoverPaused = true;
       hoverActive = false;
       hoverVelocity = 0;
       hoverTargetVelocity = 0;
-      inertialVelocity = 0;
-
+      stage.classList.add("is-dragging");
       try {
+        // Captured, the click that ends the drag lands on the stage and not
+        // on the door or sign it started on, so turning never opens a room.
         stage.setPointerCapture(event.pointerId);
       } catch (error) {
         // Synthetic pointer events in automated tests may not have an active pointer.
       }
-    });
+    }
 
     stage.addEventListener("pointermove", (event) => {
       if (isInteractionLocked) return;
 
       // Measured on resize (`resizeCanvas`), not on every move.
       const rect = stageRect || stage.getBoundingClientRect();
+
+      if (!isDragging && pressPointerId === event.pointerId && Math.abs(event.clientX - dragStartX) >= dragThreshold) {
+        beginDrag(event);
+      }
 
       if (isDragging) {
         const dx = event.clientX - dragStartX;
@@ -450,6 +481,8 @@ export function createTurntableViewer({
         setTargetAngle(nextAngle);
         return;
       }
+
+      if (hoverPaused || pressPointerId !== null || event.pointerType === "touch") return;
 
       const position = clamp((event.clientX - rect.left) / Math.max(rect.width, 1), 0, 1);
       const centred = position * 2 - 1;
@@ -473,6 +506,8 @@ export function createTurntableViewer({
         inertialVelocity = dragVelocity;
       }
       isDragging = false;
+      pressPointerId = null;
+      stage.classList.remove("is-dragging");
       if (event.pointerId !== undefined && stage.hasPointerCapture(event.pointerId)) {
         stage.releasePointerCapture(event.pointerId);
       }
@@ -481,11 +516,17 @@ export function createTurntableViewer({
 
     stage.addEventListener("pointerup", endDrag);
     stage.addEventListener("pointercancel", endDrag);
-    stage.addEventListener("pointerleave", () => {
+    stage.addEventListener("pointerleave", (event) => {
+      // A captured drag keeps going outside the stage; only a pointer that
+      // has really left ends a drag here.
+      if (isDragging && stage.hasPointerCapture?.(event.pointerId)) return;
       if (isDragging && Math.abs(dragVelocity) >= dragInertiaMinimum) {
         inertialVelocity = dragVelocity;
       }
       isDragging = false;
+      pressPointerId = null;
+      hoverPaused = false;
+      stage.classList.remove("is-dragging");
       hoverActive = false;
       hoverTargetVelocity = 0;
       ensureAnimation();

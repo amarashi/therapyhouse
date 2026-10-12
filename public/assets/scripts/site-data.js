@@ -16,7 +16,7 @@ export const assetBase =
 
 export const asset = (path) => `${assetBase}${path}`;
 
-export const frameCount = 48;
+export const frameCount = 61;
 
 export const frames = Array.from({ length: frameCount }, (_, index) => {
   const number = String(index + 1).padStart(3, "0");

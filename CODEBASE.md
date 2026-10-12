@@ -53,7 +53,7 @@ dog-eye tuning panel (`src/house-debug/`, never built).
 | `app.js` | Entry point. Creates the controllers, renders sign previews in the pop-up, and moves the visit between rooms: history entries, the Back sign and the Rooms menu. |
 | `content-data.js` | The house's content model: which rooms exist, each room's picture and signs (positions, what they open), joined by id to the wording in `house-rooms.json`. It reads the previews `house.astro` writes into the page. |
 | `site-data.js` | Asset paths, the turntable frames, and tuning values for firelight and the dog's eyes. |
-| `turntable-viewer.js` | The exterior: 48 WebP frames drawn on a canvas, with its door and window spots. |
+| `turntable-viewer.js` | The exterior: 61 WebP frames drawn on a canvas, with its door and window spots. |
 | `entrance-video.js` | The door-opening video between the exterior and the welcome room (skipped under reduced motion). |
 | `inside-scene.js` | A room: its picture layers, parallax, and signs positioned in the picture's own coordinates. |
 | `team-carousel.js` | The team carousel, built from the team collection. |

@@ -263,6 +263,25 @@ content:
         label: Full biography
         type: rich-text
 
+  # ---------------------------------------------------------- Team settings
+  - name: team-settings
+    label: Team photo settings
+    description: Choices that apply to every person on the team at once.
+    type: file
+    path: src/data/team-settings.json
+    format: json
+    operations:
+      delete: false
+    fields:
+      - name: illustratedPortraits
+        label: Show the illustrated portraits
+        description: >-
+          When on, each team photo first shows the person's illustrated
+          (cartoon-style) portrait and changes to their real photo when a
+          visitor points at it or scrolls past it. Switch off to show only the
+          real photos, for everyone, on every page.
+        type: boolean
+
   # -------------------------------------------------------------- Articles
   - name: articles
     label: Articles

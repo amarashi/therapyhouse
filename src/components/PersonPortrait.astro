@@ -1,6 +1,7 @@
 ---
 import { withBase } from '../lib/base.js';
 import { teamPortrait } from '../lib/team-portraits.js';
+import teamSettings from '../data/team-settings.json';
 
 /**
  * A team portrait that opens as the illustrated version and dissolves to the
@@ -62,9 +63,11 @@ const box = sizes ?? `${size}px`;
  * yet, the build stands the photograph in for it.
  *
  * Absent altogether and the photograph simply renders alone. Nothing else on
- * the card changes.
+ * the card changes. The clinic can also switch the illustrations off for the
+ * whole team in the CMS ("Team photo settings", src/data/team-settings.json),
+ * which leaves every portrait in that same photograph-only state.
  */
-const pix = portrait.pix;
+const pix = teamSettings.illustratedPortraits ? portrait.pix : null;
 ---
 
 <span class="portrait">

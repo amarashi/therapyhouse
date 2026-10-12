@@ -24,7 +24,7 @@ shape is [docs/house-plan.md](docs/house-plan.md).
 
 ## The exterior
 
-The exterior is a 48-frame turntable. Its spots:
+The exterior is a 61-frame turntable. Its spots:
 
 | Spot | Words on it | Opens |
 | --- | --- | --- |

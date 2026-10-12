@@ -32,5 +32,6 @@ test("nothing moves under reduced motion, and the lamp stops off screen", () => 
   const script = hero.slice(hero.indexOf("Lamplight on the words (chosen"));
   assert.match(script, /if \(reduced\.matches\) return;/);
   assert.match(script, /IntersectionObserver/);
-  assert.match(hero, /@media \(prefers-reduced-motion: no-preference\) \{\s*\.hero__word-in \{\s*animation: hero-word-rise/);
+  // The heading is simply there on arrival: its words no longer rise in.
+  assert.doesNotMatch(hero, /hero-word-rise/);
 });

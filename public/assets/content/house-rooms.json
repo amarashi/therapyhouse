@@ -106,7 +106,7 @@
       "id": "team",
       "title": "Team Parlour",
       "label": "Team",
-      "exteriorEntry": "Team garden sign",
+      "exteriorEntry": "Therapy House cloud sign",
       "summary": "Staff profiles, availability notes and team biographies in a carousel-friendly structure.",
       "images": [
         {
@@ -231,7 +231,7 @@
       "id": "groups",
       "title": "Group Room",
       "label": "Group Therapy",
-      "exteriorEntry": "Upper group therapy window/sign",
+      "exteriorEntry": "Group therapy sign on the roof",
       "summary": "Group therapy programs, Circle of Security Parenting and workshop/seminar expression-of-interest content.",
       "images": [
         {
@@ -278,7 +278,7 @@
       "id": "library",
       "title": "Library",
       "label": "Library",
-      "exteriorEntry": "Left blogs sign / tower window",
+      "exteriorEntry": "Blogs sign",
       "summary": "Resource hub for blogs, products, videos, publications and media appearances.",
       "images": [
         {
@@ -403,7 +403,7 @@
       "id": "work-with-us",
       "title": "Work With Us",
       "label": "Work With Us",
-      "exteriorEntry": "Side door / staff noticeboard",
+      "exteriorEntry": "Tower side door",
       "summary": "Clinic culture, values and work-with-us enquiry content.",
       "images": [
         {

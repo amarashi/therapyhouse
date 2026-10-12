@@ -19,4 +19,4 @@
 | `https://www.therapyhouse.com.au/wp-content/uploads/2023/05/josie.png` | `assets/team/josie.webp` | 554.7 | 27.7 | 560x760 | Downloaded, auto-oriented, portrait crop, WebP. |
 | `https://www.therapyhouse.com.au/wp-content/uploads/2022/09/Reaa-2.png` | `assets/team/reea.webp` | 1821.2 | 35.3 | 560x760 | Downloaded, auto-oriented, portrait crop, WebP. |
 | `https://www.therapyhouse.com.au/wp-content/uploads/2021/11/Samson.jpg` | `assets/team/samson.webp` | 24.9 | 23.4 | 560x760 | Downloaded, auto-oriented, portrait crop, WebP. |
-| `optimised-rotation-frames/turntable_001.webp` through `_048.webp` | `assets/turntable/turntable_001.webp` through `_048.webp` | 4150.6 | 2790.7 | 960x540 | 48 WebP frames recompressed at original dimensions; total is 2.73 MiB. |
+| `archive/turning_house.mp4`, every second frame (61 of 121) | `assets/turntable/turntable_001.webp` through `_061.webp` | 12157.1 | 5608 | 1108x756 | The newer house. Cropped 72px from the bottom (source watermark), WebP quality 72. Evenly spaced, so the house turns in equal steps; 48 frames picked from 121 had stepped by 2 or 3 source frames by turns. |

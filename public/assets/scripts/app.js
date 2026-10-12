@@ -10,16 +10,16 @@ import {
   insideEdgeFallbackColors,
   insideImageSize,
   insideParallaxDepths
-} from "./site-data.js";
+} from "./site-data.js?v=20261013-exterior";
 import { requestIdleTask } from "./utils.js";
-import { exteriorHotspots, formerRoomIds, houseContent, previews, roomNavigation, roomSceneDefaults, teamMembers } from "./content-data.js?v=20261013-motion";
+import { exteriorHotspots, formerRoomIds, houseContent, previews, roomNavigation, roomSceneDefaults, teamMembers } from "./content-data.js?v=20261013-exterior";
 import { createDogEyeController } from "./dog-eye-controller.js?v=20261013-motion";
 import { createEntranceVideoController } from "./entrance-video.js?v=20261013-rooms";
 import { createFirelightController } from "./firelight-controller.js";
 import { createInsideScene } from "./inside-scene.js?v=20261013-motion";
 import { createModalDialog } from "./modal-dialog.js";
 import { createTeamCarousel } from "./team-carousel.js?v=20261013-motion";
-import { createTurntableViewer } from "./turntable-viewer.js?v=20261013-motion";
+import { createTurntableViewer } from "./turntable-viewer.js?v=20261013-exterior";
 
 const stage = document.getElementById("stage");
 const canvas = document.getElementById("viewerCanvas");
