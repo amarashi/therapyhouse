@@ -172,11 +172,11 @@ const sizes = imageSmall
       // and the browser answers by taking the 1194px cut for a 600px picture.
       '(min-width: 64rem) min(56vw, 880px, 84vh), (min-width: 52rem) min(86vw, 560px, 68vh), 84vw'
     : // The overture holds the page's left edge and runs to the opposite
-      // margin — which above 90rem is the lift's shaft, not the screen edge.
+      // margin — which above 64rem is the lift's shaft, not the screen edge.
       // Below 64rem it reaches both screen edges and then some: the phone
       // frame opens on the room zoomed past them (see `--art-zoom`), so the
       // box it paints into is wider than the screen it is on.
-      '(min-width: 90rem) calc(100vw - 18rem), (min-width: 64rem) calc(100vw - 4rem), 120vw'
+      '(min-width: 64rem) calc(100vw - 18rem), 120vw'
   : undefined;
 ---
 
@@ -1357,7 +1357,7 @@ const sizes = imageSmall
      Masthead.astro), and every frame above resets the stage's padding. This
      has to outrank all of them or the title lands on the wordmark and the
      artwork runs under the lift. */
-  @media (min-width: 90rem) {
+  @media (min-width: 64rem) {
     .hero .hero__stage,
     .hero[data-hero]:not(.hero--settled) .hero__stage {
       padding-block-start: 7.5rem;

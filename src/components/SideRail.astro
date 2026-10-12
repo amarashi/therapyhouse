@@ -5,7 +5,7 @@ import { readyNav, contact, callsToAction } from '../data/site.js';
 /**
  * The site's navigation, in two forms.
  *
- * Below 90rem it is an ordinary bar above the hero. At 90rem and up it is the
+ * Below 64rem it is an ordinary bar above the hero. At 64rem and up it is the
  * floating rail in the right margin — and there it is a lift: a shaft drawn in
  * CSS running the full height of the viewport, with a brass car parked at the
  * floor you are on. Hovering a floor calls the car to it; leaving sends it
@@ -68,9 +68,9 @@ const floor = here === -1 ? 0 : here;
         width="114"
         height="272"
         {/* Lazy so a phone never pays for it. The lift is `display: none`
-            below 90rem, which does not stop the fetch on its own — but an
+            below 64rem, which does not stop the fetch on its own — but an
             image that can never enter the viewport is one a lazy loader never
-            asks for. Above 90rem it is on screen from the first paint, so it
+            asks for. Above 64rem it is on screen from the first paint, so it
             loads immediately. */}
         loading="lazy"
         decoding="async"
@@ -108,9 +108,9 @@ const floor = here === -1 ? 0 : here;
 
 <style>
   /* ---- Default: an ordinary bar above the hero ----
-     Present from the first paint on every page, at every width below 90rem.
+     Present from the first paint on every page, at every width below 64rem.
      Navigation is never something the visitor has to scroll to discover.
-     The lift belongs to the rail form only, so below 90rem the shaft and car
+     The lift belongs to the rail form only, so below 64rem the shaft and car
      are not rendered at all and the deck steps out of the layout entirely. */
   .rail {
     border-bottom: 1px solid var(--line);
@@ -254,10 +254,12 @@ const floor = here === -1 ? 0 : here;
     }
   }
 
-  /* ---- 90rem and up: the lift ----
-     Only at this width does the left margin clear the 68rem content column,
-     so the rail can stand in it without ever crossing the text. */
-  @media (min-width: 90rem) {
+  /* ---- 64rem and up: the lift ----
+     From this width the page holds `--rail-gutter` clear on the right
+     (PlainLayout.astro, HeroReveal.astro), so the rail stands in that margin
+     without ever crossing the text — a laptop window included, not only a
+     wide monitor. */
+  @media (min-width: 64rem) {
     .rail {
       /* One row height drives the whole machine: floor spacing, where the car
          parks, and how far it travels. The car's box is the source art's
@@ -456,7 +458,7 @@ const floor = here === -1 ? 0 : here;
        not reach. At these widths the masthead's phone link is on screen at the
        top of the page and ActionBar.astro's floating pair below it, so nothing
        is lost by taking it out of the menu.
-       Removed from the lift only: the bar form below 90rem is the one place
+       Removed from the lift only: the bar form below 64rem is the one place
        the number is not otherwise reachable, since the masthead drops it on a
        phone. */
     .rail__phone {
@@ -522,7 +524,7 @@ const floor = here === -1 ? 0 : here;
     var lift = rail.querySelector('.rail__lift');
     var root = document.documentElement;
     var reduced = matchMedia('(prefers-reduced-motion: reduce)');
-    var wide = matchMedia('(min-width: 90rem)');
+    var wide = matchMedia('(min-width: 64rem)');
     var fine = matchMedia('(hover: hover) and (pointer: fine)');
 
     var home = Number(rail.getAttribute('data-floor')) || 0;
@@ -550,7 +552,7 @@ const floor = here === -1 ? 0 : here;
       );
     })();
 
-    /* Below 90rem there is no lift, and under reduced motion it holds its floor
+    /* Below 64rem there is no lift, and under reduced motion it holds its floor
        rather than sliding between them. */
     function live() {
       return wide.matches && !reduced.matches;
@@ -672,7 +674,7 @@ const floor = here === -1 ? 0 : here;
     }
 
     lift.addEventListener('pointerdown', function (event) {
-      /* No lift below 90rem, and nothing to take hold of mid-journey. Under
+      /* No lift below 64rem, and nothing to take hold of mid-journey. Under
          reduced motion the drag still works: the car is following a pointer,
          which is direct manipulation and not an animation. */
       if (busy || drag || !wide.matches || event.button !== 0) return;
