@@ -128,15 +128,13 @@ joined the welcome room, which kept its picture.
 | The philosophy pop-up | Gone; the attic holds the philosophy, so it is written in one place. |
 | The mailbox outside, the `/contact/` hero, the Rooms menu | Lead to the welcome room. An old `?room=contact` address does too (`formerRoomIds` in `content-data.js`). |
 | `reception-room.webp` | Off the site; a copy is in `art-src/rooms-inside/` (untracked). |
+| The notebook in the welcome room | It said "Contact Us" over a phone number that was not the clinic's. The number is painted out of `inside-layer-3.webp`, so the notebook says only "Contact Us"; the "Book or call" sign on it gives the real one. The layer as it was is in `art-src/rooms-inside/` (untracked). |
 
 Still open:
 
 - The `/contact/` hero still shows the reception cutaway picture
   (`reception-room-out*.webp`), and it now opens the welcome room. A cutaway
   of the welcome room would make the picture match the room it opens.
-- The notebook painted into the welcome room picture reads "(07) 3223 4550",
-  which is not the clinic's number (07 3300 2170). The "Book or call" sign sits
-  on it and its pop-up has the right number, but the picture itself is wrong.
 
 - The new room's master image is local only, like the other masters in `art-src/`.
 - Removing a sign in the CMS stops the build (a missing id throws), so the live site keeps its last good version and a deploy alert goes out. A friendlier guard would need Pages CMS to fix each room's list of signs.
