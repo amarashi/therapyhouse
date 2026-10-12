@@ -1,94 +1,78 @@
 import { asset } from "./site-data.js";
 
+/*
+ * The words a visitor reads are not written in this file (issue #94). Clinic
+ * staff edit them in Pages CMS, which can change JSON but not JavaScript, so
+ * they live in three JSON files beside the scripts:
+ *
+ *   public/assets/content/clinic.json       phone, email, address, booking link
+ *   public/assets/content/house-rooms.json  room names, sign labels, picture alt text
+ *   public/assets/content/house-copy.json   what each sign opens
+ *
+ * This module is served to the browser as it is, with no bundler, and it is
+ * also imported by the Astro build (through src/data/site.js) and by the
+ * tests under Node. A JSON module import (`with { type: "json" }`) is the one
+ * way of reading a JSON file that all three understand: the browser fetches
+ * the file next to this script, Vite inlines it, and Node reads it from disk.
+ * That is also why the files sit under public/ rather than src/: the browser
+ * can only fetch what the site serves. Fetching at run time would have worked
+ * in the browser too, but it would have made every export below wait on a
+ * promise, and the Astro build could not have read the phone number from it.
+ *
+ * Positions, transforms, image paths and which sign opens what stay here.
+ * The JS and the JSON are joined by `id`, and a missing id throws, so a
+ * renamed sign fails the tests rather than showing an empty label.
+ */
+import clinic from "../content/clinic.json" with { type: "json" };
+import houseRooms from "../content/house-rooms.json" with { type: "json" };
+import houseCopy from "../content/house-copy.json" with { type: "json" };
+
+export { clinic };
+
+/*
+ * The phone number is written once, the way a visitor reads it
+ * ("07 3300 2170"), and the dialable link is worked out from it so the two
+ * cannot drift apart. Australian numbers: drop the leading 0, add +61.
+ */
+export const phoneHref = (phone) => `tel:+61${phone.replace(/\D/g, "").replace(/^0/, "")}`;
+
+function roomText(roomId) {
+  const room = houseRooms.rooms.find((candidate) => candidate.id === roomId);
+  if (!room) throw new Error(`house-rooms.json has no room with id "${roomId}"`);
+  return room;
+}
+
+function signText(roomId, signId) {
+  const sign = roomText(roomId).signs.find((candidate) => candidate.id === signId);
+  if (!sign) throw new Error(`house-rooms.json has no sign "${signId}" in room "${roomId}"`);
+  return { label: sign.label, ariaLabel: sign.ariaLabel };
+}
+
+/* A background picture, its alt text looked up by the file name without its extension. */
+function roomLayer(roomId, path, className) {
+  const id = path.split("/").pop().replace(/\.\w+$/, "");
+  const image = (roomText(roomId).images || []).find((candidate) => candidate.id === id);
+  if (!image) throw new Error(`house-rooms.json has no image "${id}" in room "${roomId}"`);
+  return className
+    ? { src: asset(path), className, alt: image.alt }
+    : { src: asset(path), alt: image.alt };
+}
+
 export const roomIds = ["exterior", "welcome", "team", "services", "assessments", "groups", "library", "philosophy", "contact", "work-with-us"];
+
+function navigationRoom(id) {
+  const { title, label, description, exteriorEntry } = roomText(id);
+  if (id === "exterior") {
+    return { id, title, type: "turntable", label, description, entryPoint: "turntable", route: `#${id}` };
+  }
+  return { id, title, type: "interior", label, exteriorEntry, route: `#${id}` };
+}
 
 export const roomNavigation = {
   initialRoomId: "exterior",
   defaultInteriorRoomId: "welcome",
   roomOrder: roomIds,
-  rooms: {
-    exterior: {
-      id: "exterior",
-      title: "Exterior",
-      type: "turntable",
-      label: "Therapy House exterior",
-      description: "The rotating house scene that acts as the main site map.",
-      entryPoint: "turntable",
-      route: "#exterior"
-    },
-    welcome: {
-      id: "welcome",
-      title: "Welcome Room",
-      type: "interior",
-      label: "Welcome",
-      exteriorEntry: "Main door",
-      route: "#welcome"
-    },
-    team: {
-      id: "team",
-      title: "Team Parlour",
-      type: "interior",
-      label: "Team",
-      exteriorEntry: "Team garden sign",
-      route: "#team"
-    },
-    services: {
-      id: "services",
-      title: "Consulting Room",
-      type: "interior",
-      label: "Services",
-      exteriorEntry: "Right services window",
-      route: "#services"
-    },
-    assessments: {
-      id: "assessments",
-      title: "Assessment Room",
-      type: "interior",
-      label: "Assessments",
-      exteriorEntry: "Smaller side door",
-      route: "#assessments"
-    },
-    groups: {
-      id: "groups",
-      title: "Group Room",
-      type: "interior",
-      label: "Group Therapy",
-      exteriorEntry: "Upper group therapy window/sign",
-      route: "#groups"
-    },
-    library: {
-      id: "library",
-      title: "Library",
-      type: "interior",
-      label: "Library",
-      exteriorEntry: "Left blogs sign / tower window",
-      route: "#library"
-    },
-    philosophy: {
-      id: "philosophy",
-      title: "Attic Reading Room",
-      type: "interior",
-      label: "Our Philosophy",
-      exteriorEntry: "Up the library ladder",
-      route: "#philosophy"
-    },
-    contact: {
-      id: "contact",
-      title: "Reception",
-      type: "interior",
-      label: "Contact",
-      exteriorEntry: "Mailbox",
-      route: "#contact"
-    },
-    "work-with-us": {
-      id: "work-with-us",
-      title: "Work With Us",
-      type: "interior",
-      label: "Work With Us",
-      exteriorEntry: "Side door / staff noticeboard",
-      route: "#work-with-us"
-    }
-  }
+  rooms: Object.fromEntries(roomIds.map((id) => [id, navigationRoom(id)]))
 };
 
 const roomImageSize = { width: 1672, height: 940 };
@@ -106,7 +90,12 @@ const signDefaults = {
   scaleY: 1
 };
 
-function hotspot({
+/* A sign inside a room. Its words come from house-rooms.json by `room` and `id`. */
+function hotspot({ room, ...config }) {
+  return sceneSign({ ...config, ...signText(room, config.id) });
+}
+
+function sceneSign({
   id,
   label,
   action = "content",
@@ -138,8 +127,7 @@ function hotspot({
 export const exteriorHotspots = [
   {
     id: "main-door",
-    label: "Main Door",
-    ariaLabel: "Enter the Therapy House welcome room",
+    ...signText("exterior", "main-door"),
     targetRoom: "welcome",
     exteriorFeature: "front door",
     contentKey: "rooms.welcome",
@@ -147,8 +135,7 @@ export const exteriorHotspots = [
   },
   {
     id: "services-window",
-    label: "Services",
-    ariaLabel: "Open the Therapy House services consulting room",
+    ...signText("exterior", "services-window"),
     targetRoom: "services",
     exteriorFeature: "right services window",
     contentKey: "rooms.services",
@@ -156,8 +143,7 @@ export const exteriorHotspots = [
   },
   {
     id: "group-window",
-    label: "Group Therapy",
-    ariaLabel: "Open the Therapy House group therapy room",
+    ...signText("exterior", "group-window"),
     targetRoom: "groups",
     exteriorFeature: "upper group therapy window/sign",
     contentKey: "rooms.groups",
@@ -165,8 +151,7 @@ export const exteriorHotspots = [
   },
   {
     id: "blogs-sign",
-    label: "Library",
-    ariaLabel: "Open the Therapy House library and resources room",
+    ...signText("exterior", "blogs-sign"),
     targetRoom: "library",
     exteriorFeature: "left blogs sign / tower window",
     contentKey: "rooms.library",
@@ -174,8 +159,7 @@ export const exteriorHotspots = [
   },
   {
     id: "team-sign",
-    label: "Team",
-    ariaLabel: "Open the Therapy House team parlour",
+    ...signText("exterior", "team-sign"),
     targetRoom: "team",
     exteriorFeature: "team garden sign",
     contentKey: "rooms.team",
@@ -183,8 +167,7 @@ export const exteriorHotspots = [
   },
   {
     id: "mailbox",
-    label: "Contact",
-    ariaLabel: "Open Therapy House contact and reception details",
+    ...signText("exterior", "mailbox"),
     targetRoom: "contact",
     exteriorFeature: "mailbox",
     contentKey: "rooms.contact",
@@ -192,8 +175,7 @@ export const exteriorHotspots = [
   },
   {
     id: "staff-side-door",
-    label: "Work With Us",
-    ariaLabel: "Open the Therapy House work with us room",
+    ...signText("exterior", "staff-side-door"),
     targetRoom: "work-with-us",
     exteriorFeature: "side door / staff noticeboard",
     contentKey: "rooms.work-with-us",
@@ -225,43 +207,29 @@ export const roomSceneDefaults = {
       },
       background: {
         layers: [
-          {
-            src: asset("assets/media/inside-layer-1.webp"),
-            className: "inside-parallax__layer--background",
-            alt: "Layered illustration of the warm Therapy House clinic interior"
-          },
-          {
-            src: asset("assets/media/inside-layer-2.webp"),
-            className: "inside-parallax__layer--middle",
-            alt: "Middle layer of the Therapy House counselling room scene"
-          },
-          {
-            src: asset("assets/media/inside-layer-3.webp"),
-            className: "inside-parallax__layer--foreground",
-            alt: "Foreground layer of the welcoming Therapy House interior"
-          }
+          roomLayer("welcome", "assets/media/inside-layer-1.webp", "inside-parallax__layer--background"),
+          roomLayer("welcome", "assets/media/inside-layer-2.webp", "inside-parallax__layer--middle"),
+          roomLayer("welcome", "assets/media/inside-layer-3.webp", "inside-parallax__layer--foreground")
         ]
       },
       hotspots: [
         hotspot({
+          room: "welcome",
           id: "about",
-          label: "About Us",
           action: "about",
           targetRoom: "team",
           contentKey: "team",
           className: "scene-sign--table",
-          ariaLabel: "Meet the Therapy House team",
           x: 840,
           y: 265,
           scale: 0.78
         }),
         hotspot({
+          room: "welcome",
           id: "philosophy",
-          label: "Our Philosophy",
           action: "philosophy",
           contentKey: "philosophy",
           className: "scene-sign--wall",
-          ariaLabel: "Read the Therapy House philosophy",
           x: 335,
           y: 265,
           perspective: 230,
@@ -270,13 +238,12 @@ export const roomSceneDefaults = {
           scale: 0.84
         }),
         hotspot({
+          room: "welcome",
           id: "contact",
-          label: "Contact Us",
           action: "contact",
           targetRoom: "contact",
           contentKey: "contact",
           className: "scene-sign--notebook",
-          ariaLabel: "Contact Therapy House in The Gap",
           x: 1438,
           y: 584,
           perspective: 170,
@@ -289,12 +256,11 @@ export const roomSceneDefaults = {
           scaleY: 1.31
         }),
         hotspot({
+          room: "welcome",
           id: "back",
-          label: "Back",
           action: "back",
           contentKey: "rooms.exterior",
           className: "scene-sign--door",
-          ariaLabel: "Return to the Therapy House exterior",
           x: 1337,
           y: 265,
           perspective: 980,
@@ -312,18 +278,15 @@ export const roomSceneDefaults = {
       imageSize: roomImageSize,
       background: {
         layers: [
-          {
-            src: asset("assets/rooms/team-parlour.webp"),
-            alt: "Storybook team parlour inside Therapy House"
-          }
+          roomLayer("team", "assets/rooms/team-parlour.webp")
         ]
       },
       effects: { firelight: false, dogEyes: false },
       hotspots: [
-        hotspot({ id: "team-carousel", label: "Meet The Team", action: "about", contentKey: "team.members", x: 1090, y: 122 }),
-        hotspot({ id: "availability", label: "Availability", contentKey: "team.availability", x: 1120, y: 315 }),
-        hotspot({ id: "therapy-dogs", label: "Therapy Dogs", contentKey: "team.dogs", x: 420, y: 720 }),
-        hotspot({ id: "back", label: "Back", action: "back", x: 1450, y: 160 })
+        hotspot({ room: "team", id: "team-carousel", action: "about", contentKey: "team.members", x: 1090, y: 122 }),
+        hotspot({ room: "team", id: "availability", contentKey: "team.availability", x: 1120, y: 315 }),
+        hotspot({ room: "team", id: "therapy-dogs", contentKey: "team.dogs", x: 420, y: 720 }),
+        hotspot({ room: "team", id: "back", action: "back", x: 1450, y: 160 })
       ]
     },
 
@@ -332,21 +295,18 @@ export const roomSceneDefaults = {
       imageSize: roomImageSize,
       background: {
         layers: [
-          {
-            src: asset("assets/rooms/consulting-room.webp"),
-            alt: "Warm consulting room inside Therapy House"
-          }
+          roomLayer("services", "assets/rooms/consulting-room.webp")
         ]
       },
       effects: { firelight: false, dogEyes: false },
       hotspots: [
-        hotspot({ id: "service-list", label: "Services", contentKey: "services.offerings", x: 1040, y: 360 }),
-        hotspot({ id: "therapy-models", label: "Therapy Models", contentKey: "services.therapyModels", x: 1180, y: 230 }),
-        hotspot({ id: "fees", label: "Fees", contentKey: "services.fees", x: 1370, y: 610 }),
-        hotspot({ id: "rebates", label: "Rebates", contentKey: "services.rebates", x: 1330, y: 760 }),
-        hotspot({ id: "reports", label: "Reports", contentKey: "services.reports", x: 1490, y: 465 }),
-        hotspot({ id: "assessment-room", label: "Assessments", targetRoom: "assessments", contentKey: "rooms.assessments", x: 650, y: 735 }),
-        hotspot({ id: "back", label: "Back", action: "back", x: 170, y: 305 })
+        hotspot({ room: "services", id: "service-list", contentKey: "services.offerings", x: 1040, y: 360 }),
+        hotspot({ room: "services", id: "therapy-models", contentKey: "services.therapyModels", x: 1180, y: 230 }),
+        hotspot({ room: "services", id: "fees", contentKey: "services.fees", x: 1370, y: 610 }),
+        hotspot({ room: "services", id: "rebates", contentKey: "services.rebates", x: 1330, y: 760 }),
+        hotspot({ room: "services", id: "reports", contentKey: "services.reports", x: 1490, y: 465 }),
+        hotspot({ room: "services", id: "assessment-room", targetRoom: "assessments", contentKey: "rooms.assessments", x: 650, y: 735 }),
+        hotspot({ room: "services", id: "back", action: "back", x: 170, y: 305 })
       ]
     },
 
@@ -355,23 +315,20 @@ export const roomSceneDefaults = {
       imageSize: roomImageSize,
       background: {
         layers: [
-          {
-            src: asset("assets/rooms/assessment-room.webp"),
-            alt: "Child-friendly assessment room inside Therapy House"
-          }
+          roomLayer("assessments", "assets/rooms/assessment-room.webp")
         ]
       },
       effects: { firelight: false, dogEyes: false },
       hotspots: [
-        hotspot({ id: "assessment-process", label: "Process", contentKey: "assessments.process", x: 1220, y: 405 }),
-        hotspot({ id: "assessment-documents", label: "Documents", contentKey: "assessments.documents", x: 1120, y: 720 }),
-        hotspot({ id: "psychoeducational-assessment", label: "Psycho-educational", contentKey: "assessments.packages.psychoeducational", x: 560, y: 630 }),
-        hotspot({ id: "cognitive-assessment", label: "Cognitive", contentKey: "assessments.packages.cognitive", x: 705, y: 530 }),
-        hotspot({ id: "adhd-assessment", label: "ADHD", contentKey: "assessments.packages.adhd", x: 885, y: 570 }),
-        hotspot({ id: "autism-assessment", label: "Autism", contentKey: "assessments.packages.autism", x: 1310, y: 785 }),
-        hotspot({ id: "school-observations", label: "School Observations", contentKey: "assessments.schoolObservations", x: 1430, y: 710 }),
-        hotspot({ id: "assessment-faq", label: "FAQ", contentKey: "assessments.faq", x: 1490, y: 850 }),
-        hotspot({ id: "back", label: "Back", action: "back", x: 155, y: 155 })
+        hotspot({ room: "assessments", id: "assessment-process", contentKey: "assessments.process", x: 1220, y: 405 }),
+        hotspot({ room: "assessments", id: "assessment-documents", contentKey: "assessments.documents", x: 1120, y: 720 }),
+        hotspot({ room: "assessments", id: "psychoeducational-assessment", contentKey: "assessments.packages.psychoeducational", x: 560, y: 630 }),
+        hotspot({ room: "assessments", id: "cognitive-assessment", contentKey: "assessments.packages.cognitive", x: 705, y: 530 }),
+        hotspot({ room: "assessments", id: "adhd-assessment", contentKey: "assessments.packages.adhd", x: 885, y: 570 }),
+        hotspot({ room: "assessments", id: "autism-assessment", contentKey: "assessments.packages.autism", x: 1310, y: 785 }),
+        hotspot({ room: "assessments", id: "school-observations", contentKey: "assessments.schoolObservations", x: 1430, y: 710 }),
+        hotspot({ room: "assessments", id: "assessment-faq", contentKey: "assessments.faq", x: 1490, y: 850 }),
+        hotspot({ room: "assessments", id: "back", action: "back", x: 155, y: 155 })
       ]
     },
 
@@ -380,22 +337,19 @@ export const roomSceneDefaults = {
       imageSize: roomImageSize,
       background: {
         layers: [
-          {
-            src: asset("assets/rooms/group-room.webp"),
-            alt: "Group therapy room inside Therapy House"
-          }
+          roomLayer("groups", "assets/rooms/group-room.webp")
         ]
       },
       effects: { firelight: false, dogEyes: false },
       hotspots: [
-        hotspot({ id: "group-overview", label: "Group Therapy", contentKey: "groups.overview", x: 835, y: 390 }),
-        hotspot({ id: "emotion-regulation", label: "Emotion Regulation", contentKey: "groups.programs.emotionRegulation", x: 710, y: 835 }),
-        hotspot({ id: "hunter-remote", label: "Hunter's Remote", contentKey: "groups.programs.hunterRemote", x: 435, y: 835 }),
-        hotspot({ id: "social-relationships", label: "Social Relationships", contentKey: "groups.programs.socialRelationships", x: 1110, y: 850 }),
-        hotspot({ id: "lego-club", label: "Lego Club", contentKey: "groups.programs.legoClub", x: 835, y: 620 }),
-        hotspot({ id: "circle-security", label: "Circle Of Security", contentKey: "groups.circleOfSecurity", x: 1370, y: 830 }),
-        hotspot({ id: "workshops", label: "Workshops", contentKey: "groups.workshops", x: 585, y: 300 }),
-        hotspot({ id: "back", label: "Back", action: "back", x: 1450, y: 190 })
+        hotspot({ room: "groups", id: "group-overview", contentKey: "groups.overview", x: 835, y: 390 }),
+        hotspot({ room: "groups", id: "emotion-regulation", contentKey: "groups.programs.emotionRegulation", x: 710, y: 835 }),
+        hotspot({ room: "groups", id: "hunter-remote", contentKey: "groups.programs.hunterRemote", x: 435, y: 835 }),
+        hotspot({ room: "groups", id: "social-relationships", contentKey: "groups.programs.socialRelationships", x: 1110, y: 850 }),
+        hotspot({ room: "groups", id: "lego-club", contentKey: "groups.programs.legoClub", x: 835, y: 620 }),
+        hotspot({ room: "groups", id: "circle-security", contentKey: "groups.circleOfSecurity", x: 1370, y: 830 }),
+        hotspot({ room: "groups", id: "workshops", contentKey: "groups.workshops", x: 585, y: 300 }),
+        hotspot({ room: "groups", id: "back", action: "back", x: 1450, y: 190 })
       ]
     },
 
@@ -404,21 +358,18 @@ export const roomSceneDefaults = {
       imageSize: roomImageSize,
       background: {
         layers: [
-          {
-            src: asset("assets/rooms/library-room.webp"),
-            alt: "Cosy Therapy House library and resource room"
-          }
+          roomLayer("library", "assets/rooms/library-room.webp")
         ]
       },
       effects: { firelight: false, dogEyes: false },
       hotspots: [
-        hotspot({ id: "blogs", label: "Blogs", contentKey: "library.blogArticles", x: 790, y: 720 }),
-        hotspot({ id: "products", label: "Books", contentKey: "library.products", x: 1130, y: 560 }),
-        hotspot({ id: "videos", label: "Videos", contentKey: "library.videos", x: 835, y: 430 }),
-        hotspot({ id: "publications", label: "Publications", contentKey: "library.publications", x: 1240, y: 750 }),
-        hotspot({ id: "media", label: "Media", contentKey: "library.media", x: 1450, y: 410 }),
-        hotspot({ id: "attic", label: "Our Philosophy", targetRoom: "philosophy", contentKey: "rooms.philosophy", x: 500, y: 105 }),
-        hotspot({ id: "back", label: "Back", action: "back", x: 180, y: 180 })
+        hotspot({ room: "library", id: "blogs", contentKey: "library.blogArticles", x: 790, y: 720 }),
+        hotspot({ room: "library", id: "products", contentKey: "library.products", x: 1130, y: 560 }),
+        hotspot({ room: "library", id: "videos", contentKey: "library.videos", x: 835, y: 430 }),
+        hotspot({ room: "library", id: "publications", contentKey: "library.publications", x: 1240, y: 750 }),
+        hotspot({ room: "library", id: "media", contentKey: "library.media", x: 1450, y: 410 }),
+        hotspot({ room: "library", id: "attic", targetRoom: "philosophy", contentKey: "rooms.philosophy", x: 500, y: 105 }),
+        hotspot({ room: "library", id: "back", action: "back", x: 180, y: 180 })
       ]
     },
 
@@ -435,21 +386,18 @@ export const roomSceneDefaults = {
       imageSize: roomImageSize,
       background: {
         layers: [
-          {
-            src: asset("assets/rooms/library-attic-room.webp"),
-            alt: "The Therapy House attic reading room, with bookshelves, a round window and a table with an open book"
-          }
+          roomLayer("philosophy", "assets/rooms/library-attic-room.webp")
         ]
       },
       effects: { firelight: false, dogEyes: false },
       hotspots: [
-        hotspot({ id: "philosophy-overview", label: "Our Philosophy", contentKey: "philosophy", x: 650, y: 620 }),
-        hotspot({ id: "holistic-care", label: "Holistic Care", contentKey: "philosophy.principles.0", x: 245, y: 265 }),
-        hotspot({ id: "inclusive-environment", label: "Inclusive Environment", contentKey: "philosophy.principles.1", x: 1190, y: 300 }),
-        hotspot({ id: "sanctuary", label: "Sanctuary For Wellness", contentKey: "philosophy.principles.2", x: 838, y: 320 }),
-        hotspot({ id: "meaningful-connections", label: "Meaningful Connections", contentKey: "philosophy.principles.3", x: 1400, y: 440 }),
-        hotspot({ id: "authenticity", label: "Authenticity", contentKey: "philosophy.principles.4", x: 420, y: 755 }),
-        hotspot({ id: "back", label: "Back", action: "back", x: 455, y: 470 })
+        hotspot({ room: "philosophy", id: "philosophy-overview", contentKey: "philosophy", x: 650, y: 620 }),
+        hotspot({ room: "philosophy", id: "holistic-care", contentKey: "philosophy.principles.0", x: 245, y: 265 }),
+        hotspot({ room: "philosophy", id: "inclusive-environment", contentKey: "philosophy.principles.1", x: 1190, y: 300 }),
+        hotspot({ room: "philosophy", id: "sanctuary", contentKey: "philosophy.principles.2", x: 838, y: 320 }),
+        hotspot({ room: "philosophy", id: "meaningful-connections", contentKey: "philosophy.principles.3", x: 1400, y: 440 }),
+        hotspot({ room: "philosophy", id: "authenticity", contentKey: "philosophy.principles.4", x: 420, y: 755 }),
+        hotspot({ room: "philosophy", id: "back", action: "back", x: 455, y: 470 })
       ]
     },
 
@@ -458,20 +406,17 @@ export const roomSceneDefaults = {
       imageSize: roomImageSize,
       background: {
         layers: [
-          {
-            src: asset("assets/rooms/reception-room.webp"),
-            alt: "Therapy House reception room"
-          }
+          roomLayer("contact", "assets/rooms/reception-room.webp")
         ]
       },
       effects: { firelight: false, dogEyes: false },
       hotspots: [
-        hotspot({ id: "book-online", label: "Book Online", contentKey: "contact.bookingUrl", x: 1480, y: 335 }),
-        hotspot({ id: "phone", label: "Phone", contentKey: "contact.phone", x: 1410, y: 485 }),
-        hotspot({ id: "email", label: "Email", contentKey: "contact.email", x: 940, y: 280 }),
-        hotspot({ id: "address", label: "Address", contentKey: "contact.address", x: 880, y: 485 }),
-        hotspot({ id: "parking", label: "Parking", contentKey: "contact.intro", x: 290, y: 550 }),
-        hotspot({ id: "back", label: "Back", action: "back", x: 180, y: 180 })
+        hotspot({ room: "contact", id: "book-online", contentKey: "contact.bookingUrl", x: 1480, y: 335 }),
+        hotspot({ room: "contact", id: "phone", contentKey: "contact.phone", x: 1410, y: 485 }),
+        hotspot({ room: "contact", id: "email", contentKey: "contact.email", x: 940, y: 280 }),
+        hotspot({ room: "contact", id: "address", contentKey: "contact.address", x: 880, y: 485 }),
+        hotspot({ room: "contact", id: "parking", contentKey: "contact.intro", x: 290, y: 550 }),
+        hotspot({ room: "contact", id: "back", action: "back", x: 180, y: 180 })
       ]
     },
 
@@ -480,19 +425,16 @@ export const roomSceneDefaults = {
       imageSize: roomImageSize,
       background: {
         layers: [
-          {
-            src: asset("assets/rooms/work-with-us-room.webp"),
-            alt: "Therapy House staff room and work with us noticeboard"
-          }
+          roomLayer("work-with-us", "assets/rooms/work-with-us-room.webp")
         ]
       },
       effects: { firelight: false, dogEyes: false },
       hotspots: [
-        hotspot({ id: "opportunities", label: "Opportunities", contentKey: "workWithUs.opportunities", x: 840, y: 300 }),
-        hotspot({ id: "clinic-culture", label: "Clinic Culture", contentKey: "workWithUs.culture", x: 700, y: 560 }),
-        hotspot({ id: "values", label: "Values", contentKey: "workWithUs.values", x: 1170, y: 560 }),
-        hotspot({ id: "enquire", label: "Enquire", contentKey: "workWithUs.enquiry", x: 1330, y: 365 }),
-        hotspot({ id: "back", label: "Back", action: "back", x: 1430, y: 210 })
+        hotspot({ room: "work-with-us", id: "opportunities", contentKey: "workWithUs.opportunities", x: 840, y: 300 }),
+        hotspot({ room: "work-with-us", id: "clinic-culture", contentKey: "workWithUs.culture", x: 700, y: 560 }),
+        hotspot({ room: "work-with-us", id: "values", contentKey: "workWithUs.values", x: 1170, y: 560 }),
+        hotspot({ room: "work-with-us", id: "enquire", contentKey: "workWithUs.enquiry", x: 1330, y: 365 }),
+        hotspot({ room: "work-with-us", id: "back", action: "back", x: 1430, y: 210 })
       ]
     }
   }
@@ -526,10 +468,38 @@ export const houseFacts = readHouseFacts();
 const packagePrice = (title) => houseFacts.packagePrices?.[title];
 
 const feesPointer = {
-  title: "Fees and Medicare rebates in full",
-  description: "Every session fee, the Medicare rebate for each kind of psychologist, private health, NDIS and assessment costs, on one page.",
-  link: { href: asset("fees/"), label: "Open the fees page" }
+  title: houseCopy.services.feesPointer.title,
+  description: houseCopy.services.feesPointer.description,
+  link: { href: asset("fees/"), label: houseCopy.services.feesPointer.linkLabel }
 };
+
+/*
+ * A room's record of what its signs open. The label is the sign's own, from
+ * house-rooms.json; `sign` borrows the label of a sign with a different id.
+ */
+function roomLink(roomId, id, contentKey, { targetRoom, sign = id } = {}) {
+  const label = signText(roomId, sign).label;
+  return targetRoom ? { id, label, targetRoom, contentKey } : { id, label, contentKey };
+}
+
+function roomRecord(id, sourceUrls, hotspots) {
+  const { title, exteriorEntry, summary, intro } = roomText(id);
+  return intro
+    ? { id, title, exteriorEntry, sourceUrls, summary, intro, hotspots }
+    : { id, title, exteriorEntry, sourceUrls, summary, hotspots };
+}
+
+/* Each philosophy sign opens the principle with its own id, whatever order the principles are saved in. */
+const principleSigns = ["holistic-care", "inclusive-environment", "sanctuary", "meaningful-connections", "authenticity"];
+
+function principle(id) {
+  const found = houseCopy.philosophy.principles.find((candidate) => candidate.id === id);
+  if (!found) throw new Error(`house-copy.json has no philosophy principle with id "${id}"`);
+  return { title: found.title, description: found.description };
+}
+
+const { assessments, groups, team, library, workWithUs } = houseCopy;
+const packages = assessments.packages;
 
 export const siteContent = {
   source: {
@@ -548,676 +518,227 @@ export const siteContent = {
   navigation: roomNavigation,
 
   contact: {
-    phone: "07 3300 2170",
-    fax: "07 3319 4640",
-    email: "admin@therapyhouse.com.au",
-    address: "1290 Waterworks Rd, The Gap, Brisbane, QLD, 4061",
-    bookingUrl: "https://my.powerdiary.com/clientportal/3cjz0",
+    phone: clinic.phone,
+    fax: clinic.fax,
+    email: clinic.email,
+    address: clinic.address,
+    bookingUrl: clinic.bookingUrl,
     sourceUrl: asset("contact/"),
-    intro: [
-      "Our clinic is located in a Brisbane Western Suburb, on a main road, yet tucked away so you won't hear any road traffic.",
-      "Plenty of street parking, so you don't need to be concerned about finding a park.",
-      "Our clients are from anywhere in the greater Brisbane area."
-    ],
+    intro: clinic.intro,
     callsToAction: [
-      { label: "Book an appointment online", url: "https://my.powerdiary.com/clientportal/3cjz0" },
-      { label: "Call Therapy House", url: "tel:+61733002170" },
-      { label: "Email reception", url: "mailto:admin@therapyhouse.com.au" }
+      { label: "Book an appointment online", url: clinic.bookingUrl },
+      { label: "Call Therapy House", url: phoneHref(clinic.phone) },
+      { label: "Email reception", url: `mailto:${clinic.email}` }
     ]
   },
 
   rooms: {
     exterior: {
       id: "exterior",
-      title: "Exterior",
-      summary: "The rotating Therapy House exterior is the top-level navigation surface for the expanded site.",
+      title: roomText("exterior").title,
+      summary: roomText("exterior").summary,
       hotspots: exteriorHotspots
     },
 
-    welcome: {
-      id: "welcome",
-      title: "Welcome Room",
-      exteriorEntry: "Main door",
-      sourceUrls: [asset("")],
-      summary: "A warm entry point for the main Therapy House story, philosophy, team and contact paths.",
-      intro: [
-        "Therapy House is a place for all children, and anyone who has once been a child.",
-        "Therapy House is a boutique psychology clinic for people of all ages.",
-        "Located in a leafy suburb of Brisbane, the space is purposefully and elegantly designed to make people feel at home."
-      ],
-      hotspots: [
-        { id: "about-team", label: "About Us", targetRoom: "team", contentKey: "team" },
-        { id: "philosophy", label: "Our Philosophy", contentKey: "philosophy" },
-        { id: "contact", label: "Contact Us", targetRoom: "contact", contentKey: "contact" },
-        { id: "explore-house", label: "Explore The House", targetRoom: "exterior", contentKey: "roomGuide" }
-      ]
-    },
+    welcome: roomRecord("welcome", [asset("")], [
+      roomLink("welcome", "about-team", "team", { targetRoom: "team", sign: "about" }),
+      roomLink("welcome", "philosophy", "philosophy"),
+      roomLink("welcome", "contact", "contact", { targetRoom: "contact" }),
+      /* Not a sign in the room, so never shown; kept as the record of the way back out. */
+      { id: "explore-house", label: "Explore The House", targetRoom: "exterior", contentKey: "roomGuide" }
+    ]),
 
-    team: {
-      id: "team",
-      title: "Team Parlour",
-      exteriorEntry: "Team garden sign",
-      sourceUrls: [
-        asset("team/")
-      ],
-      summary: "Staff profiles, availability notes and team biographies in a carousel-friendly structure.",
-      hotspots: [
-        { id: "team-carousel", label: "Meet The Team", contentKey: "team.members" },
-        { id: "availability", label: "Availability", contentKey: "team.availability" },
-        { id: "therapy-dogs", label: "Therapy Dogs", contentKey: "team.dogs" }
-      ]
-    },
+    team: roomRecord("team", [asset("team/")], [
+      roomLink("team", "team-carousel", "team.members"),
+      roomLink("team", "availability", "team.availability"),
+      roomLink("team", "therapy-dogs", "team.dogs")
+    ]),
 
-    services: {
-      id: "services",
-      title: "Consulting Room",
-      exteriorEntry: "Right services window",
-      sourceUrls: [asset("therapy/")],
-      summary: "Core therapy services, therapy models, fees, rebates, assessment fees and practical appointment information.",
-      hotspots: [
-        { id: "service-list", label: "Services", contentKey: "services.offerings" },
-        { id: "therapy-models", label: "Therapy Models", contentKey: "services.therapyModels" },
-        { id: "fees", label: "Fees", contentKey: "services.fees" },
-        { id: "rebates", label: "Rebates", contentKey: "services.rebates" },
-        { id: "reports", label: "Reports", contentKey: "services.reports" },
-        { id: "assessment-room", label: "Assessments", targetRoom: "assessments", contentKey: "rooms.assessments" }
-      ]
-    },
+    services: roomRecord("services", [asset("therapy/")], [
+      roomLink("services", "service-list", "services.offerings"),
+      roomLink("services", "therapy-models", "services.therapyModels"),
+      roomLink("services", "fees", "services.fees"),
+      roomLink("services", "rebates", "services.rebates"),
+      roomLink("services", "reports", "services.reports"),
+      roomLink("services", "assessment-room", "rooms.assessments", { targetRoom: "assessments" })
+    ]),
 
-    assessments: {
-      id: "assessments",
-      title: "Assessment Room",
-      exteriorEntry: "Smaller side door",
-      sourceUrls: [
-        asset("assessments/"),
-        asset("library/what-is-adhd/"),
-        asset("library/is-your-child-learning-to-the-best-of-their-capacity/")
-      ],
-      summary: "Assessment process, required documentation, assessment packages and FAQ content.",
-      hotspots: [
-        { id: "assessment-process", label: "Process", contentKey: "assessments.process" },
-        { id: "assessment-documents", label: "Documents", contentKey: "assessments.documents" },
-        { id: "psychoeducational-assessment", label: "Psycho-educational", contentKey: "assessments.packages.psychoeducational" },
-        { id: "cognitive-assessment", label: "Cognitive", contentKey: "assessments.packages.cognitive" },
-        { id: "adhd-assessment", label: "ADHD", contentKey: "assessments.packages.adhd" },
-        { id: "autism-assessment", label: "Autism", contentKey: "assessments.packages.autism" },
-        { id: "school-observations", label: "School Observations", contentKey: "assessments.schoolObservations" },
-        { id: "assessment-faq", label: "FAQ", contentKey: "assessments.faq" }
-      ]
-    },
+    assessments: roomRecord("assessments", [
+      asset("assessments/"),
+      asset("library/what-is-adhd/"),
+      asset("library/is-your-child-learning-to-the-best-of-their-capacity/")
+    ], [
+      roomLink("assessments", "assessment-process", "assessments.process"),
+      roomLink("assessments", "assessment-documents", "assessments.documents"),
+      roomLink("assessments", "psychoeducational-assessment", "assessments.packages.psychoeducational"),
+      roomLink("assessments", "cognitive-assessment", "assessments.packages.cognitive"),
+      roomLink("assessments", "adhd-assessment", "assessments.packages.adhd"),
+      roomLink("assessments", "autism-assessment", "assessments.packages.autism"),
+      roomLink("assessments", "school-observations", "assessments.schoolObservations"),
+      roomLink("assessments", "assessment-faq", "assessments.faq")
+    ]),
 
-    groups: {
-      id: "groups",
-      title: "Group Room",
-      exteriorEntry: "Upper group therapy window/sign",
-      sourceUrls: [
-        asset("group-therapy/")
-      ],
-      summary: "Group therapy programs, Circle of Security Parenting and workshop/seminar expression-of-interest content.",
-      hotspots: [
-        { id: "group-overview", label: "Group Therapy", contentKey: "groups.overview" },
-        { id: "emotion-regulation", label: "Emotion Regulation", contentKey: "groups.programs.emotionRegulation" },
-        { id: "hunter-remote", label: "Hunter's Remote", contentKey: "groups.programs.hunterRemote" },
-        { id: "social-relationships", label: "Social Relationships", contentKey: "groups.programs.socialRelationships" },
-        { id: "lego-club", label: "Lego Club", contentKey: "groups.programs.legoClub" },
-        { id: "circle-security", label: "Circle Of Security", contentKey: "groups.circleOfSecurity" },
-        { id: "workshops", label: "Workshops", contentKey: "groups.workshops" }
-      ]
-    },
+    groups: roomRecord("groups", [asset("group-therapy/")], [
+      roomLink("groups", "group-overview", "groups.overview"),
+      roomLink("groups", "emotion-regulation", "groups.programs.emotionRegulation"),
+      roomLink("groups", "hunter-remote", "groups.programs.hunterRemote"),
+      roomLink("groups", "social-relationships", "groups.programs.socialRelationships"),
+      roomLink("groups", "lego-club", "groups.programs.legoClub"),
+      roomLink("groups", "circle-security", "groups.circleOfSecurity"),
+      roomLink("groups", "workshops", "groups.workshops")
+    ]),
 
-    library: {
-      id: "library",
-      title: "Library",
-      exteriorEntry: "Left blogs sign / tower window",
-      sourceUrls: [
-        asset("library/")
-      ],
-      summary: "Resource hub for blogs, products, videos, publications and media appearances.",
-      hotspots: [
-        { id: "blogs", label: "Blogs", contentKey: "library.blogArticles" },
-        { id: "products", label: "Books", contentKey: "library.products" },
-        { id: "videos", label: "Videos", contentKey: "library.videos" },
-        { id: "publications", label: "Publications", contentKey: "library.publications" },
-        { id: "media", label: "Media", contentKey: "library.media" },
-        { id: "attic", label: "Our Philosophy", contentKey: "rooms.philosophy" }
-      ]
-    },
+    library: roomRecord("library", [asset("library/")], [
+      roomLink("library", "blogs", "library.blogArticles"),
+      roomLink("library", "products", "library.products"),
+      roomLink("library", "videos", "library.videos"),
+      roomLink("library", "publications", "library.publications"),
+      roomLink("library", "media", "library.media"),
+      roomLink("library", "attic", "rooms.philosophy")
+    ]),
 
-    philosophy: {
-      id: "philosophy",
-      title: "Attic Reading Room",
-      exteriorEntry: "Up the library ladder",
-      sourceUrls: [asset("philosophy/")],
-      summary: "The attic over the library, where the five principles the clinic works to are hung on the objects in the room.",
-      hotspots: [
-        { id: "philosophy-overview", label: "Our Philosophy", contentKey: "philosophy" },
-        { id: "holistic-care", label: "Holistic Care", contentKey: "philosophy.principles.0" },
-        { id: "inclusive-environment", label: "Inclusive Environment", contentKey: "philosophy.principles.1" },
-        { id: "sanctuary", label: "Sanctuary For Wellness", contentKey: "philosophy.principles.2" },
-        { id: "meaningful-connections", label: "Meaningful Connections", contentKey: "philosophy.principles.3" },
-        { id: "authenticity", label: "Authenticity", contentKey: "philosophy.principles.4" }
-      ]
-    },
+    philosophy: roomRecord("philosophy", [asset("philosophy/")], [
+      roomLink("philosophy", "philosophy-overview", "philosophy"),
+      ...principleSigns.map((id, index) => roomLink("philosophy", id, `philosophy.principles.${index}`))
+    ]),
 
-    contact: {
-      id: "contact",
-      title: "Reception",
-      exteriorEntry: "Mailbox",
-      sourceUrls: [asset("contact/")],
-      summary: "Practical contact, booking, parking and location information.",
-      hotspots: [
-        { id: "book-online", label: "Book Online", contentKey: "contact.bookingUrl" },
-        { id: "phone", label: "Phone", contentKey: "contact.phone" },
-        { id: "email", label: "Email", contentKey: "contact.email" },
-        { id: "address", label: "Address", contentKey: "contact.address" },
-        { id: "parking", label: "Parking", contentKey: "contact.intro" }
-      ]
-    },
+    contact: roomRecord("contact", [asset("contact/")], [
+      roomLink("contact", "book-online", "contact.bookingUrl"),
+      roomLink("contact", "phone", "contact.phone"),
+      roomLink("contact", "email", "contact.email"),
+      roomLink("contact", "address", "contact.address"),
+      roomLink("contact", "parking", "contact.intro")
+    ]),
 
-    "work-with-us": {
-      id: "work-with-us",
-      title: "Work With Us",
-      exteriorEntry: "Side door / staff noticeboard",
-      sourceUrls: [asset("work-with-us/")],
-      summary: "Clinic culture, values and work-with-us enquiry content.",
-      hotspots: [
-        { id: "opportunities", label: "Opportunities", contentKey: "workWithUs.opportunities" },
-        { id: "clinic-culture", label: "Clinic Culture", contentKey: "workWithUs.culture" },
-        { id: "values", label: "Values", contentKey: "workWithUs.values" },
-        { id: "enquire", label: "Enquire", contentKey: "workWithUs.enquiry" }
-      ]
-    }
+    "work-with-us": roomRecord("work-with-us", [asset("work-with-us/")], [
+      roomLink("work-with-us", "opportunities", "workWithUs.opportunities"),
+      roomLink("work-with-us", "clinic-culture", "workWithUs.culture"),
+      roomLink("work-with-us", "values", "workWithUs.values"),
+      roomLink("work-with-us", "enquire", "workWithUs.enquiry")
+    ])
   },
 
   philosophy: {
-    title: "Our Philosophy",
-    intro: "Counselling and psychology should feel warm and inviting. Our clinic is a nurturing place where people can feel safe, understood and supported.",
-    principles: [
-      { title: "Holistic Care", description: "We focus on your whole story, not only a diagnosis." },
-      { title: "Inclusive Environment", description: "Our space is safe, neuro-affirming and welcoming for LGBTQIA+ people." },
-      { title: "Sanctuary for Wellness", description: "You can work towards wellbeing at your own pace." },
-      { title: "Meaningful Connections", description: "We build purposeful relationships so you feel heard and valued." },
-      { title: "Authenticity", description: "We bring genuine care to the counselling process." }
-    ],
-    closing: "Your wellbeing matters. We are here to support you."
+    title: houseCopy.philosophy.title,
+    intro: houseCopy.philosophy.intro,
+    principles: principleSigns.map(principle),
+    closing: houseCopy.philosophy.closing
   },
 
   services: {
     sourceUrl: asset("therapy/"),
-    intro: "We have established Therapy House with the aim of providing high quality evidence based services to our clients.",
-    offerings: [
-      "Assessment of ADHD, Autism, and developmental disorders",
-      "Cognitive assessment for giftedness or cognitive impairment",
-      "Assessment of memory and concentration",
-      "Assessment of learning disabilities such as Dyslexia and Dysgraphia",
-      "Therapy with children for anxiety, fears, depression, school avoidance, peer relationship problems and low self-esteem",
-      "Family therapy for families in distress",
-      "Couple therapy",
-      "Adult short-term psychodynamic therapy"
-    ],
-    therapyModels: [
-      "Cognitive behaviour therapy with children and adults (CBT)",
-      "Acceptance and commitment therapy (ACT)",
-      "Emotionally focused therapy for couples, families and individuals (EFT)",
-      "Eye Movement Desensitisation Reprocessing with people who have experienced trauma (EMDR)",
-      "Short term psychodynamic therapy for deeper problems that can be manifested as anxiety, depression, personality disorders and relationship problems"
-    ],
+    intro: houseCopy.services.intro,
+    offerings: houseCopy.services.offerings,
+    therapyModels: houseCopy.services.therapyModels,
     fees: [...(houseFacts.fees ?? []), feesPointer],
     rebates: [...(houseFacts.rebates ?? []), feesPointer],
-    reports: [
-      "Assessments, letters, reports and other services such as stakeholder meetings are charged in addition to session charges.",
-      "Letters and reports are charged at hourly rates and typical letters take 30 minutes to one hour to prepare."
-    ]
+    reports: houseCopy.services.reports
   },
 
+  /* A package title is also the key into the prices from assessments.md, so it must match the title there. */
   assessments: {
     sourceUrl: asset("assessments/"),
-    intro: [
-      "Assessment processes can vary across psychology clinics and clinicians.",
-      "Therapy House is located in The Gap, Brisbane Northside and has provisional practitioners and fully registered psychologists trained in assessment.",
-      "Only provisional psychologists with relevant training undertake assessment cases, and all reports are signed off by a fully registered psychologist."
-    ],
-    process: [
-      "Call the clinic and let the team know you are seeking assessment.",
-      "Send an email with a brief description of reasons for seeking assessment.",
-      "Reception discusses the request with the clinical team leader and advises who would be the best clinician.",
-      "Complete online background forms before intake so the clinician can review background information.",
-      "After intake, the clinician discusses assessment options and the most appropriate process.",
-      "Book assessment sessions through reception based on family and clinician availability and the person's capacity to focus.",
-      "The clinician may require up to four weeks from the last assessment session to analyse, interpret, receive collateral information and write the report.",
-      "Once payment has been received and the report is finalised, a feedback session can be booked."
-    ],
-    documents: [
-      "Referral, if applicable",
-      "School reports",
-      "NAPLAN results, if applicable",
-      "Any prior assessment reports",
-      "Relevant intervention documentation such as reading intervention, occupational therapy or speech assessment",
-      "Any letters with prior diagnoses"
-    ],
+    intro: assessments.intro,
+    process: assessments.process,
+    documents: assessments.documents,
     packages: {
       psychoeducational: {
-        title: "Comprehensive Psycho-educational Assessment",
-        price: packagePrice("Comprehensive Psycho-educational Assessment"),
-        inclusions: [
-          "Parent intake session",
-          "4-5 hours of child testing",
-          "Questionnaires",
-          "Assessment scoring and report writing",
-          "Feedback session"
-        ]
+        title: packages.psychoeducational.title,
+        price: packagePrice(packages.psychoeducational.title),
+        inclusions: packages.psychoeducational.inclusions
       },
       cognitive: {
-        title: "Cognitive Assessment",
-        price: packagePrice("Cognitive Assessment"),
-        description: "Aims to understand a child's cognitive strengths and weaknesses."
+        title: packages.cognitive.title,
+        price: packagePrice(packages.cognitive.title),
+        description: packages.cognitive.description
       },
       adhd: {
-        title: "ADHD Assessment",
-        price: packagePrice("ADHD Assessment"),
-        description: "Includes intake, diagnostic interview, questionnaires, scoring and a feedback session."
+        title: packages.adhd.title,
+        price: packagePrice(packages.adhd.title),
+        description: packages.adhd.description
       },
       autism: {
-        title: "Autism Assessment",
-        price: packagePrice("Autism Assessment"),
-        description: "Explores social communication differences, routine reliance and related presentation."
+        title: packages.autism.title,
+        price: packagePrice(packages.autism.title),
+        description: packages.autism.description
       }
     },
     schoolObservations: {
-      title: "School Observations",
-      price: packagePrice("School Observations"),
-      description: "Optional add-on where school context is clinically useful."
+      title: assessments.schoolObservations.title,
+      price: packagePrice(assessments.schoolObservations.title),
+      description: assessments.schoolObservations.description
     },
-    faq: [
-      "Assessments typically involve three to four sessions.",
-      "Reports may take up to four weeks after the last assessment session.",
-      "People pursue assessment for self-understanding, validation, funding, school or work adjustments.",
-      "Paediatricians or psychiatrists may need to be involved when medication or funding is sought."
-    ]
+    faq: assessments.faq
   },
 
   groups: {
     sourceUrl: asset("group-therapy/"),
-    overview: [
-      "Group therapy is an effective and affordable way to seek help.",
-      "In a group setting people can feel supported by others with similar problems and learn structured skills.",
-      "Groups are matched by age and consistent attendance is encouraged for social connection."
-    ],
-    programs: {
-      emotionRegulation: {
-        title: "Emotion Regulation and Social Skills Workshop",
-        audience: "Children aged 7-12 years",
-        description: "Helps children identify emotions, body signals, triggers and ways to regulate thoughts, emotions and behaviours."
-      },
-      hunterRemote: {
-        title: "Hunter and His Amazing Remote Control",
-        audience: "Children aged 6-10 years",
-        description: "Uses a brain remote control metaphor to teach attention, problem-solving and regulation skills across eight sessions."
-      },
-      socialRelationships: {
-        title: "Navigating Social Relationships",
-        audience: "Young people aged 12-15 years",
-        description: "Eight-week program based on the PEERS framework, focusing on friendships, conversation skills, rejection, humour, electronic communication and conflict management."
-      },
-      legoClub: {
-        title: "Lego Club",
-        audience: "Children aged 6-12 years",
-        description: "Eight-week program using Lego therapy to support social communication, turn-taking, sharing, listening, teamwork and problem-solving."
-      }
-    },
+    overview: groups.overview,
+    programs: groups.programs,
     circleOfSecurity: {
       sourceUrl: asset("group-therapy/"),
-      title: "Circle of Security Parenting Program",
-      description: "Based on attachment theory and designed to help parents recognise their child's needs and foster secure relationships.",
-      details: [
-        "Location: Therapy House Clinic, 1290 Waterworks Rd, The Gap",
-        "Audience: Parents of children aged 4 months to 12 years",
-        "Schedule: Eight 90-minute sessions",
-        "Group size: 3-6 participants",
-        "Cost: $125 per group session; $1,000 total"
-      ]
+      title: groups.circleOfSecurity.title,
+      description: groups.circleOfSecurity.description,
+      details: groups.circleOfSecurity.details
     },
     workshops: {
       sourceUrl: asset("group-therapy/"),
-      title: "Workshop or Seminar Expression of Interest",
-      topics: [
-        "Positive parenting",
-        "Psychological adjustment to parenting",
-        "Early development",
-        "Emotion regulation",
-        "Perinatal mental health"
-      ]
+      title: groups.workshops.title,
+      topics: groups.workshops.topics
     }
   },
 
+  /* A team member's `id` is their profile address under /team/. */
   team: {
     sourceUrl: asset("team/"),
-    availability: [
-      { name: "Dr Amelia Shay", status: "Not currently accepting new clients" },
-      { name: "Dr Kaya Beinke", status: "Not currently accepting new clients" },
-      { name: "Letitia McVey", status: "On leave" },
-      { name: "Sahar Fattahi", status: "Active waitlist for new clients" },
-      { name: "Rani Banks", status: "Accepting new clients" },
-      { name: "Jazmin Squire", status: "Active waitlist for new clients" },
-      { name: "Laura Storey", status: "Accepting new clients" },
-      { name: "Genevieve Hussey", status: "Not currently accepting new clients" }
-    ],
-    dogs: ["Reea", "Samson"],
-    members: [
-      {
-        name: "Dr Amelia Shay",
-        role: "Director, Developmental Psychologist",
-        sourceUrl: asset("team/amelia-shay/"),
-        credentials: "PhD, MPsy, BPsySc. Developmental Psychologist",
-        summary: "Amelia works with adults, parents and couples, and can deliver counselling and psychological interventions in English and Persian (Farsi)."
-      },
-      {
-        name: "Dr Kaya Beinke",
-        role: "Clinical Psychologist, Chief Clinical Officer",
-        sourceUrl: asset("team/kaya-beinke/"),
-        credentials: "BPsych (Hons), PhD Clin Psych",
-        summary: "Kaya has experience across clinical psychology, supervision, developmental delay, Autism, ADHD, chronic health and trauma-impacted family support."
-      },
-      {
-        name: "Letitia McVey",
-        role: "Psychologist, Educational and Developmental Registrar, Chief Operating Officer",
-        sourceUrl: asset("team/letitia-mcvey/"),
-        credentials: "BPsychSc (Hons), MPsy (Educational and Developmental Psychology)",
-        summary: "Letitia is a warm and collaborative practitioner who works with children, adolescents and adults, with a focus on resilience, strengths and hope."
-      },
-      {
-        name: "Sahar Fattahi",
-        role: "Psychologist",
-        sourceUrl: asset("team/sahar-fattahi/"),
-        credentials: "MSCP Psychologist",
-        summary: "Sahar works with clients across the lifespan and can deliver interventions in English, Persian (Farsi) and Filipino (Tagalog)."
-      },
-      {
-        name: "Rani Banks",
-        role: "Clinical Psychologist",
-        sourceUrl: asset("team/rani-banks/"),
-        credentials: "Clinical Psychologist",
-        summary: "Rani is listed as accepting new clients on the current team page."
-      },
-      {
-        name: "Jazmin Squire",
-        role: "Psychologist",
-        sourceUrl: asset("team/jazmin-squire/"),
-        credentials: "Psychologist",
-        summary: "Jazmin is a warm and engaging clinician with a flexible, non-judgemental approach and enjoys working with people of all ages."
-      },
-      {
-        name: "Laura Storey",
-        role: "Counsellor",
-        sourceUrl: asset("team/laura-storey/"),
-        credentials: "Counsellor",
-        summary: "Laura approaches therapeutic work in a person-centred, trauma-informed and neuro-affirming way."
-      },
-      {
-        name: "Genevieve Hussey",
-        role: "Provisional Psychologist",
-        sourceUrl: asset("team/genevieve-hussey/"),
-        credentials: "Provisional Psychologist",
-        summary: "Gen is a warm and dedicated clinician who is passionate about supporting young people and families."
-      },
-      {
-        name: "Natasha",
-        role: "Client Support and Marketing Coordinator",
-        sourceUrl: asset("team/natasha/"),
-        credentials: "Client Support and Marketing Coordinator",
-        summary: "Natasha supports clients and contributes to Therapy House marketing and communications."
-      },
-      {
-        name: "Josie",
-        role: "Administrative Support",
-        sourceUrl: asset("team/josie/"),
-        credentials: "Administrative Support",
-        summary: "Josie supports the administrative side of Therapy House."
-      },
-      {
-        name: "Reea",
-        role: "Therapy Dog",
-        sourceUrl: asset("team/reea/"),
-        credentials: "Therapy Dog",
-        summary: "Reea is part of the Therapy House team and is described as the clinic's therapy dog."
-      },
-      {
-        name: "Samson",
-        role: "Retired Therapy Dog",
-        sourceUrl: asset("team/samson/"),
-        credentials: "Retired Therapy Dog",
-        summary: "Samson is remembered by Therapy House as a loved presence who helped visitors feel safe."
-      }
-    ]
+    availability: team.availability.map(({ name, status }) => ({ name, status })),
+    dogs: team.dogs,
+    members: team.members.map(({ id, name, role, credentials, summary }) => ({
+      name,
+      role,
+      sourceUrl: asset(`team/${id}/`),
+      credentials,
+      summary
+    }))
   },
 
+  /* A blog article's `id` is its address under /library/. */
   library: {
-    products: [
-      {
-        title: "Little Koala - Helping children with their fears",
-        sourceUrl: asset("library/"),
-        description: "A children's story addressing fear and separation anxiety, suitable for bedtime reading or early-childhood settings."
-      },
-      {
-        title: "What Is Going On In My Head",
-        sourceUrl: asset("library/"),
-        description: "A 68-page book for therapists working with children, guiding CBT and ACT techniques across three phases of therapy."
-      }
-    ],
+    products: library.products.map(({ title, description }) => ({
+      title,
+      sourceUrl: asset("library/"),
+      description
+    })),
     videos: {
       sourceUrl: asset("library/"),
-      topics: [
-        "A note on happiness",
-        "The approaches we use and a welcome message from Dr Amelia",
-        "The Lockdown Challenge",
-        "Persian-language videos"
-      ]
+      topics: library.videos.topics
     },
     publications: {
       sourceUrl: asset("library/"),
-      description: "Scholarly works by Dr Amelia Shay, including book chapters, journal articles, conference presentations and Persian-language publications."
+      description: library.publications.description
     },
     media: {
       sourceUrl: asset("library/"),
-      items: [
-        "If you can only do one thing for your children, it should be shared reading",
-        "Diversity in the classroom means children develop differently",
-        "More children are starting school depressed and anxious - without help, it will only get worse",
-        "Radio interviews on reading to children and shared reading"
-      ]
+      items: library.media.items
     },
-    blogArticles: [
-      {
-        title: "Mindfulness and Journalling for Your Mental Wellbeing",
-        slug: "mindfulness-and-journalling",
-        date: "2026-10-07",
-        url: asset("library/mindfulness-and-journalling/"),
-        excerpt: "A Therapy House article about mindfulness and journalling as everyday practices for wellbeing."
-      },
-      {
-        title: "Play Therapy: Therapy Made for Children, With Children's Minds in Mind",
-        slug: "play-therapy-therapy-made-for-children-with-childrens-minds-in-mind",
-        date: "2026-07-30",
-        url: asset("library/play-therapy-therapy-made-for-children-with-childrens-minds-in-mind/"),
-        excerpt: "A Therapy House article about play therapy and how it works with the way children think."
-      },
-      {
-        title: "The Lasting Value of Long-Term Psychodynamic Therapy: Who It Helps and Why It Works",
-        slug: "long-term-psychodynamic-therapy",
-        date: "2025-10-14",
-        url: asset("library/long-term-psychodynamic-therapy/"),
-        excerpt: "In today's wellness culture, quick fixes are everywhere - apps for mindfulness, short-term coaching, or fast-acting therapies that aim to relieve symptoms quickly."
-      },
-      {
-        title: "Helping Kids Build Healthy Screen Time Habits: A Parent's Guide",
-        slug: "screen-time",
-        date: "2025-10-01",
-        url: asset("library/screen-time/"),
-        excerpt: "A parent guide to helping children build healthy screen time habits in a digital world."
-      },
-      {
-        title: "Practicing Self-Compassion to Manage Uncomfortable Emotions",
-        slug: "practicing-self-compassion",
-        date: "2025-08-05",
-        url: asset("library/practicing-self-compassion/"),
-        excerpt: "How responding with self-compassion rather than self-criticism can make it easier to handle overwhelming situations."
-      },
-      {
-        title: "How To Have A Loving Relationship With Your Body",
-        slug: "how-to-have-a-loving-relationship-with-your-body",
-        date: "2025-06-10",
-        url: asset("library/how-to-have-a-loving-relationship-with-your-body/"),
-        excerpt: "A Therapy House article about healing a relationship with food and body image."
-      },
-      {
-        title: "12 Practical Tips to Manage Depression from Behavioural Therapy Experts",
-        slug: "practical-tips-to-manage-depression",
-        date: "2025-05-27",
-        url: asset("library/practical-tips-to-manage-depression/"),
-        excerpt: "Practical behavioural strategies for managing depression."
-      },
-      {
-        title: "Holding Two Truths: The Power of Emotional Duality in Relationships",
-        slug: "emotional-duality-in-relationships",
-        date: "2025-05-22",
-        url: asset("library/emotional-duality-in-relationships/"),
-        excerpt: "A Therapy House article about holding two emotions or truths as valid at the same time in relationships."
-      },
-      {
-        title: "Nurturing Healthy Self-Esteem in Children",
-        slug: "nurturing-healthy-self-esteem",
-        date: "2025-04-01",
-        url: asset("library/nurturing-healthy-self-esteem/"),
-        excerpt: "How parents and caregivers can foster a strong sense of self-worth in children."
-      },
-      {
-        title: "Why We Procrastinate: Understanding the Psychology Behind It",
-        slug: "procrastination",
-        date: "2025-01-28",
-        url: asset("library/procrastination/"),
-        excerpt: "A Therapy House article exploring the psychology behind procrastination."
-      },
-      {
-        title: "Understanding and Supporting School Readiness",
-        slug: "school-readiness",
-        date: "2024-12-03",
-        url: asset("library/school-readiness/"),
-        excerpt: "A guide to supporting children and families through the transition to formal schooling."
-      },
-      {
-        title: "Conflict",
-        slug: "conflict",
-        date: "2024-11-11",
-        url: asset("library/conflict/"),
-        excerpt: "A Therapy House article about conflict in relationships and problem solving at home."
-      },
-      {
-        title: "Self Care",
-        slug: "self-care",
-        date: "2024-05-21",
-        url: asset("library/self-care/"),
-        excerpt: "How to establish a self-care routine that actually works."
-      },
-      {
-        title: "Sense of Self",
-        slug: "sense-of-self",
-        date: "2024-05-08",
-        url: asset("library/sense-of-self/"),
-        excerpt: "A Therapy House article about sense of self across adults and children."
-      },
-      {
-        title: "The Autonomic Nervous System and Mental Health: Strategies to Ease Anxiety, Depression and Trauma Response",
-        slug: "autonomic-nervous-system",
-        date: "2024-04-02",
-        url: asset("library/autonomic-nervous-system/"),
-        excerpt: "Strategies to ease anxiety, depression and trauma responses through understanding the nervous system."
-      },
-      {
-        title: "What is Depression?",
-        slug: "what-is-depression",
-        date: "2024-03-12",
-        url: asset("library/what-is-depression/"),
-        excerpt: "A Therapy House article explaining depression as a combination of symptoms beyond feeling low."
-      },
-      {
-        title: "How Involved Should Parents Be In Their Child's Therapy?",
-        slug: "parent-involvement-in-child-therapy",
-        date: "2024-02-13",
-        url: asset("library/parent-involvement-in-child-therapy/"),
-        excerpt: "Guidance for parents about involvement in a child's therapy."
-      },
-      {
-        title: "What Is Therapy?",
-        slug: "what-actually-is-therapy",
-        date: "2024-01-22",
-        url: asset("library/what-actually-is-therapy/"),
-        excerpt: "A first-time guide for people considering therapy for themselves or their child."
-      },
-      {
-        title: "Are You Learning At Your Full Potential?",
-        slug: "is-your-child-learning-to-the-best-of-their-capacity",
-        date: "2023-08-30",
-        url: asset("library/is-your-child-learning-to-the-best-of-their-capacity/"),
-        excerpt: "A Therapy House assessment article about strengths, weaknesses and learning capacity."
-      },
-      {
-        title: "Do You Really Know What Anxiety Is?",
-        slug: "do-you-really-know-what-anxiety-is",
-        date: "2023-06-28",
-        url: asset("library/do-you-really-know-what-anxiety-is/"),
-        excerpt: "A Therapy House article about the function of anxiety and how it protects us."
-      },
-      {
-        title: "New Cancellation Policy",
-        slug: "new-cancellation-policy",
-        date: "2023-05-05",
-        url: asset("library/new-cancellation-policy/"),
-        excerpt: "A Therapy House update about cancellation policy and appointment commitment."
-      },
-      {
-        title: "Therapy is a Commitment",
-        slug: "therapy-house-update",
-        date: "2023-05-05",
-        url: asset("library/therapy-house-update/"),
-        excerpt: "A Therapy House update about therapy as a commitment to yourself."
-      },
-      {
-        title: "What is ADHD?",
-        slug: "what-is-adhd",
-        date: "2023-05-05",
-        url: asset("library/what-is-adhd/"),
-        excerpt: "An introduction to ADHD as a neurodevelopmental disorder affecting attention, impulses and activity."
-      },
-      {
-        title: "Different Parenting Approaches and How Successful They Are",
-        slug: "parenting-styles-parenting-tips",
-        date: "2023-03-20",
-        url: asset("library/parenting-styles-parenting-tips/"),
-        excerpt: "A Therapy House article about parenting approaches and child social-emotional development."
-      },
-      {
-        title: "Emotion Regulation Skills, Tips and Strategy",
-        slug: "emotion-regulation-skills-strategy",
-        date: "2023-01-10",
-        url: asset("library/emotion-regulation-skills-strategy/"),
-        excerpt: "A Therapy House article explaining emotion regulation and useful skills."
-      }
-    ]
+    blogArticles: library.blogArticles.map(({ id, title, date, excerpt }) => ({
+      title,
+      slug: id,
+      date,
+      url: asset(`library/${id}/`),
+      excerpt
+    }))
   },
 
   workWithUs: {
     sourceUrl: asset("work-with-us/"),
-    values: ["care", "compassion", "respect"],
-    culture: [
-      "Therapy House describes a pleasant work environment with sound-proof rooms, ergonomic furniture and a focus on long-term commitment.",
-      "Prospective psychologists at various career stages are encouraged to enquire."
-    ],
-    opportunities: [
-      "Psychologists and clinicians interested in joining Therapy House can use the work-with-us pathway."
-    ],
+    values: workWithUs.values,
+    culture: workWithUs.culture,
+    opportunities: workWithUs.opportunities,
     enquiry: {
-      email: "admin@therapyhouse.com.au",
+      email: clinic.email,
       sourceUrl: asset("work-with-us/")
     }
   }
 };
+
