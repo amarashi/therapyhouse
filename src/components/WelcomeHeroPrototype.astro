@@ -77,8 +77,16 @@
            "Welcome to Therapy House" -> a greeting group and a name group,
            every word its own line box so it can rise out of a mask. The text
            itself is untouched, so the accessible name is unchanged. */
+        /* Only the welcome itself is split. The line under it (`.hero__sub`,
+           "Psychologists for children…") is set apart, not folded into the
+           large welcome, and is put back after it untouched. */
+        var sub = h1.querySelector('.hero__sub');
+        if (sub) sub.remove();
         var words = (h1.textContent || '').trim().split(/\s+/);
-        if (words.length < 3) return;
+        if (words.length < 3) {
+          if (sub) h1.appendChild(sub);
+          return;
+        }
         var split = 2; // "Welcome to" | "Therapy House"
 
         function group(cls, list, from) {
@@ -105,6 +113,10 @@
         wrap.appendChild(group('ph--name', words.slice(split), split));
         h1.textContent = '';
         h1.appendChild(wrap);
+        if (sub) {
+          h1.appendChild(document.createTextNode(' '));
+          h1.appendChild(sub);
+        }
 
         /* ---- B: the lit duplicate ----------------------------------------
            The same letterforms in warmed ink, laid exactly over the green and
