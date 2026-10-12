@@ -64,6 +64,12 @@ const DECORATIVE = {
   // The telephone over "Talk to us" and the garden strip on the footer rule:
   // atmosphere only, next to a heading and links that say everything.
   "src/layouts/PlainLayout.astro": 2,
+  // The object beside each service link (a teddy, two teacups): the link
+  // beside it already names the page.
+  "src/components/ServiceList.astro": 1,
+  // The section objects on /therapy/ and /assessments/: each stands beside a
+  // heading and words that say everything.
+  "src/components/Vignette.astro": 1,
 };
 
 async function* astroFiles(dir) {

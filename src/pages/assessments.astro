@@ -4,6 +4,7 @@ import { getCollection, getEntry, render } from 'astro:content';
 import PlainLayout from '../layouts/PlainLayout.astro';
 import HeroReveal from '../components/HeroReveal.astro';
 import ServiceList from '../components/ServiceList.astro';
+import Vignette from '../components/Vignette.astro';
 import { includeInBuild, isProductionSite, serviceLinks } from '../lib/services.js';
 
 /* The assessment pages under /assessments/<page>/, listed here because this
@@ -71,8 +72,13 @@ const groups = [
   />
 
   <div class="wrap page">
-    <div class="prose--flush prose stack">
-      <Content />
+    {/* The words, and beside them the desk a report is written at — the
+        fountain pen and the seal stand for the sign-off the copy promises. */}
+    <div class="intro">
+      <div class="prose--flush prose stack">
+        <Content />
+      </div>
+      <Vignette class="intro__art" name="assess-intro" sizes="(min-width: 58rem) 300px, 220px" />
     </div>
 
     {assessmentLinks.length > 0 && (
@@ -101,9 +107,13 @@ const groups = [
         <ol class="step-list steps" style={`--last:${Math.max(0, (process?.length ?? 0) - 1)}`}>
           {process?.map((step, i) => <li style={`--i:${i}`}>{step}</li>)}
         </ol>
+        {/* Where the thread ends, the path carries on out of the list. */}
+        <Vignette class="steps__art" name="process" sizes="200px" />
       </section>
 
       <aside class="bring" aria-labelledby="documents">
+        {/* Stood on the box's top edge, as if just put down on the table. */}
+        <Vignette class="bring__art" name="bring" sizes="140px" />
         <h2 id="documents">What to bring</h2>
         <p>Anything you already have that describes how things have been going:</p>
         <ul class="tick-list bring__list">
@@ -189,10 +199,13 @@ const groups = [
     </section>
 
     <section class="notes" aria-labelledby="good-to-know">
-      <h2 id="good-to-know">Good to know</h2>
-      <ul class="tick-list notes__list">
-        {goodToKnow?.map((item) => <li>{item}</li>)}
-      </ul>
+      <Vignette class="notes__art" name="good-to-know" sizes="(min-width: 64rem) 160px, 110px" />
+      <div>
+        <h2 id="good-to-know">Good to know</h2>
+        <ul class="tick-list notes__list">
+          {goodToKnow?.map((item) => <li>{item}</li>)}
+        </ul>
+      </div>
     </section>
   </div>
 </PlainLayout>
@@ -213,7 +226,43 @@ const groups = [
     margin-top: 0;
   }
 
+  /* ---- The intro and its picture ----
+     The same arrangement as the home page's intro: the art to the right of the
+     reading column on wide screens, under it on a phone. */
+  .intro {
+    display: grid;
+    gap: var(--space-xl);
+    align-items: center;
+  }
+
+  .intro :global(.intro__art) {
+    display: block;
+    width: min(220px, 60%);
+    height: auto;
+    justify-self: center;
+  }
+
+  @media (min-width: 58rem) {
+    .intro {
+      grid-template-columns: minmax(0, var(--content-max)) minmax(0, 300px);
+      column-gap: clamp(var(--space-2xl), 5vw, 88px);
+    }
+
+    .intro :global(.intro__art) {
+      width: 100%;
+    }
+  }
+
   /* ---- What your part looks like ---- */
+
+  /* The path picks up under the last disc, a little in from the left so it
+     reads as the thread's continuation rather than a picture below a list. */
+  .your-part :global(.steps__art) {
+    display: block;
+    width: min(200px, 55%);
+    height: auto;
+    margin: var(--space-md) 0 0 var(--space-xl);
+  }
 
   .your-part {
     display: grid;
@@ -233,10 +282,29 @@ const groups = [
      it — and what keeps it findable when a parent comes back for it a week
      later. */
   .bring {
+    position: relative;
     background: var(--surface-sunk);
     border: 1px solid var(--line-soft);
     border-radius: var(--radius-lg);
     padding: var(--space-xl);
+    /* Room at the top for the satchel standing on the edge. */
+    margin-top: var(--space-2xl);
+  }
+
+  .bring :global(.bring__art) {
+    position: absolute;
+    top: 0;
+    right: var(--space-xl);
+    width: 7.5rem;
+    height: auto;
+    transform: translateY(-62%);
+    filter: drop-shadow(0 8px 10px rgba(48, 25, 8, 0.16));
+    pointer-events: none;
+  }
+
+  /* The heading stays clear of the satchel's foot. */
+  .bring h2 {
+    padding-right: 7rem;
   }
 
   /* ---- The one moment on this page ----
@@ -424,6 +492,31 @@ const groups = [
   }
 
   /* ---- What else is worth knowing ---- */
+
+  /* The hourglass stands to the left of the four facts — most of them are
+     about how long things take. On a phone it sits above the heading. */
+  .notes {
+    display: grid;
+    gap: var(--space-lg);
+    align-items: start;
+  }
+
+  .notes :global(.notes__art) {
+    display: block;
+    width: 110px;
+    height: auto;
+  }
+
+  @media (min-width: 44rem) {
+    .notes {
+      grid-template-columns: 9rem minmax(0, 1fr);
+      column-gap: var(--space-2xl);
+    }
+
+    .notes :global(.notes__art) {
+      width: 100%;
+    }
+  }
 
   /* Four facts that do not depend on each other, so they read across rather
      than down — a fourth full-length bulleted list in the same column was what

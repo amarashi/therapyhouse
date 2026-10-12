@@ -18,6 +18,7 @@ import { getCollection, getEntry, render } from 'astro:content';
 import PlainLayout from '../../layouts/PlainLayout.astro';
 import HeroReveal from '../../components/HeroReveal.astro';
 import ServiceList from '../../components/ServiceList.astro';
+import Vignette from '../../components/Vignette.astro';
 import { hubGroups, hubLinks, includeInBuild, isProductionSite } from '../../lib/services.js';
 
 const production = isProductionSite(Astro.site);
@@ -51,8 +52,13 @@ const { title, documentTitle, description, lede, offerings, therapyModels } = pa
   />
 
   <div class="wrap page">
-    <div class="prose--flush prose stack">
-      <Content />
+    {/* The words, and beside them the room they describe: two armchairs and a
+        lamp, so the page never has to say the place is warm. */}
+    <div class="intro">
+      <div class="prose--flush prose stack">
+        <Content />
+      </div>
+      <Vignette class="intro__art" name="therapy-intro" sizes="(min-width: 58rem) 300px, 220px" />
     </div>
 
     {audienceHubs.length > 0 && (
@@ -65,12 +71,19 @@ const { title, documentTitle, description, lede, offerings, therapyModels } = pa
     {groups.length > 0 && (
       <section class="hub" aria-labelledby="therapy-pages">
         <h2 id="therapy-pages">Find the right kind of help</h2>
-        {groups.map((group) => (
-          <section class="hub__group" aria-labelledby={`hub-${group.key}`}>
-            <h3 id={`hub-${group.key}`}>{group.label}</h3>
-            <ServiceList links={group.links} />
-          </section>
-        ))}
+        {/* A group of one page takes half a row, so two of them share one
+            instead of each leaving an empty half beside it. */}
+        <div class="hub__groups">
+          {groups.map((group) => (
+            <section
+              class:list={['hub__group', group.links.length === 1 && 'hub__group--single']}
+              aria-labelledby={`hub-${group.key}`}
+            >
+              <h3 id={`hub-${group.key}`}>{group.label}</h3>
+              <ServiceList links={group.links} />
+            </section>
+          ))}
+        </div>
       </section>
     )}
 
@@ -100,27 +113,37 @@ const { title, documentTitle, description, lede, offerings, therapyModels } = pa
       </section>
     </div>
 
-    <section class="fees-pointer" aria-labelledby="fees">
-      <h2 id="fees">Fees and Medicare</h2>
-      <p>
-        Session fees, Medicare rebates with a GP referral, private health, NDIS and
-        cancellations are all on one page.
-      </p>
-      <p>
-        <a class="standalone-link" href={withBase('/fees/')}>Fees and Medicare rebates</a>
-      </p>
-    </section>
+    {/* Two short answers that send you somewhere else, side by side as a pair
+        of signposts, each with the object it points to. */}
+    <div class="pointers">
+      <section class="pointer" aria-labelledby="fees">
+        <Vignette class="pointer__art" name="fees" sizes="120px" />
+        <div>
+          <h2 id="fees">Fees and Medicare</h2>
+          <p>
+            Session fees, Medicare rebates with a GP referral, private health, NDIS and
+            cancellations are all on one page.
+          </p>
+          <p>
+            <a class="standalone-link" href={withBase('/fees/')}>Fees and Medicare rebates</a>
+          </p>
+        </div>
+      </section>
 
-    <section class="fees-pointer" aria-labelledby="video">
-      <h2 id="video">Sessions by video</h2>
-      <p>
-        If you live outside Brisbane, or the trip to The Gap is hard, you can see a
-        psychologist by video from anywhere in Australia.
-      </p>
-      <p>
-        <a class="standalone-link" href={withBase('/telehealth/')}>How video sessions work</a>
-      </p>
-    </section>
+      <section class="pointer" aria-labelledby="video">
+        <Vignette class="pointer__art" name="video" sizes="120px" />
+        <div>
+          <h2 id="video">Sessions by video</h2>
+          <p>
+            If you live outside Brisbane, or the trip to The Gap is hard, you can see a
+            psychologist by video from anywhere in Australia.
+          </p>
+          <p>
+            <a class="standalone-link" href={withBase('/telehealth/')}>How video sessions work</a>
+          </p>
+        </div>
+      </section>
+    </div>
   </div>
 </PlainLayout>
 
@@ -141,12 +164,34 @@ const { title, documentTitle, description, lede, offerings, therapyModels } = pa
   /* ---- The hub ----
      Each heading sits a section-sized step below the last, but a heading and
      its own list stay together: the list is the answer to the heading. */
-  .hub__group + .hub__group {
-    margin-top: var(--space-2xl);
+  .hub__groups {
+    display: grid;
+    /* An explicit track: an implicit `auto` one sizes to the tile list's
+       content, which lays two tiles side by side and pushes a phone sideways. */
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--space-2xl);
+    max-width: 68rem;
   }
 
   .hub__group h3 {
-    margin-top: var(--space-xl);
+    margin-top: 0;
+  }
+
+  /* The same two columns the tiles use, so a single tile in a half-row lines
+     up with the tiles in the full rows above it. */
+  @media (min-width: 55rem) {
+    .hub__groups {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: var(--space-lg);
+    }
+
+    .hub__group {
+      grid-column: 1 / -1;
+    }
+
+    .hub__group--single {
+      grid-column: auto;
+    }
   }
 
   /* ---- The two-column band ----
@@ -191,12 +236,101 @@ const { title, documentTitle, description, lede, offerings, therapyModels } = pa
     margin-bottom: 0;
   }
 
-  /* ---- Fees pointer ---- */
-  .fees-pointer {
-    max-width: var(--content-max);
+  /* ---- The intro and its picture ----
+     The same arrangement as the home page's intro: the art to the right of the
+     reading column on wide screens, under it on a phone. */
+  .intro {
+    display: grid;
+    gap: var(--space-xl);
+    align-items: center;
   }
 
-  .fees-pointer p:last-child {
+  .intro :global(.intro__art) {
+    display: block;
+    width: min(220px, 60%);
+    height: auto;
+    justify-self: center;
+  }
+
+  @media (min-width: 58rem) {
+    .intro {
+      grid-template-columns: minmax(0, var(--content-max)) minmax(0, 300px);
+      column-gap: clamp(var(--space-2xl), 5vw, 88px);
+    }
+
+    .intro :global(.intro__art) {
+      width: 100%;
+    }
+  }
+
+  /* ---- The group headings ----
+     A rule running on from each audience's name, so four groups of tiles read
+     as four shelves rather than one long run of them. */
+  .hub__group h3 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    max-width: 68rem;
+  }
+
+  .hub__group h3::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  /* ---- The two signposts ---- */
+  .pointers {
+    display: grid;
+    gap: var(--space-xl);
+    max-width: 68rem;
+  }
+
+  @media (min-width: 52rem) {
+    .pointers {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .pointer {
+    display: grid;
+    grid-template-columns: 6.5rem minmax(0, 1fr);
+    gap: var(--space-xl);
+    align-items: start;
+    padding: var(--space-xl);
+    background: var(--surface-sunk);
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--edge-lit);
+  }
+
+  .pointer :global(.pointer__art) {
+    display: block;
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 8px 10px rgba(48, 25, 8, 0.14));
+  }
+
+  /* Supporting answers, so a step below the page's main headings. */
+  .pointer h2 {
+    font-size: var(--text-subhead);
+    line-height: var(--lh-subhead);
+    margin-bottom: var(--space-sm);
+  }
+
+  .pointer p:last-child {
     margin-bottom: 0;
+  }
+
+  @media (max-width: 30rem) {
+    .pointer {
+      grid-template-columns: 1fr;
+      padding: var(--space-lg);
+    }
+
+    .pointer :global(.pointer__art) {
+      width: 5.5rem;
+    }
   }
 </style>

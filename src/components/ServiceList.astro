@@ -1,30 +1,60 @@
 ---
 import { withBase } from '../lib/base.js';
+import art from '../data/service-art.json';
 
 /**
- * A plain list of service pages: the page's own heading as the link, and the
- * one sentence that says who it is for. Used by the /therapy/ and
- * /assessments/ hubs, which is where search engines and visitors find the
- * service pages — the lift carries six floors and no drop-downs, so these
+ * The service pages, as a shelf of objects: each page's own heading as the
+ * link, the one sentence that says who it is for, and a small illustrated
+ * object from the house beside them. Used by the /therapy/ and /assessments/
+ * hubs and the audience hubs, which is where search engines and visitors find
+ * the service pages — the lift carries six floors and no drop-downs, so these
  * lists are the only route in from the rest of the site besides the footer.
+ *
+ * Each object is different on purpose — a teddy on its storybooks, two
+ * teacups, a toy train on its track — so the shelf reads as things in a room
+ * and never as a row of identical icon cards (DESIGN.md). The pictures are
+ * listed in `src/data/service-art.json`, written by the export step in
+ * `art-src/README.md`; a page without one simply gets no picture.
  *
  * Server-rendered links and nothing else: no JavaScript, nothing hidden
  * behind a toggle, so every service page is one ordinary link from its hub.
+ * The whole tile is the link's target (a stretched pseudo-element), but the
+ * accessible link is only the heading text, so a screen reader hears the page
+ * name and not the description read twice.
  */
 interface Props {
   links: { id: string; label: string; description: string; href: string }[];
 }
 
 const { links } = Astro.props;
+const pictures = art as Record<string, { width: number; height: number }>;
 ---
 
 <ul class="service-list">
-  {links.map((link) => (
-    <li>
-      <a href={withBase(link.href)}>{link.label}</a>
-      <p>{link.description}</p>
-    </li>
-  ))}
+  {links.map((link) => {
+    const pic = pictures[link.id];
+    return (
+      <li class:list={['service', pic && 'service--art']}>
+        {pic && (
+          <img
+            class="service__art"
+            src={withBase(`/assets/services/${link.id}-320.webp`)}
+            srcset={`${withBase(`/assets/services/${link.id}-320.webp`)} 320w, ${withBase(`/assets/services/${link.id}-640.webp`)} 640w`}
+            sizes="120px"
+            alt=""
+            width={pic.width}
+            height={pic.height}
+            loading="lazy"
+            decoding="async"
+          />
+        )}
+        <div class="service__text">
+          <a class="service__link" href={withBase(link.href)}>{link.label}</a>
+          <p>{link.description}</p>
+        </div>
+      </li>
+    );
+  })}
 </ul>
 
 <style>
@@ -33,16 +63,121 @@ const { links } = Astro.props;
     margin: 0;
     padding: 0;
     display: grid;
+    /* Two across from a laptop up, one on a phone. Three would cut the
+       descriptions to a dozen words a line; these are read, not scanned. */
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 26rem), 1fr));
     gap: var(--space-lg);
-    max-width: var(--content-max);
+    max-width: 68rem;
   }
 
-  .service-list a {
-    font-size: var(--text-subhead);
-    line-height: var(--lh-subhead);
+  .service {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: center;
+    gap: var(--space-lg);
+    padding: var(--space-lg) var(--space-xl);
+    background: var(--surface-sunk);
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius-md);
+    box-shadow: var(--edge-lit);
+    transition:
+      background-color 200ms ease,
+      border-color 200ms ease,
+      box-shadow 260ms cubic-bezier(0.2, 0.72, 0.2, 1);
   }
 
-  .service-list p {
+  .service--art {
+    grid-template-columns: 6.5rem minmax(0, 1fr);
+    padding-left: var(--space-md);
+  }
+
+  /* The object sits on the tile's shelf like something put down on it. */
+  .service__art {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 7rem;
+    object-fit: contain;
+    filter: drop-shadow(0 8px 10px rgba(48, 25, 8, 0.14));
+    transition: transform 320ms cubic-bezier(0.2, 0.72, 0.2, 1);
+  }
+
+  .service__link {
+    font-family: var(--font-display);
+    font-size: var(--text-cardtitle);
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--hedge-green);
+    /* The tile is the affordance; an underline on a bold serif title made
+       every tile shout. It comes back on hover, with the lift. */
+    text-decoration: none;
+    text-underline-offset: 0.18em;
+    text-decoration-thickness: 1px;
+  }
+
+  .service:hover .service__link {
+    text-decoration: underline;
+  }
+
+  /* The whole tile answers a click, not only the words. */
+  .service__link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+
+  .service__text p {
     margin: var(--space-xs) 0 0;
+    font-size: var(--text-secondary);
+    line-height: var(--lh-compact);
+    color: var(--ink-soft);
+  }
+
+  .service:hover {
+    background: var(--surface-raised);
+    border-color: var(--line);
+    box-shadow:
+      var(--edge-lit),
+      0 14px 30px rgba(48, 25, 8, 0.1);
+  }
+
+  /* Picked up off the shelf. */
+  .service:hover .service__art {
+    transform: translateY(-4px) rotate(-2deg);
+  }
+
+  .service:has(.service__link:focus-visible) {
+    background: var(--surface-raised);
+    border-color: var(--line);
+  }
+
+  .service__link:focus-visible {
+    outline: none;
+  }
+
+  .service__link:focus-visible::after {
+    outline: 3px solid var(--focus-blue);
+    outline-offset: 3px;
+  }
+
+  @media (max-width: 30rem) {
+    .service--art {
+      grid-template-columns: 4.75rem minmax(0, 1fr);
+      gap: var(--space-md);
+      padding: var(--space-md);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .service,
+    .service__art {
+      transition: none;
+    }
+
+    .service:hover .service__art {
+      transform: none;
+    }
   }
 </style>

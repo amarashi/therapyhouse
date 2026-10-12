@@ -1,0 +1,34 @@
+---
+import { withBase } from '../lib/base.js';
+import art from '../data/service-art.json';
+
+/**
+ * One of the small illustrated objects in `public/assets/services/`, for a
+ * section of the /therapy/ or /assessments/ page. Always decorative: each one
+ * stands beside words that already say everything, so its alt text is empty.
+ * Lazy, because none of them is ever in the opening view.
+ */
+interface Props {
+  name: string;
+  class?: string;
+  /** The `sizes` attribute: how wide the picture is drawn. */
+  sizes: string;
+}
+
+const { name, class: className, sizes } = Astro.props;
+const pic = (art as Record<string, { width: number; height: number }>)[name];
+if (!pic) throw new Error(`No vignette called "${name}" in src/data/service-art.json`);
+const src = (w: number) => withBase(`/assets/services/${name}-${w}.webp`);
+---
+
+<img
+  class={className}
+  src={src(320)}
+  srcset={`${src(320)} 320w, ${src(640)} 640w`}
+  sizes={sizes}
+  alt=""
+  width={pic.width}
+  height={pic.height}
+  loading="lazy"
+  decoding="async"
+/>
