@@ -334,9 +334,9 @@ test("every JSON file's form matches the keys in the file", () => {
 test("the house text is only its own wording, one field per key", () => {
   // What a sign opens is built from the plain pages' own files
   // (src/lib/house-content.js); house-copy.json holds only the words that
-  // belong to the house: its links and its rooms menu.
+  // belong to the house: its links, its rooms menu and the words around it.
   const data = JSON.parse(read(JSON_FILES["house-copy"]));
-  assert.deepEqual(Object.keys(data).sort(), ["links", "menu"]);
+  assert.deepEqual(Object.keys(data).sort(), ["links", "menu", "page"]);
   for (const name of Object.keys(data)) {
     const group = entry("house-copy").fields.find((f) => f.name === name);
     assert.ok(group, `house-copy has no ${name}`);

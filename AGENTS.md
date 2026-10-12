@@ -1,9 +1,11 @@
 # Therapy House — Agent Instructions
 
-A static, browser-served experience: `index.html`, one stylesheet, ES modules in
-`assets/scripts/`, media in `assets/`. No bundler, framework, package manager, or
-build step. See [CODEBASE.md](CODEBASE.md) for the file-by-file layout and how to
-preview the site locally.
+A static site built with Astro and pnpm: plain reading pages from Markdown in
+`src/content/`, and the illustrated house at `/house/`, whose hand-written ES
+modules live in `public/assets/scripts/`. Clinic staff edit content through
+Pages CMS (`.pages.yml`). See [CODEBASE.md](CODEBASE.md) for the layout and how
+to run it, and [docs/house-plan.md](docs/house-plan.md) for how the house reads
+its content from the plain pages.
 
 ## Agent skills
 

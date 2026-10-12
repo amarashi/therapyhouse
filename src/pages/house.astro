@@ -8,8 +8,9 @@ import { assertRebatesCurrent, medicare } from '../data/medicare.js';
 import { HOUSE_CONTENT_ID, houseContent, houseContentJson } from '../lib/house-content.js';
 import { teamPortrait } from '../lib/team-portraits.js';
 import { books, videos } from '../data/library-shelf.js';
-import { clinic, phoneHref, roomNavigation } from '../../public/assets/scripts/content-data.js';
+import { clinic, phoneHref, roomNavigation, siteContent } from '../../public/assets/scripts/content-data.js';
 import houseCopy from '../../public/assets/content/house-copy.json';
+import houseRooms from '../../public/assets/content/house-rooms.json';
 import Analytics from '../components/Analytics.astro';
 import DebugPanel from '../house-debug/DebugPanel.astro';
 
@@ -86,8 +87,17 @@ const content = houseContent({
 });
 const contentJson = houseContentJson(content);
 const philosophy = pages.philosophy;
+/* A sign's own words, for the pop-up it opens (house-rooms.json). */
+const signLabel = (roomId, signId) =>
+  houseRooms.rooms.find((room) => room.id === roomId)?.signs.find((sign) => sign.id === signId)?.label ?? '';
 /* The rooms menu: every room the house has, in the order the house lists
    them, with the exterior named as the way outside. */
+/* For screen readers, and for anyone whose browser runs no script: every
+   room and the plain page it stands for. The room records carry the page as
+   a path relative to the site root ("therapy/"); the welcome room's is "". */
+const roomPages = roomNavigation.roomOrder
+  .filter((id) => id !== 'exterior' && siteContent.rooms[id]?.sourceUrls?.length)
+  .map((id) => ({ name: roomNavigation.rooms[id].title, href: withBase(`/${siteContent.rooms[id].sourceUrls[0]}`) }));
 const menuRooms = roomNavigation.roomOrder.map((id) => ({
   id,
   name: id === 'exterior' ? houseCopy.menu.outside : roomNavigation.rooms[id].title,
@@ -120,12 +130,12 @@ const contactPreview = {
   <script is:inline define:vars={{ assetBase }}>window.__ASSET_BASE__ = assetBase;</script>
   <script is:inline type="application/json" id={HOUSE_CONTENT_ID} set:html={contentJson}></script>
   <title>Explore the House | Therapy House, The Gap, Brisbane</title>
-  <link rel="stylesheet" href={withBase("/assets/styles/main.css?v=20261013-rooms")}>
+  <link rel="stylesheet" href={withBase("/assets/styles/main.css?v=20261013-text")}>
   <script type="application/ld+json" set:html={JSON.stringify(businessSchema)} />
   <Analytics />
 </head>
 <body>
-  <a class="skip-link" href="#siteOverview">Skip to Therapy House information</a>
+  <a class="skip-link" href="#siteOverview">{houseCopy.page.skip}</a>
   {/* The house is a full screen with none of the site's chrome on it, and the
       rooms are now reachable straight from the reading pages — so there has to
       be a plain way back to the one you left. `app.js` points this at the
@@ -135,7 +145,7 @@ const contactPreview = {
       <path d="M13.75 7H2.4"></path>
       <path d="M6.6 2.1 1.7 7l4.9 4.9"></path>
     </svg>
-    <span>Back to the website</span>
+    <span>{houseCopy.page.exit}</span>
   </a>
   {/* Any room, from anywhere in the house, without walking back outside to
       find its door (docs/house-plan.md, phase C). `app.js` moves the visit
@@ -164,24 +174,22 @@ const contactPreview = {
         <img class="orientation-lock__logo" src={withBase("/assets/media/logo3d.png")} alt="Therapy House logo" draggable="false" loading="lazy" decoding="async">
       </div>
       <span class="orientation-lock__rotate-mark" aria-hidden="true"></span>
-      <p class="orientation-lock__title">Please rotate your phone</p>
-      <p class="orientation-lock__text">Turn your phone sideways to explore Therapy House in horizontal view.</p>
+      <p class="orientation-lock__title">{houseCopy.page.rotateTitle}</p>
+      <p class="orientation-lock__text">{houseCopy.page.rotateText}</p>
     </div>
   </aside>
   <main class="stage" id="stage" aria-labelledby="siteTitle" aria-describedby="siteSummary">
     <section class="sr-only" id="siteOverview" tabindex="-1">
-      <h1 id="siteTitle">Therapy House psychology and counselling in The Gap, Brisbane</h1>
-      <p id="siteSummary">Therapy House offers warm, inclusive mental health support for adults, children, young people, couples and families.</p>
-      <h2>What you can do on this page</h2>
+      <h1 id="siteTitle">{houseCopy.page.title}</h1>
+      <p id="siteSummary">{houseCopy.page.summary}</p>
+      <h2>{houseCopy.page.roomsHeading}</h2>
       <ul>
-        <li>Explore our Therapy House team.</li>
-        <li>Read our inclusive counselling philosophy.</li>
-        <li>Book online, call reception, or find the clinic address.</li>
+        {roomPages.map((room) => (
+          <li><a href={room.href}>{room.name}</a></li>
+        ))}
       </ul>
     </section>
-    <canvas id="viewerCanvas" aria-label="Interactive Therapy House exterior">
-      Interactive image of the Therapy House clinic exterior. Use the Open the Therapy House entrance button to enter the site.
-    </canvas>
+    <canvas id="viewerCanvas" aria-label="Interactive Therapy House exterior">{houseCopy.page.exterior}</canvas>
     <button class="door-hotspot" id="doorHotspot" type="button" aria-label="Open the Therapy House entrance">
       <span class="sparkle" aria-hidden="true"></span>
       <span class="sparkle" aria-hidden="true"></span>
@@ -203,24 +211,13 @@ const contactPreview = {
         <div class="dog-eye-layer" id="dogEyeLayer" aria-hidden="true"></div>
         <img class="inside-parallax__layer inside-parallax__layer--foreground" data-src={withBase("/assets/media/inside-layer-3.webp")} alt="Foreground layer of the welcoming Therapy House interior" draggable="false" decoding="async">
       </div>
-      <div class="scene-sign-layer" id="sceneSignLayer" aria-hidden="false">
-        <button class="scene-sign scene-sign--table" type="button" data-action="about" data-x="840" data-y="265" data-perspective="900" data-depth="60" data-rotate-x="0" data-rotate-y="0" data-rotate="0" data-skew-x="0" data-skew-y="0" data-scale="0.78" data-scale-x="1" data-scale-y="1" aria-label="Meet the Therapy House team">
-          <span class="scene-sign__title">About Us</span>
-        </button>
-        <button class="scene-sign scene-sign--wall" type="button" data-action="philosophy" data-x="335" data-y="265" data-perspective="230" data-depth="60" data-rotate-x="0" data-rotate-y="35.4" data-rotate="0.5" data-skew-x="0" data-skew-y="0" data-scale="0.84" data-scale-x="1" data-scale-y="1" aria-label="Read the Therapy House philosophy">
-          <span class="scene-sign__title">Our Philosophy</span>
-        </button>
-        <button class="scene-sign scene-sign--notebook" type="button" data-action="contact" data-x="1438" data-y="584" data-perspective="170" data-depth="72" data-rotate-x="0" data-rotate-y="-15.2" data-rotate="0" data-skew-x="4.1" data-skew-y="32" data-scale="0.84" data-scale-x="0.64" data-scale-y="1.31" aria-label="Contact Therapy House in The Gap">
-          <span class="scene-sign__title">Contact Us</span>
-        </button>
-        <button class="scene-sign scene-sign--door" type="button" data-action="back" data-x="1337" data-y="265" data-perspective="980" data-depth="128" data-rotate-x="0" data-rotate-y="-15.2" data-rotate="-1.5" data-skew-x="0" data-skew-y="0" data-scale="0.74" data-scale-x="0.71" data-scale-y="1" aria-label="Return to the Therapy House exterior">
-          <span class="scene-sign__title">Back</span>
-        </button>
-      </div>
+      {/* The room's signs are drawn here by `inside-scene.js` from content-data.js
+          and house-rooms.json, for whichever room is open. */}
+      <div class="scene-sign-layer" id="sceneSignLayer" aria-hidden="false"></div>
       <div class="team-carousel" id="teamCarousel" role="dialog" aria-modal="true" aria-labelledby="teamCarouselTitle" aria-hidden="true" hidden>
         <div class="team-carousel__panel">
           <button class="team-carousel__close" id="teamCarouselClose" type="button" aria-label="Close team carousel">&times;</button>
-          <h2 class="sr-only" id="teamCarouselTitle">Meet the Therapy House team</h2>
+          <h2 class="sr-only" id="teamCarouselTitle">{signLabel('team', 'team-carousel')}</h2>
           <div class="team-carousel__deck" id="teamCarouselDeck" aria-live="polite" aria-label="Swipe or use controls to browse team profiles"></div>
           <div class="team-carousel__nav">
             <span class="team-carousel__count" id="teamCarouselCount"></span>
@@ -256,8 +253,8 @@ const contactPreview = {
       <div class="content-modal" id="contentModal" role="dialog" aria-modal="true" aria-labelledby="contentModalTitle" aria-hidden="true" hidden>
         <section class="content-modal__panel">
           <button class="content-modal__close" id="contentModalClose" type="button" aria-label="Close content window">&times;</button>
-          <p class="content-modal__eyebrow" id="contentModalEyebrow">Therapy House</p>
-          <h2 class="content-modal__title" id="contentModalTitle">Therapy House</h2>
+          <p class="content-modal__eyebrow" id="contentModalEyebrow"></p>
+          <h2 class="content-modal__title" id="contentModalTitle"></h2>
           <span class="content-modal__rule" aria-hidden="true"></span>
           <div class="content-modal__body" id="contentModalBody"></div>
           <div class="house-actions" id="contentModalActions" aria-label="Book or call">
@@ -273,7 +270,7 @@ const contactPreview = {
             <img src={withBase("/assets/media/phone.webp")} alt="Illustration for contacting Therapy House reception" width="660" height="660" loading="lazy" decoding="async">
           </div>
           <div class="contact-modal__body">
-            <h2 class="contact-modal__title" id="contactTitle">Contact Us</h2>
+            <h2 class="contact-modal__title" id="contactTitle">{signLabel('welcome', 'contact')}</h2>
             <p class="contact-modal__intro">{pages.contact.lede}</p>
             <div class="house-actions" aria-label="Book or call">
               <a class="house-action" href={contactPreview.booking} target="_blank" rel="noopener">{callsToAction.book.label}</a>
@@ -281,15 +278,15 @@ const contactPreview = {
             </div>
             <dl class="contact-modal__details">
               <div class="contact-modal__detail">
-                <dt>Phone</dt>
+                <dt>{houseCopy.page.phone}</dt>
                 <dd><a href={contactPreview.tel}>{contactPreview.phone}</a></dd>
               </div>
               <div class="contact-modal__detail">
-                <dt>Email</dt>
+                <dt>{houseCopy.page.email}</dt>
                 <dd><a href={`mailto:${contactPreview.email}`}>{contactPreview.email}</a></dd>
               </div>
               <div class="contact-modal__detail">
-                <dt>Address</dt>
+                <dt>{houseCopy.page.address}</dt>
                 <dd><a href={contactPreview.map} target="_blank" rel="noopener">{contactPreview.address}</a></dd>
               </div>
             </dl>

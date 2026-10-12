@@ -22,5 +22,18 @@
     "button": "Rooms",
     "heading": "Go to a room",
     "outside": "Outside the house"
+  },
+  "page": {
+    "skip": "Skip to the list of rooms",
+    "exit": "Back to the website",
+    "title": "Therapy House psychology and counselling in The Gap, Brisbane",
+    "summary": "An illustrated walk through the clinic. Each room stands for a page of the website, and every page is also reachable from the list below.",
+    "roomsHeading": "The rooms and the pages they stand for",
+    "exterior": "An illustration of the Therapy House cottage that turns as you drag it. Each door and window leads into a room.",
+    "rotateTitle": "Please rotate your phone",
+    "rotateText": "Turn your phone sideways to explore Therapy House in horizontal view.",
+    "phone": "Phone",
+    "email": "Email",
+    "address": "Address"
   }
 }

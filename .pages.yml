@@ -2144,6 +2144,55 @@ content:
                 label: Name for the outside of the house
                 type: string
                 required: true
+          - name: page
+            label: Around the house
+            description: The exit link, the prompt to turn a phone sideways, and the words screen readers announce.
+            type: object
+            fields:
+              - name: skip
+                label: Skip link, for keyboard users
+                type: string
+                required: true
+              - name: exit
+                label: Link back to the website
+                type: string
+                required: true
+              - name: title
+                label: Page heading, read by screen readers
+                type: string
+                required: true
+              - name: summary
+                label: Page summary, read by screen readers
+                type: text
+                required: true
+              - name: roomsHeading
+                label: Heading over the list of rooms, read by screen readers
+                type: string
+                required: true
+              - name: exterior
+                label: Description of the turning house, read by screen readers
+                type: text
+                required: true
+              - name: rotateTitle
+                label: Heading asking an upright phone to turn sideways
+                type: string
+                required: true
+              - name: rotateText
+                label: Text asking an upright phone to turn sideways
+                type: text
+                required: true
+              - name: phone
+                label: Label for the phone number
+                type: string
+                required: true
+              - name: email
+                label: Label for the email address
+                type: string
+                required: true
+              - name: address
+                label: Label for the address
+                type: string
+                required: true
 
       - name: house-rooms
         label: Rooms and signs
