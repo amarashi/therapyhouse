@@ -384,6 +384,50 @@
           "label": "Parking"
         },
         {
+          "id": "telehealth",
+          "label": "See us by video",
+          "ariaLabel": "Go through to the telehealth room, for sessions by video"
+        },
+        {
+          "id": "back",
+          "label": "Back"
+        }
+      ]
+    },
+    {
+      "id": "telehealth",
+      "title": "Telehealth Room",
+      "label": "Telehealth",
+      "exteriorEntry": "Through reception",
+      "summary": "Seeing a Therapy House psychologist by video, from anywhere in Australia.",
+      "images": [
+        {
+          "id": "telehealth-room",
+          "alt": "A quiet study in the cottage set up for video sessions: a laptop on a wooden desk, a green armchair and a window onto gum trees and hills"
+        }
+      ],
+      "signs": [
+        {
+          "id": "how-it-works",
+          "label": "How video works"
+        },
+        {
+          "id": "medicare",
+          "label": "Medicare"
+        },
+        {
+          "id": "regional",
+          "label": "Regional Queensland"
+        },
+        {
+          "id": "clinicians",
+          "label": "Who you would see"
+        },
+        {
+          "id": "booking",
+          "label": "Book by video"
+        },
+        {
           "id": "back",
           "label": "Back"
         }

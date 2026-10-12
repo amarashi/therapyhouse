@@ -4,7 +4,6 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 import { siteContent } from "../public/assets/scripts/content-data.js";
-import houseCopy from "../public/assets/content/house-copy.json" with { type: "json" };
 import { teamPortrait, UPLOAD_DIR } from "../src/lib/team-portraits.js";
 import { frontmatter, readableText, splitMarkdown } from "./helpers/markdown.mjs";
 import { DESCRIPTION_MAX, TITLE_MAX } from "../src/lib/seo.js";
@@ -12,10 +11,10 @@ import { DESCRIPTION_MAX, TITLE_MAX } from "../src/lib/seo.js";
 const root = fileURLToPath(new URL("..", import.meta.url));
 
 /**
- * The house and the plain pages are two presentations of one content model.
- * These tests guard the seam: if a fee changes in `content-data.js` but not in
- * the page's frontmatter (or the reverse), a parent could be quoted one price
- * in a room and a different price on the page it links to.
+ * Checks on the plain pages' own content. The house used to keep copies of
+ * this content and these tests compared the two; it now builds its previews
+ * from these same files (src/lib/house-content.js), so there is nothing left
+ * to compare.
  *
  * Sentences are looked for in the page's readable text (tests/helpers/
  * markdown.mjs) rather than in the raw file, because Pages CMS re-wraps long
@@ -33,34 +32,8 @@ const servicesText = readableText(services);
 const assessmentsText = readableText(assessments);
 const feesText = readableText(fees);
 
-test("services page lists every service offering from the content model", () => {
-  for (const offering of siteContent.services.offerings) {
-    assert.ok(
-      servicesText.includes(offering),
-      `services.md is missing the offering: ${offering}`
-    );
-  }
-});
-
-test("services page lists every therapy model from the content model", () => {
-  for (const model of siteContent.services.therapyModels) {
-    assert.ok(servicesText.includes(model), `services.md is missing the therapy model: ${model}`);
-  }
-});
-
-// Fees, rebates and assessment prices are no longer copied into
-// content-data.js: the house reads them from fees.md, assessments.md and
-// src/data/medicare.js (issue #80). tests/house-facts.test.mjs guards that.
-
 test("the therapy hub no longer carries its own fee table", () => {
   assert.ok(!/^fees:/m.test(services), "services.md still has a fees block; fees live in fees.md");
-});
-
-test("every report note reaches the fees page", () => {
-  for (const note of siteContent.services.reports) {
-    const plain = note.replace(/\.$/, "");
-    assert.ok(feesText.includes(plain), `fees.md is missing: ${note.slice(0, 50)}…`);
-  }
 });
 
 test("fees page title, H1 and description fit a search result and carry its phrase", () => {
@@ -80,31 +53,6 @@ test("fees page title, H1 and description fit a search result and carry its phra
 
 test("the fees page states plainly that the clinic does not bulk bill", () => {
   assert.match(feesText, /(does not|doesn.t) bulk.?bill/i, "fees.md must still say the clinic does not bulk bill");
-});
-
-test("assessment process steps appear in order on the assessments page", () => {
-  let cursor = 0;
-  for (const step of siteContent.assessments.process) {
-    const at = assessmentsText.indexOf(step, cursor);
-    assert.notEqual(at, -1, `assessments.md is missing or misorders the step: ${step}`);
-    cursor = at;
-  }
-});
-
-test("assessment documents list is complete", () => {
-  for (const doc of siteContent.assessments.documents) {
-    assert.ok(assessmentsText.includes(doc), `assessments.md is missing the document: ${doc}`);
-  }
-});
-
-test("every assessment package in the house is published on the assessments page", () => {
-  // Joined by id, not title (issue #97): the house's key for a package is the
-  // `id` of its item in assessments.md, so either title can be reworded.
-  const keys = [...Object.keys(siteContent.assessments.packages), "schoolObservations"];
-  assert.ok(keys.length > 1, "content model has no assessment packages");
-  for (const key of keys) {
-    assert.match(assessments, new RegExp(`^\\s*-?\\s*id: ${key}\\s*$`, "m"), `assessments.md has no package with id ${key}`);
-  }
 });
 
 test("both calls to action reach every plain page", async () => {
@@ -148,32 +96,6 @@ test("availability status is read correctly, including the negative case", async
   assert.equal(isAcceptingNewClients("On leave"), false);
   assert.equal(isAcceptingNewClients(undefined), false);
   assert.equal(isAcceptingNewClients(""), false);
-
-  // Whatever the clinic writes, the house and the team profiles must agree on
-  // who is accepting. Staff change statuses in the CMS, so this compares the
-  // two copies rather than a fixed count: the house's list
-  // (house-copy.json) and each person's own profile (src/content/team).
-  const { readdir } = await import("node:fs/promises");
-  const teamDir = fileURLToPath(new URL("../src/content/team", import.meta.url));
-  // Only the people the house lists: someone new is on the team page before
-  // a developer places them in the house.
-  const inHouse = new Set(houseCopy.team.members.map((m) => m.id));
-  const fromProfiles = new Set();
-  for (const file of (await readdir(teamDir)).filter((f) => f.endsWith(".md"))) {
-    const id = file.replace(/\.md$/, "");
-    const md = await readFile(`${teamDir}/${file}`, "utf8");
-    const status = md.match(/^availability:\s*"?([^"\r\n]+?)"?\s*$/m)?.[1];
-    if (inHouse.has(id) && isAcceptingNewClients(status)) fromProfiles.add(id);
-  }
-  const fromHouse = new Set(
-    houseCopy.team.availability.filter((a) => isAcceptingNewClients(a.status)).map((a) => a.id)
-  );
-  assert.ok(fromProfiles.size > 0, "nobody is accepting new clients — check the parse");
-  assert.deepEqual(
-    [...fromHouse].sort(),
-    [...fromProfiles].sort(),
-    "house-copy.json (House > Team) and the team profiles disagree on who is accepting new clients"
-  );
 });
 
 test("every team member has a profile file with a photo that exists", async () => {

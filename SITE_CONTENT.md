@@ -4,10 +4,10 @@ Every page the new site will have, what goes on each one, where that content
 comes from today, and what is still missing.
 
 This is the **human sign-off document** — the thing to send the clinic to review.
-The copy itself lives in `public/assets/scripts/content-data.js` (the house and
-the original plain pages) and in the Markdown files under `src/content/` (one
-file per page, service page, practitioner and article); this file describes the
-*pages*.
+The copy itself lives in the Markdown files under `src/content/` (one file per
+page, service page, practitioner, article and town). The illustrated house
+previews those same files rather than keeping its own copy
+(`src/lib/house-content.js`). This file describes the *pages*.
 
 Three audiences are served (see [PRODUCT.md](PRODUCT.md)): local families, the
 Telehealth Audience (people anywhere in Australia, regional Queensland first,
@@ -22,7 +22,7 @@ Related: [PRODUCT.md](PRODUCT.md) (who/why) · [DESIGN.md](DESIGN.md) (visual sy
 
 | Mark | Meaning |
 |---|---|
-| ✅ | Copy exists in `content-data.js` and is usable as-is |
+| ✅ | Copy exists and is usable as-is |
 | ✏️ | Structure known, copy is thin or a placeholder — needs writing |
 | ❓ | Needs the clinic to supply facts we do not have |
 | ⚖️ | Legal/compliance content — must be carried over verbatim, not rewritten |
@@ -355,8 +355,8 @@ at the top of `src/data/library-shelf.js`.
 23 and missed the two newest). Issue #39 migrated every one into
 `src/content/articles/` with its published text unchanged, its original date,
 the author where the Current Site names one, `BlogPosting` structured data, and
-in-body images in `public/assets/library/`. The house's library room still
-reads the short list in `content-data.js`, which now links to these pages. The slug is the last part of
+in-body images in `public/assets/library/`. The house's library room
+previews the newest five, built from this collection, and links to them. The slug is the last part of
 the Current Site address, and every old address forwards to the new one (see
 `docs/redirects.md`).
 

@@ -44,14 +44,13 @@ const feeRow = z.object({
 });
 
 /**
- * The key of an item the illustrated house keeps its own copy of
- * (public/assets/content/house-copy.json: `assessments.packages.<id>`,
- * `assessments.schoolObservations`, `groups.programs.<id>`). The house joins
- * prices and the "Show on the live website" switch by this id, so a title can
- * be reworded freely. Hidden in the CMS; an item without one is simply not in
- * the house.
+ * The key of an item that has its own sign in the illustrated house
+ * (`assessments.packages.<id>`, `assessments.<id>` for an add-on,
+ * `groups.programs.<id>`; see src/lib/house-content.js). The sign finds its
+ * item by this id, so a title can be reworded freely. Hidden in the CMS; an
+ * item without one has no sign of its own.
  */
-const houseId = z.string().regex(/^[a-zA-Z]+$/, 'a house-copy.json key such as adhd').optional();
+const houseId = z.string().regex(/^[a-zA-Z]+$/, 'a house key such as adhd').optional();
 
 const groupProgram = z.object({
   title: z.string(),

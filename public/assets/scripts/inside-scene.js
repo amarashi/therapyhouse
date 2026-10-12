@@ -1,4 +1,4 @@
-import { clamp, getImageHeight, getImageWidth } from "./utils.js";
+import { clamp, getImageHeight, getImageWidth, preloadImage } from "./utils.js";
 
 const defaultImageSize = { width: 1672, height: 940 };
 const defaultEdgeFallbackColors = {
@@ -43,6 +43,18 @@ export function createInsideScene({
 }) {
   let active = false;
   let parallaxFrameId = 0;
+  let lastParallaxTime = 0;
+  /*
+   * The view's box, measured once per layout change (`updateSceneSigns`, which
+   * runs on resize and on every room change) rather than on every pointer
+   * move: reading it forces the browser to finish layout, and pointer events
+   * arrive faster than frames.
+   */
+  let viewRect = null;
+  /* Each room change takes a number, so a slow picture from an earlier change
+     can never finish on top of a later one. */
+  let roomChange = 0;
+  const preloaded = new Set();
   let targetX = 0;
   let targetY = 0;
   let currentX = 0;
@@ -150,8 +162,12 @@ export function createInsideScene({
     }
   }
 
-  function getInsideImageRect() {
-    const rect = insideView.getBoundingClientRect();
+  function measureView() {
+    viewRect = insideView.getBoundingClientRect();
+    return viewRect;
+  }
+
+  function getInsideImageRect(rect = viewRect || measureView()) {
     const viewRatio = rect.width / rect.height;
     const imageRatio = currentInsideImageSize.width / currentInsideImageSize.height;
     let width = rect.width;
@@ -176,7 +192,6 @@ export function createInsideScene({
   function updateFrameClip(imageRect = getInsideImageRect()) {
     if (!insideParallax) return;
 
-    const viewRect = insideView.getBoundingClientRect();
     const frameLeft = Math.max(0, imageRect.x);
     const frameTop = Math.max(0, imageRect.y);
     const frameRight = Math.max(0, viewRect.width - imageRect.x - imageRect.width);
@@ -193,19 +208,22 @@ export function createInsideScene({
   }
 
   function updateSceneSigns() {
+    measureView();
     const imageRect = getInsideImageRect();
-    const viewRect = insideView.getBoundingClientRect();
     const margin = 12;
 
     updateFrameClip(imageRect);
 
-    sceneSigns.forEach((sign) => {
+    /* Every size is read before any position is written: a read after a
+       write makes the browser lay the page out again, once per sign. */
+    const sizes = sceneSigns.map((sign) => ({ width: sign.offsetWidth || 160, height: sign.offsetHeight || 58 }));
+
+    sceneSigns.forEach((sign, index) => {
       const imageX = Number(sign.dataset.x);
       const imageY = Number(sign.dataset.y);
       if (!Number.isFinite(imageX) || !Number.isFinite(imageY)) return;
 
-      const width = sign.offsetWidth || 160;
-      const height = sign.offsetHeight || 58;
+      const { width, height } = sizes[index];
       const x = imageRect.x + imageRect.width * imageX / currentInsideImageSize.width;
       const y = imageRect.y + imageRect.height * imageY / currentInsideImageSize.height;
       const clampedX = clamp(x, margin + width / 2, Math.max(margin + width / 2, viewRect.width - margin - width / 2));
@@ -226,30 +244,110 @@ export function createInsideScene({
     });
   }
 
-  function renderRoomBackground(roomScene) {
+  function createLayer(roomScene, layerConfig, index) {
+    const image = document.createElement("img");
+    image.className = ["inside-parallax__layer", layerConfig.className].filter(Boolean).join(" ");
+    if (layersAllowed) {
+      image.src = layerConfig.src;
+    } else {
+      image.dataset.src = layerConfig.src;
+    }
+    image.alt = layerConfig.alt || "";
+    image.draggable = false;
+    image.decoding = "async";
+    image.dataset.roomId = roomScene.id;
+    image.dataset.layerIndex = String(index);
+    image.style.zIndex = String(layerConfig.zIndex ?? index);
+    return image;
+  }
+
+  /*
+   * A room's picture. Walking in from outside, it simply replaces the last
+   * one: the interior is hidden until the entrance finishes. Moving from room
+   * to room (docs/house-plan.md, phase G) the new picture is decoded first,
+   * so there is never a blank frame while it loads, and then fades in over
+   * the old one, which goes once it is covered. Under reduced motion the
+   * fade is a cut (main.css), still after the decode.
+   */
+  function renderRoomBackground(roomScene, { crossFade = false } = {}) {
     if (!insideParallax || !roomScene?.background?.layers) return;
 
-    insideParallax.querySelectorAll(".inside-parallax__layer").forEach((layer) => layer.remove());
+    const change = ++roomChange;
+    // Anything still fading out from an earlier change goes now.
+    insideParallax.querySelectorAll(".inside-parallax__layer.is-leaving").forEach((layer) => layer.remove());
+    const oldLayers = Array.from(insideParallax.querySelectorAll(".inside-parallax__layer"));
+    const nextLayers = roomScene.background.layers.map((layerConfig, index) => createLayer(roomScene, layerConfig, index));
 
-    const nextLayers = roomScene.background.layers.map((layerConfig, index) => {
-      const image = document.createElement("img");
-      image.className = ["inside-parallax__layer", layerConfig.className].filter(Boolean).join(" ");
-      if (layersAllowed) {
-        image.src = layerConfig.src;
-      } else {
-        image.dataset.src = layerConfig.src;
-      }
-      image.alt = layerConfig.alt || "";
-      image.draggable = false;
-      image.decoding = "async";
-      image.dataset.roomId = roomScene.id;
-      image.dataset.layerIndex = String(index);
-      image.style.zIndex = String(layerConfig.zIndex ?? index);
-      insideParallax.appendChild(image);
-      return image;
+    if (!crossFade || !layersAllowed) {
+      oldLayers.forEach((layer) => layer.remove());
+      nextLayers.forEach((layer) => insideParallax.appendChild(layer));
+      insideParallaxLayers.splice(0, insideParallaxLayers.length, ...nextLayers);
+      sceneSignLayer?.classList.remove("is-switching");
+      return;
+    }
+
+    oldLayers.forEach((layer) => layer.classList.add("is-leaving"));
+    nextLayers.forEach((layer, index) => {
+      layer.classList.add("is-entering");
+      // Above every old layer until the old ones are gone.
+      layer.style.zIndex = String(10 + index);
+      insideParallax.appendChild(layer);
     });
-
     insideParallaxLayers.splice(0, insideParallaxLayers.length, ...nextLayers);
+    sceneSignLayer?.classList.add("is-switching");
+
+    const decoded = nextLayers.map((layer) =>
+      typeof layer.decode === "function" ? layer.decode().catch(() => null) : Promise.resolve(null)
+    );
+    // A picture that will not decode must not hold the room shut for long.
+    const ready = Promise.race([Promise.all(decoded), new Promise((resolve) => window.setTimeout(resolve, 900))]);
+
+    ready.then(() => {
+      if (change !== roomChange) return;
+      requestAnimationFrame(() => {
+        if (change !== roomChange) return;
+        nextLayers.forEach((layer) => layer.classList.remove("is-entering"));
+        sceneSignLayer?.classList.remove("is-switching");
+
+        /* The old picture goes once the new one has finished fading in, and
+           not on a timer alone: a tab in the background runs no frames, and
+           a timer would take the old room away while the new one is still
+           transparent. The timer is the fallback for a fade that never
+           reports its end. */
+        let settled = false;
+        const settle = () => {
+          if (settled || change !== roomChange) return;
+          settled = true;
+          insideParallax.querySelectorAll(".inside-parallax__layer.is-leaving").forEach((layer) => layer.remove());
+          nextLayers.forEach((layer, index) => {
+            layer.style.zIndex = String(roomScene.background.layers[index].zIndex ?? index);
+          });
+        };
+        if (reducedMotionQuery.matches) {
+          settle();
+          return;
+        }
+        nextLayers[0]?.addEventListener("transitionend", (event) => {
+          if (event.propertyName === "opacity") settle();
+        });
+        window.setTimeout(settle, 1500);
+      });
+    });
+  }
+
+  /*
+   * Fetch and decode a room's picture ahead of a visit, so the cross-fade
+   * starts at once. Only after the interior is allowed to load at all (see
+   * `loadLayers`), and once per picture.
+   */
+  function preloadRoom(roomId) {
+    const room = roomSceneMap[roomId];
+    if (!layersAllowed || !room?.background?.layers) return;
+    room.background.layers.forEach(({ src }) => {
+      if (preloaded.has(src)) return;
+      preloaded.add(src);
+      preloadImage(src);
+    });
   }
 
   function createRoomHotspotButton(hotspotConfig) {
@@ -316,6 +414,7 @@ export function createInsideScene({
   function setActiveRoom(roomId) {
     const nextRoom = roomSceneMap[roomId] || roomSceneMap[fallbackRoomId];
     if (!nextRoom) return false;
+    const crossFade = active && nextRoom.id !== activeRoomId;
 
     activeRoomId = nextRoom.id;
     currentInsideImageSize = nextRoom.imageSize || insideImageSize;
@@ -323,7 +422,7 @@ export function createInsideScene({
     currentParallaxDepths = nextRoom.parallaxDepths || parallaxDepths;
     insideView.dataset.room = activeRoomId;
     stage.dataset.room = activeRoomId;
-    renderRoomBackground(nextRoom);
+    renderRoomBackground(nextRoom, { crossFade });
     renderRoomHotspots(nextRoom);
     applyRoomEffects(nextRoom);
     resetParallax(true);
@@ -359,10 +458,14 @@ export function createInsideScene({
     parallaxFrameId = requestAnimationFrame(updateParallax);
   }
 
-  function updateParallax() {
+  function updateParallax(now = performance.now()) {
     parallaxFrameId = 0;
 
-    const easing = 0.14;
+    /* The same glide at 60 or 120 frames a second: 14% of the way per
+       sixtieth of a second, whatever the frame actually lasted. */
+    const elapsed = lastParallaxTime ? Math.min(now - lastParallaxTime, 100) : 1000 / 60;
+    lastParallaxTime = now;
+    const easing = 1 - Math.pow(1 - 0.14, elapsed / (1000 / 60));
     currentX += (targetX - currentX) * easing;
     currentY += (targetY - currentY) * easing;
     applyParallax();
@@ -371,13 +474,15 @@ export function createInsideScene({
     const remainingY = Math.abs(targetY - currentY);
     if (active && (remainingX > 0.002 || remainingY > 0.002)) {
       scheduleParallaxUpdate();
+    } else {
+      lastParallaxTime = 0;
     }
   }
 
   function updateParallaxTarget(clientX, clientY) {
     if (!active || !stage.classList.contains("inside-visible")) return;
 
-    const rect = insideView.getBoundingClientRect();
+    const rect = viewRect || measureView();
     const width = Math.max(rect.width, 1);
     const height = Math.max(rect.height, 1);
     targetX = clamp((clientX - rect.left) / width * 2 - 1, -1, 1);
@@ -396,6 +501,7 @@ export function createInsideScene({
       }
       currentX = 0;
       currentY = 0;
+      lastParallaxTime = 0;
       applyParallax();
       return;
     }
@@ -511,6 +617,7 @@ export function createInsideScene({
     init,
     leave,
     loadLayers,
+    preloadRoom,
     resetParallax,
     setActiveRoom,
     setSceneActionHandler,

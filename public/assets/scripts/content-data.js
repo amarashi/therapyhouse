@@ -3,11 +3,14 @@ import { asset } from "./site-data.js";
 /*
  * The words a visitor reads are not written in this file (issue #94). Clinic
  * staff edit them in Pages CMS, which can change JSON but not JavaScript, so
- * they live in three JSON files beside the scripts:
+ * they live in JSON files beside the scripts:
  *
  *   public/assets/content/clinic.json       phone, email, address, booking link
  *   public/assets/content/house-rooms.json  room names, sign labels, picture alt text
- *   public/assets/content/house-copy.json   what each sign opens
+ *   public/assets/content/house-copy.json   the words on the "read more" links
+ *
+ * and what each sign opens is built from the plain pages' own files when
+ * /house/ is built (see `houseContent` below).
  *
  * This module is served to the browser as it is, with no bundler, and it is
  * also imported by the Astro build (through src/data/site.js) and by the
@@ -25,7 +28,6 @@ import { asset } from "./site-data.js";
  */
 import clinic from "../content/clinic.json" with { type: "json" };
 import houseRooms from "../content/house-rooms.json" with { type: "json" };
-import houseCopy from "../content/house-copy.json" with { type: "json" };
 
 export { clinic };
 
@@ -58,7 +60,7 @@ function roomLayer(roomId, path, className) {
     : { src: asset(path), alt: image.alt };
 }
 
-export const roomIds = ["exterior", "welcome", "team", "services", "assessments", "groups", "library", "philosophy", "contact", "work-with-us"];
+export const roomIds = ["exterior", "welcome", "team", "services", "assessments", "groups", "library", "philosophy", "contact", "telehealth", "work-with-us"];
 
 function navigationRoom(id) {
   const { title, label, description, exteriorEntry } = roomText(id);
@@ -416,7 +418,34 @@ export const roomSceneDefaults = {
         hotspot({ room: "contact", id: "email", contentKey: "contact.email", x: 940, y: 280 }),
         hotspot({ room: "contact", id: "address", contentKey: "contact.address", x: 880, y: 485 }),
         hotspot({ room: "contact", id: "parking", contentKey: "contact.intro", x: 290, y: 550 }),
+        hotspot({ room: "contact", id: "telehealth", targetRoom: "telehealth", contentKey: "rooms.telehealth", x: 1250, y: 600 }),
         hotspot({ room: "contact", id: "back", action: "back", x: 180, y: 180 })
+      ]
+    },
+
+    /*
+     * The telehealth room, through reception (docs/house-plan.md, phase D): a
+     * study in the cottage set up for video sessions, its window onto gum
+     * trees and hills. Every sign leads to /telehealth/. The /telehealth/
+     * page has no door of its own into the house: it is written for people
+     * who will see a psychologist by video, and stays answer-first.
+     */
+    telehealth: {
+      id: "telehealth",
+      imageSize: roomImageSize,
+      background: {
+        layers: [
+          roomLayer("telehealth", "assets/rooms/telehealth-room.webp")
+        ]
+      },
+      effects: { firelight: false, dogEyes: false },
+      hotspots: [
+        hotspot({ room: "telehealth", id: "how-it-works", contentKey: "telehealth.process", x: 830, y: 455 }),
+        hotspot({ room: "telehealth", id: "medicare", contentKey: "telehealth.medicare", x: 460, y: 300 }),
+        hotspot({ room: "telehealth", id: "regional", contentKey: "telehealth.regional", x: 840, y: 270 }),
+        hotspot({ room: "telehealth", id: "clinicians", contentKey: "telehealth.clinicians", x: 1215, y: 640 }),
+        hotspot({ room: "telehealth", id: "booking", contentKey: "telehealth.booking", x: 640, y: 650 }),
+        hotspot({ room: "telehealth", id: "back", action: "back", x: 150, y: 330 })
       ]
     },
 
@@ -441,20 +470,19 @@ export const roomSceneDefaults = {
 };
 
 /*
- * Fees, Medicare rebates and assessment prices are not written in this file
- * (issue #80). `src/pages/house.astro` builds them from the same sources the
- * plain pages use (src/content/pages/fees.md, src/content/pages/assessments.md
- * and src/data/medicare.js, through src/lib/house-facts.js) and writes them
- * into the page as JSON. Read here, they reach the rooms unchanged, so the
- * house can never quote a figure /fees/ or /assessments/ does not.
+ * What the signs open is not written here either (docs/house-plan.md, phase
+ * A). `src/pages/house.astro` builds a short preview for every sign from the
+ * files the plain pages read (the pages, the team, the services, the
+ * articles, clinic.json) and writes them into the page as JSON; see
+ * src/lib/house-content.js. Each preview ends with a link to the plain page
+ * that holds the whole answer, so the house never keeps a second copy.
  *
  * Outside that page (a test, the Astro build importing this file for the
- * contact details) there is no JSON, and the fee hotspots fall back to the
- * pointer to /fees/ alone.
+ * contact details) there is no JSON and `houseContent` is empty.
  */
-function readHouseFacts() {
+function readHouseContent() {
   if (typeof document === "undefined") return {};
-  const element = document.getElementById("house-facts");
+  const element = document.getElementById("house-content");
   if (!element) return {};
   try {
     return JSON.parse(element.textContent) || {};
@@ -463,39 +491,11 @@ function readHouseFacts() {
   }
 }
 
-export const houseFacts = readHouseFacts();
-
-/* By house-copy.json key, which is also the package's `id` in assessments.md. */
-const packagePrice = (key) => houseFacts.packagePrices?.[key];
-
-/*
- * "Show on the live website" (issue #95). The team, packages and programs in
- * house-copy.json are the house's own copies, so the build cannot filter them
- * the way it filters the collections. /house/ lists instead what this build
- * switches off (production only; the Preview hides nothing):
- *   hidden.team    team collection ids, which are also the `id`s in
- *                  house-copy.json and site-data.js, so renaming someone in
- *                  the CMS does not undo it;
- *   hidden.packages, hidden.programs
- *                  keys in house-copy.json (`assessments.packages.<key>`,
- *                  `assessments.schoolObservations`, `groups.programs.<key>`),
- *                  which are also the items' `id`s in assessments.md and
- *                  group-therapy.md, so rewording a title does not undo it.
- */
-const hidden = {
-  team: new Set(houseFacts.hidden?.team ?? []),
-  packages: new Set(houseFacts.hidden?.packages ?? []),
-  programs: new Set(houseFacts.hidden?.programs ?? [])
-};
-
-/** Whether the house shows a team member, by their team id. */
-export const teamOnSite = (id) => !hidden.team.has(id);
-
-const feesPointer = {
-  title: houseCopy.services.feesPointer.title,
-  description: houseCopy.services.feesPointer.description,
-  link: { href: asset("fees/"), label: houseCopy.services.feesPointer.linkLabel }
-};
+export const houseContent = readHouseContent();
+/** The preview a sign opens, by its `contentKey`. */
+export const previews = houseContent.previews ?? {};
+/** The team carousel: everyone this build shows, from the team collection. */
+export const teamMembers = houseContent.team ?? [];
 
 /*
  * A room's record of what its signs open. The label is the sign's own, from
@@ -513,17 +513,8 @@ function roomRecord(id, sourceUrls, hotspots) {
     : { id, title, exteriorEntry, sourceUrls, summary, hotspots };
 }
 
-/* Each philosophy sign opens the principle with its own id, whatever order the principles are saved in. */
+/* Each philosophy sign opens the principle in the same place in philosophy.md. */
 const principleSigns = ["holistic-care", "inclusive-environment", "sanctuary", "meaningful-connections", "authenticity"];
-
-function principle(id) {
-  const found = houseCopy.philosophy.principles.find((candidate) => candidate.id === id);
-  if (!found) throw new Error(`house-copy.json has no philosophy principle with id "${id}"`);
-  return { title: found.title, description: found.description };
-}
-
-const { assessments, groups, team, library, workWithUs } = houseCopy;
-const packages = assessments.packages;
 
 export const siteContent = {
   source: {
@@ -631,7 +622,16 @@ export const siteContent = {
       roomLink("contact", "phone", "contact.phone"),
       roomLink("contact", "email", "contact.email"),
       roomLink("contact", "address", "contact.address"),
-      roomLink("contact", "parking", "contact.intro")
+      roomLink("contact", "parking", "contact.intro"),
+      roomLink("contact", "telehealth", "rooms.telehealth", { targetRoom: "telehealth" })
+    ]),
+
+    telehealth: roomRecord("telehealth", [asset("telehealth/")], [
+      roomLink("telehealth", "how-it-works", "telehealth.process"),
+      roomLink("telehealth", "medicare", "telehealth.medicare"),
+      roomLink("telehealth", "regional", "telehealth.regional"),
+      roomLink("telehealth", "clinicians", "telehealth.clinicians"),
+      roomLink("telehealth", "booking", "telehealth.booking")
     ]),
 
     "work-with-us": roomRecord("work-with-us", [asset("work-with-us/")], [
@@ -640,156 +640,22 @@ export const siteContent = {
       roomLink("work-with-us", "values", "workWithUs.values"),
       roomLink("work-with-us", "enquire", "workWithUs.enquiry")
     ])
-  },
-
-  philosophy: {
-    title: houseCopy.philosophy.title,
-    intro: houseCopy.philosophy.intro,
-    principles: principleSigns.map(principle),
-    closing: houseCopy.philosophy.closing
-  },
-
-  services: {
-    sourceUrl: asset("therapy/"),
-    intro: houseCopy.services.intro,
-    offerings: houseCopy.services.offerings,
-    therapyModels: houseCopy.services.therapyModels,
-    fees: [...(houseFacts.fees ?? []), feesPointer],
-    rebates: [...(houseFacts.rebates ?? []), feesPointer],
-    reports: houseCopy.services.reports
-  },
-
-  /* Prices come from assessments.md by the package's key here, its `id` there. */
-  assessments: {
-    sourceUrl: asset("assessments/"),
-    intro: assessments.intro,
-    process: assessments.process,
-    documents: assessments.documents,
-    packages: {
-      psychoeducational: {
-        title: packages.psychoeducational.title,
-        price: packagePrice("psychoeducational"),
-        inclusions: packages.psychoeducational.inclusions
-      },
-      cognitive: {
-        title: packages.cognitive.title,
-        price: packagePrice("cognitive"),
-        description: packages.cognitive.description
-      },
-      adhd: {
-        title: packages.adhd.title,
-        price: packagePrice("adhd"),
-        description: packages.adhd.description
-      },
-      autism: {
-        title: packages.autism.title,
-        price: packagePrice("autism"),
-        description: packages.autism.description
-      }
-    },
-    schoolObservations: {
-      title: assessments.schoolObservations.title,
-      price: packagePrice("schoolObservations"),
-      description: assessments.schoolObservations.description
-    },
-    faq: assessments.faq
-  },
-
-  groups: {
-    sourceUrl: asset("group-therapy/"),
-    overview: groups.overview,
-    // A copy, so switching a program off never edits the shared JSON module.
-    programs: { ...groups.programs },
-    circleOfSecurity: {
-      sourceUrl: asset("group-therapy/"),
-      title: groups.circleOfSecurity.title,
-      description: groups.circleOfSecurity.description,
-      details: groups.circleOfSecurity.details
-    },
-    workshops: {
-      sourceUrl: asset("group-therapy/"),
-      title: groups.workshops.title,
-      topics: groups.workshops.topics
-    }
-  },
-
-  /* A team member's `id` is their profile address under /team/. */
-  team: {
-    sourceUrl: asset("team/"),
-    availability: team.availability.filter(({ id }) => teamOnSite(id)).map(({ name, status }) => ({ name, status })),
-    // The dogs are listed by name; their id is on their entry in `members`.
-    dogs: team.dogs.filter((name) => teamOnSite(team.members.find((member) => member.name === name)?.id)),
-    members: team.members.filter(({ id }) => teamOnSite(id)).map(({ id, name, role, credentials, summary }) => ({
-      name,
-      role,
-      sourceUrl: asset(`team/${id}/`),
-      credentials,
-      summary
-    }))
-  },
-
-  /* A blog article's `id` is its address under /library/. */
-  library: {
-    products: library.products.map(({ title, description }) => ({
-      title,
-      sourceUrl: asset("library/"),
-      description
-    })),
-    videos: {
-      sourceUrl: asset("library/"),
-      topics: library.videos.topics
-    },
-    publications: {
-      sourceUrl: asset("library/"),
-      description: library.publications.description
-    },
-    media: {
-      sourceUrl: asset("library/"),
-      items: library.media.items
-    },
-    blogArticles: library.blogArticles.map(({ id, title, date, excerpt }) => ({
-      title,
-      slug: id,
-      date,
-      url: asset(`library/${id}/`),
-      excerpt
-    }))
-  },
-
-  workWithUs: {
-    sourceUrl: asset("work-with-us/"),
-    values: workWithUs.values,
-    culture: workWithUs.culture,
-    opportunities: workWithUs.opportunities,
-    enquiry: {
-      email: clinic.email,
-      sourceUrl: asset("work-with-us/")
-    }
   }
 };
 
-/* Take out the packages and programs this build switches off (see `hidden`
-   above), and any room sign that would open one of them. */
-if (hidden.packages.size > 0 || hidden.programs.size > 0) {
-  const removedKeys = new Set();
-  const removeFrom = (parent, key, switchedOff, contentKey) => {
-    if (!parent[key] || !switchedOff.has(key)) return;
-    delete parent[key];
-    removedKeys.add(contentKey);
-  };
-  const { assessments: shownAssessments, groups: shownGroups } = siteContent;
-  for (const key of Object.keys(shownAssessments.packages)) {
-    removeFrom(shownAssessments.packages, key, hidden.packages, `assessments.packages.${key}`);
-  }
-  removeFrom(shownAssessments, "schoolObservations", hidden.packages, "assessments.schoolObservations");
-  for (const key of Object.keys(shownGroups.programs)) {
-    removeFrom(shownGroups.programs, key, hidden.programs, `groups.programs.${key}`);
-  }
-
+/*
+ * A sign that opens a preview the build did not make is left off its room:
+ * a package, program or person switched off ("Show on the live website",
+ * issue #95), or a principle staff removed. Only on /house/ itself, where
+ * the previews are; a test without them keeps every sign.
+ */
+if (houseContent.previews) {
+  const opensNothing = (spot) =>
+    (spot.action ?? "content") === "content" && !spot.targetRoom && spot.contentKey && !(spot.contentKey in previews);
   for (const rooms of [roomSceneDefaults.rooms, siteContent.rooms]) {
     for (const room of Object.values(rooms)) {
       if (Array.isArray(room.hotspots)) {
-        room.hotspots = room.hotspots.filter((spot) => !removedKeys.has(spot.contentKey));
+        room.hotspots = room.hotspots.filter((spot) => !opensNothing(spot));
       }
     }
   }

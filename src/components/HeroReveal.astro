@@ -83,6 +83,21 @@ interface Props {
   /** The words on the plate. "Step inside" everywhere a room is a room; the
       homepage opens on the whole building instead. */
   enterLabel?: string;
+  /**
+   * A short greeting set small above the title ("Welcome to", over "Therapy
+   * House"), so the name reads as the name and the greeting introduces it.
+   * The heading's text, and so its accessible name, is the greeting, the
+   * title and the subtitle in order, as before. Its words rise into place
+   * once on arrival, unless motion is reduced.
+   */
+  greeting?: string;
+  /**
+   * Lamplight on the words: a warm light that drifts slowly across the
+   * greeting and title and follows the pointer, warming the ink where it
+   * falls. Needs `greeting`. Nothing of it exists under reduced motion or
+   * without JavaScript; the heading is simply the heading.
+   */
+  lamplight?: boolean;
 }
 
 const {
@@ -105,7 +120,14 @@ const {
   room,
   roomName,
   enterLabel = 'Step inside',
+  greeting,
+  lamplight = false,
 } = Astro.props;
+
+/* The greeting and the title as words, each in a line box it can rise out
+   of; `--i` is its place in the whole heading, for the stagger. */
+const greetingWords = greeting ? greeting.trim().split(/\s+/) : [];
+const titleWords = greeting ? title.trim().split(/\s+/) : [];
 
 const anchored = layout === 'anchored';
 const stacked = !anchored;
@@ -179,11 +201,26 @@ const sizes = imageSmall
 >
   <div class="hero__stage">
     <div class="hero__copy">
-      <h1>
+      <h1 class:list={[greeting && 'hero__title--welcome']}>
         {/* The space is for everything that reads the text rather than the
             layout: without it a screen reader, a search snippet and the
             heading's own text content all got "Therapy HousePsychologists". */}
-        {title}{titleSub && <>{' '}<span class="hero__sub">{titleSub}</span></>}{titleAccent && <><br /><br /><span class="hero__accent">{titleAccent}</span></>}
+        {greeting ? (
+          <span class="hero__welcome" data-hero-lamp={lamplight ? '' : undefined}>
+            <span class="hero__words">
+              <span class="hero__greet">
+                {greetingWords.map((word, i) => (
+                  <>{i > 0 && ' '}<span class="hero__word"><span class="hero__word-in" style={`--i: ${i}`}>{word}</span></span></>
+                ))}
+              </span>{' '}
+              <span class="hero__name">
+                {titleWords.map((word, i) => (
+                  <>{i > 0 && ' '}<span class="hero__word"><span class="hero__word-in" style={`--i: ${greetingWords.length + i}`}>{word}</span></span></>
+                ))}
+              </span>
+            </span>
+          </span>
+        ) : title}{titleSub && <>{' '}<span class="hero__sub">{titleSub}</span></>}{titleAccent && <><br /><br /><span class="hero__accent">{titleAccent}</span></>}
       </h1>
       {lede && <p class="lede">{lede}</p>}
     </div>
@@ -390,6 +427,106 @@ const sizes = imageSmall
   </script>
 )}
 
+{lamplight && greeting && (
+  <script is:inline>
+    /*
+     * Lamplight on the words (chosen from the welcome prototype). A warmed
+     * copy of the greeting and title is laid exactly over them and shown
+     * only inside a soft circle of light, which drifts slowly on its own and
+     * follows the pointer when there is one, with a little weight, so it
+     * glides rather than snaps.
+     *
+     * The copy is made here, not in the HTML, so a search snippet, a screen
+     * reader and anyone without JavaScript read the heading once. Nothing
+     * runs under reduced motion; the loop stops whenever the heading is off
+     * screen or the tab is hidden.
+     */
+    (function () {
+      var welcome = document.querySelector('[data-hero-lamp]');
+      var words = welcome && welcome.querySelector('.hero__words');
+      if (!words) return;
+      var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+      if (reduced.matches) return;
+
+      var lit = words.cloneNode(true);
+      lit.classList.add('hero__words--lit');
+      lit.setAttribute('aria-hidden', 'true');
+      welcome.appendChild(lit);
+      welcome.classList.add('hero__welcome--lit');
+
+      var lamp = { x: 0.32, y: 0.34, tx: 0.32, ty: 0.34, live: false, pointer: null };
+      var frame = 0;
+      var last = 0;
+      var visible = true;
+
+      function step(now) {
+        frame = 0;
+        if (lamp.pointer) {
+          // One layout read a frame, however fast the pointer moves.
+          var r = welcome.getBoundingClientRect();
+          lamp.tx = (lamp.pointer.x - r.left) / Math.max(r.width, 1);
+          lamp.ty = (lamp.pointer.y - r.top) / Math.max(r.height, 1);
+          lamp.pointer = null;
+        } else if (!lamp.live) {
+          // A slow figure that never repeats on a beat you can count.
+          lamp.tx = 0.5 + Math.sin(now / 5200) * 0.42;
+          lamp.ty = 0.42 + Math.sin(now / 3100 + 1.2) * 0.3;
+        }
+        // The same glide at any frame rate.
+        var dt = last ? Math.min(now - last, 100) : 16.7;
+        last = now;
+        var k = 1 - Math.pow(1 - 0.055, dt / 16.7);
+        lamp.x += (lamp.tx - lamp.x) * k;
+        lamp.y += (lamp.ty - lamp.y) * k;
+        welcome.style.setProperty('--lamp-x', (lamp.x * 100).toFixed(2) + '%');
+        welcome.style.setProperty('--lamp-y', (lamp.y * 100).toFixed(2) + '%');
+        welcome.style.setProperty('--lamp-nx', lamp.x.toFixed(3));
+        welcome.style.setProperty('--lamp-ny', lamp.y.toFixed(3));
+        run();
+      }
+
+      function run() {
+        if (!frame && visible && !reduced.matches) frame = requestAnimationFrame(step);
+        else if (!visible) last = 0;
+      }
+
+      addEventListener(
+        'pointermove',
+        function (event) {
+          if (event.pointerType === 'touch') return;
+          lamp.live = true;
+          lamp.pointer = { x: event.clientX, y: event.clientY };
+          run();
+        },
+        { passive: true }
+      );
+      document.documentElement.addEventListener('pointerleave', function () {
+        lamp.live = false;
+      });
+
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (entries) {
+          visible = entries[0].isIntersecting;
+          run();
+        }).observe(welcome);
+      }
+
+      // Someone who turns motion off mid-visit gets the plain heading back.
+      if (reduced.addEventListener) {
+        reduced.addEventListener('change', function (event) {
+          if (!event.matches) return;
+          if (frame) cancelAnimationFrame(frame);
+          frame = 0;
+          lit.remove();
+          welcome.classList.remove('hero__welcome--lit');
+        });
+      }
+
+      run();
+    })();
+  </script>
+)}
+
 <style>
   /* ===================================================================
      The hero is one movement on every page: the room steps back to the
@@ -544,6 +681,156 @@ const sizes = imageSmall
     letter-spacing: normal;
     font-weight: 500;
     color: var(--heading-accent);
+  }
+
+  /* ---- The welcome: a greeting over a name ----
+     "Welcome to" was competing with "Therapy House" at the same size across
+     three ragged lines; set small above it, it introduces the name. The
+     measure widens so the name holds one line. */
+  .hero--anchored h1.hero__title--welcome {
+    max-width: 15ch;
+    text-wrap: balance;
+  }
+
+  .hero__welcome {
+    position: relative;
+    display: block;
+  }
+
+  .hero__words,
+  .hero__greet,
+  .hero__name {
+    display: block;
+  }
+
+  .hero__greet {
+    margin-bottom: 0.1em;
+    font-size: 0.4em;
+    line-height: 1.12;
+    letter-spacing: 0.005em;
+    color: var(--heading-accent);
+  }
+
+  /* A line box per word, so a word can rise out of one. The padding and its
+     matching negative margin give Georgia's descenders room inside an
+     `overflow: hidden` box. */
+  .hero__word {
+    display: inline-block;
+    overflow: hidden;
+    padding-bottom: 0.2em;
+    margin-bottom: -0.2em;
+    vertical-align: bottom;
+  }
+
+  .hero__word-in {
+    display: inline-block;
+  }
+
+  /* Lamplight: the warmed copy (added by the script) shows only inside the
+     lamp's circle, and its shadow leans away from where the lamp stands. */
+  .hero__words--lit {
+    position: absolute;
+    inset: 0 0 auto;
+    color: var(--chestnut);
+    pointer-events: none;
+    user-select: none;
+    -webkit-mask-image: radial-gradient(
+      circle 300px at var(--lamp-x, 32%) var(--lamp-y, 34%),
+      #000 0%,
+      rgba(0, 0, 0, 0.86) 26%,
+      rgba(0, 0, 0, 0) 64%
+    );
+    mask-image: radial-gradient(
+      circle 300px at var(--lamp-x, 32%) var(--lamp-y, 34%),
+      #000 0%,
+      rgba(0, 0, 0, 0.86) 26%,
+      rgba(0, 0, 0, 0) 64%
+    );
+  }
+
+  /* The copy does not rise with the words: it arrives once they have settled,
+     so the two never fall out of step. Its words are not clipped either, or
+     the soft shadow would stop at each word's edge in a hard rectangle. */
+  .hero__words--lit .hero__word {
+    overflow: visible;
+  }
+
+  .hero__words--lit .hero__word-in {
+    animation: none;
+    text-shadow: calc((0.5 - var(--lamp-nx, 0.5)) * 16px) calc((0.5 - var(--lamp-ny, 0.5)) * 12px) 20px
+      rgba(60, 35, 12, 0.26);
+  }
+
+  .hero__words--lit .hero__greet {
+    color: #a9713f;
+  }
+
+  /* Arrival: each word rises out of its line, then the rule draws and the
+     lede follows. Once, on load; under reduced motion the heading is simply
+     there. */
+  @media (prefers-reduced-motion: no-preference) {
+    .hero__word-in {
+      animation: hero-word-rise 900ms cubic-bezier(0.16, 0.86, 0.24, 1) both;
+      animation-delay: calc(var(--i, 0) * 78ms + 90ms);
+    }
+
+    .hero__title--welcome::after {
+      transform-origin: left center;
+      animation: hero-rule-draw 760ms cubic-bezier(0.16, 0.86, 0.24, 1) 420ms both;
+    }
+
+    .hero__copy:has(.hero__title--welcome) .lede {
+      animation: hero-lede-in 800ms cubic-bezier(0.16, 0.86, 0.24, 1) 560ms both;
+    }
+
+    .hero__words--lit {
+      animation: hero-lamp-in 900ms ease 1200ms both;
+    }
+  }
+
+  @keyframes hero-lamp-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes hero-word-rise {
+    from {
+      transform: translateY(0.66em) rotate(1.1deg);
+      filter: blur(7px);
+      opacity: 0;
+    }
+    55% {
+      filter: blur(0);
+    }
+    to {
+      transform: none;
+      filter: blur(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes hero-rule-draw {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  @keyframes hero-lede-in {
+    from {
+      transform: translateY(14px);
+      opacity: 0;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
   }
 
   .hero__accent {

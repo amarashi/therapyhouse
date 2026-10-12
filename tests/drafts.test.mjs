@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { includeInBuild, shownEntries, shownItems } from "../src/lib/drafts.js";
-import { HOUSE_FACTS_ID, houseFacts, houseFactsJson } from "../src/lib/house-facts.js";
 import { medicare } from "../src/data/medicare.js";
 
 /**
@@ -26,89 +25,66 @@ test("the helper keeps drafts on the Preview and drops them in production", () =
 });
 
 test("the house leaves out hidden team members, packages and programs, and their signs", async () => {
-  const facts = houseFacts({
-    fees: [],
-    packages: [],
-    medicare,
-    hidden: { team: ["laura-storey", "reea"], packages: ["adhd", "schoolObservations"], programs: ["legoClub"] },
-  });
-  const json = houseFactsJson(facts);
-  globalThis.document = { getElementById: (id) => (id === HOUSE_FACTS_ID ? { textContent: json } : null) };
-  try {
-    const data = await import(`../public/assets/scripts/content-data.js?hidden=${Date.now()}`);
-    const { siteContent, roomSceneDefaults, teamOnSite } = data;
-    const names = (list) => list.map((item) => (typeof item === "string" ? item : item.name));
-
-    assert.ok(!names(siteContent.team.members).includes("Laura Storey"));
-    assert.ok(!names(siteContent.team.availability).includes("Laura Storey"));
-    assert.deepEqual(siteContent.team.dogs, ["Samson"]);
-    assert.ok(names(siteContent.team.members).includes("Rani Banks"));
-
-    assert.equal(siteContent.assessments.packages.adhd, undefined);
-    assert.ok(siteContent.assessments.packages.autism);
-    assert.equal(siteContent.assessments.schoolObservations, undefined);
-    assert.equal(siteContent.groups.programs.legoClub, undefined);
-    assert.ok(siteContent.groups.programs.hunterRemote);
-
-    const signs = (room) => roomSceneDefaults.rooms[room].hotspots.map((h) => h.id);
-    assert.ok(!signs("assessments").includes("adhd-assessment"));
-    assert.ok(!signs("assessments").includes("school-observations"));
-    assert.ok(signs("assessments").includes("autism-assessment"));
-    assert.ok(!signs("groups").includes("lego-club"));
-
-    const { teamMembers } = await import("../public/assets/scripts/site-data.js");
-    // Every carousel entry carries the team id the build hides by.
-    assert.ok(teamMembers.every((m) => typeof m.id === "string" && m.id));
-    const carousel = teamMembers.filter((m) => teamOnSite(m.id)).map((m) => m.name);
-    assert.ok(!carousel.includes("Laura Storey") && !carousel.includes("Reea"));
-    assert.equal(carousel.length, teamMembers.length - 2);
-  } finally {
-    delete globalThis.document;
-  }
-});
-
-test("the house's team ids are the team collection's ids", async () => {
-  const { readdirSync, readFileSync } = await import("node:fs");
-  const ids = readdirSync(new URL("../src/content/team/", import.meta.url))
-    .filter((f) => f.endsWith(".md"))
-    .map((f) => f.slice(0, -3))
-    .sort();
-  const copy = JSON.parse(readFileSync(new URL("../public/assets/content/house-copy.json", import.meta.url), "utf8"));
-  const { teamMembers } = await import("../public/assets/scripts/site-data.js");
-  // Every person in the house is a real team entry, so switching an entry off
-  // reaches the house. The reverse need not hold: someone added through the
-  // CMS is on the team page at once, and in the illustrated house only once a
-  // developer has placed them there (site-data.js).
-  for (const id of copy.team.members.map((m) => m.id)) assert.ok(ids.includes(id), `house-copy.json member ${id}`);
-  for (const id of teamMembers.map((m) => m.id)) assert.ok(ids.includes(id), `site-data.js member ${id}`);
-  assert.deepEqual(teamMembers.map((m) => m.id).sort(), copy.team.members.map((m) => m.id).sort());
-  for (const row of copy.team.availability) assert.ok(ids.includes(row.id), `availability id ${row.id}`);
-  for (const dog of copy.team.dogs) assert.ok(copy.team.members.some((m) => m.name === dog), `dog ${dog} has no member entry`);
-});
-
-test("every package and program the house keeps a copy of has a page item with the same id", async () => {
-  // The house joins prices and the "Show on the live website" switch by id
-  // (src/pages/house.astro), so a title can be reworded in the CMS freely, but
-  // a key in house-copy.json with no matching `id` would never be priced or
-  // switched off.
+  // /house/ builds its previews from what the build shows (src/pages/house.astro),
+  // so a switched-off item is simply not there, and its sign goes with it.
+  const { builtHouseContent, collection, loadHouse } = await import("./helpers/house-content.mjs");
+  const { houseContent } = await import("../src/lib/house-content.js");
+  const { books, videos } = await import("../src/data/library-shelf.js");
   const { readFileSync } = await import("node:fs");
-  const { frontmatter: parse } = await import("./helpers/markdown.mjs");
   const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
-  const frontmatter = (path) => parse(read(path));
-  const copy = JSON.parse(read("public/assets/content/house-copy.json"));
-  const ids = (items) => items.map((item) => item.id).filter(Boolean).sort();
+  const pages = Object.fromEntries(collection("pages").map((entry) => [entry.id, entry.data]));
+  const off = { team: ["laura-storey", "reea"], packages: ["adhd", "schoolObservations"], programs: ["legoClub"] };
+  pages.assessments = { ...pages.assessments, packages: pages.assessments.packages.filter((p) => !off.packages.includes(p.id)) };
+  pages["group-therapy"] = { ...pages["group-therapy"], programs: pages["group-therapy"].programs.filter((p) => !off.programs.includes(p.id)) };
+  const content = houseContent({
+    pages,
+    services: collection("services"),
+    articles: collection("articles"),
+    team: collection("team").filter((entry) => !off.team.includes(entry.id)),
+    books,
+    videos,
+    clinic: JSON.parse(read("public/assets/content/clinic.json")),
+    links: JSON.parse(read("public/assets/content/house-copy.json")).links,
+    medicare,
+  });
+  const { roomSceneDefaults, teamMembers } = await loadHouse(content);
 
-  assert.deepEqual(
-    ids(frontmatter("src/content/pages/assessments.md").packages),
-    [...Object.keys(copy.assessments.packages), "schoolObservations"].sort()
-  );
-  assert.deepEqual(ids(frontmatter("src/content/pages/group-therapy.md").programs), Object.keys(copy.groups.programs).sort());
+  const carousel = teamMembers.map((m) => m.name);
+  assert.ok(!carousel.includes("Laura Storey") && !carousel.includes("Reea"));
+  assert.equal(teamMembers.length, builtHouseContent().team.length - 2);
+  assert.ok(!content.previews["team.availability"].items.some((i) => i.title === "Laura Storey"));
+  assert.deepEqual(content.previews["team.dogs"].items.map((i) => i.title), ["Samson"]);
+
+  const signs = (room) => roomSceneDefaults.rooms[room].hotspots.map((h) => h.id);
+  assert.ok(!signs("assessments").includes("adhd-assessment"));
+  assert.ok(!signs("assessments").includes("school-observations"));
+  assert.ok(signs("assessments").includes("autism-assessment"));
+  assert.ok(!signs("groups").includes("lego-club"));
+  assert.ok(signs("groups").includes("hunter-remote"));
 });
 
-test("with nothing hidden the house keeps everything", async () => {
-  const { siteContent, roomSceneDefaults } = await import(`../public/assets/scripts/content-data.js?none=${Date.now()}`);
-  assert.equal(siteContent.team.members.length, 12);
-  assert.equal(Object.keys(siteContent.assessments.packages).length, 4);
-  assert.equal(Object.keys(siteContent.groups.programs).length, 4);
-  assert.ok(roomSceneDefaults.rooms.assessments.hotspots.some((h) => h.id === "adhd-assessment"));
+test("every package and program sign in the house names a page item by its id", async () => {
+  // The house joins a sign to its item by the item's `id` in assessments.md
+  // and group-therapy.md, so a title can be reworded in the CMS freely.
+  const { collection } = await import("./helpers/house-content.mjs");
+  const { roomSceneDefaults } = await import("../public/assets/scripts/content-data.js");
+  const pages = Object.fromEntries(collection("pages").map((entry) => [entry.id, entry.data]));
+  const ids = (items) => items.map((item) => item.id).filter(Boolean).sort();
+  const keys = (room, pattern) =>
+    roomSceneDefaults.rooms[room].hotspots
+      .map((h) => h.contentKey.match(pattern)?.[1])
+      .filter(Boolean)
+      .sort();
+
+  assert.deepEqual(keys("assessments", /^assessments\.(?:packages\.)?(\w+)$/).filter((k) => !["process", "documents", "faq"].includes(k)), ids(pages.assessments.packages));
+  assert.deepEqual(keys("groups", /^groups\.programs\.(\w+)$/), ids(pages["group-therapy"].programs));
+});
+
+test("with nothing hidden the house keeps every sign", async () => {
+  const { loadHouse } = await import("./helpers/house-content.mjs");
+  const { roomSceneDefaults: built } = await loadHouse();
+  const { roomSceneDefaults: plain } = await import(`../public/assets/scripts/content-data.js?none=${Date.now()}`);
+  for (const [id, room] of Object.entries(plain.rooms)) {
+    assert.deepEqual(built.rooms[id].hotspots.map((h) => h.id), room.hotspots.map((h) => h.id), id);
+  }
 });

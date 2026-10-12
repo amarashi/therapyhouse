@@ -9,18 +9,17 @@ import {
   frames,
   insideEdgeFallbackColors,
   insideImageSize,
-  insideParallaxDepths,
-  teamMembers
+  insideParallaxDepths
 } from "./site-data.js";
 import { requestIdleTask } from "./utils.js";
-import { exteriorHotspots, phoneHref, roomSceneDefaults, siteContent, teamOnSite } from "./content-data.js?v=20261012-show-on-site";
-import { createDogEyeController } from "./dog-eye-controller.js?v=20260529-eye-scale";
-import { createEntranceVideoController } from "./entrance-video.js?v=20261011-reduced-door";
+import { exteriorHotspots, houseContent, previews, roomNavigation, roomSceneDefaults, teamMembers } from "./content-data.js?v=20261013-motion";
+import { createDogEyeController } from "./dog-eye-controller.js?v=20261013-motion";
+import { createEntranceVideoController } from "./entrance-video.js?v=20261013-rooms";
 import { createFirelightController } from "./firelight-controller.js";
-import { createInsideScene } from "./inside-scene.js";
+import { createInsideScene } from "./inside-scene.js?v=20261013-motion";
 import { createModalDialog } from "./modal-dialog.js";
-import { createTeamCarousel } from "./team-carousel.js";
-import { createTurntableViewer } from "./turntable-viewer.js";
+import { createTeamCarousel } from "./team-carousel.js?v=20261013-motion";
+import { createTurntableViewer } from "./turntable-viewer.js?v=20261013-motion";
 
 const stage = document.getElementById("stage");
 const canvas = document.getElementById("viewerCanvas");
@@ -51,10 +50,13 @@ const contentModalClose = document.getElementById("contentModalClose");
 const contentModalEyebrow = document.getElementById("contentModalEyebrow");
 const contentModalTitle = document.getElementById("contentModalTitle");
 const contentModalBody = document.getElementById("contentModalBody");
+const contentModalActions = document.getElementById("contentModalActions");
 const contactModal = document.getElementById("contactModal");
 const contactModalClose = document.getElementById("contactModalClose");
 const cursorSparkleLayer = document.getElementById("cursorSparkleLayer");
 const houseExit = document.getElementById("houseExit");
+const roomMenuToggle = document.getElementById("roomMenuToggle");
+const roomMenuList = document.getElementById("roomMenuList");
 const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 /*
  * Save-Data is the browser passing on "this visitor is on a metered or slow
@@ -91,7 +93,7 @@ const turntable = createTurntableViewer({
   onExteriorHotspot: (hotspot) => {
     if (!hotspot.targetRoom || insideScene.isActive) return;
 
-    entranceVideo.enterInsideView(hotspot.targetRoom);
+    goToRoom(hotspot.targetRoom);
   },
   frames,
   frameCount,
@@ -124,8 +126,9 @@ const teamCarousel = createTeamCarousel({
   previousButton: teamCarouselPrev,
   nextButton: teamCarouselNext,
   closeButton: teamCarouselClose,
-  // Team members switched off for this build stay out of the carousel (issue #95).
-  teamMembers: teamMembers.filter((member) => teamOnSite(member.id)),
+  // Everyone this build shows, from the team collection (src/lib/house-content.js).
+  teamMembers,
+  profileLabel: houseContent.profileLabel,
   canOpen: () => insideScene.isActive,
   fallbackFocus: () => insideScene.getSceneSigns().find((sign) => sign.dataset.action === "about")
 });
@@ -169,8 +172,11 @@ const entranceVideo = createEntranceVideoController({
   doorVideo,
   turntable,
   insideScene,
-  onEnterInside: () => {
+  onEnterInside: (roomId) => {
     teamCarousel.preloadImages();
+    recordVisit(roomId);
+    markMenuRoom(roomId);
+    preloadNeighbours(roomId);
   },
   reducedMotionQuery
 });
@@ -195,34 +201,164 @@ function scheduleResize() {
 function returnToExteriorView() {
   if (!insideScene.isActive) return;
 
-  teamCarousel.close();
-  philosophyDialog.close();
-  contentDialog.close();
-  contactDialog.close();
+  closeDialogs();
   entranceVideo.reset();
   insideScene.leave();
   turntable.unlockInteraction();
   turntable.resizeCanvas();
 }
 
-function getContentByKey(contentKey) {
-  if (!contentKey) return undefined;
-
-  return contentKey.split(".").reduce((value, key) => {
-    if (value && typeof value === "object" && key in value) {
-      return value[key];
-    }
-    return undefined;
-  }, siteContent);
+function closeDialogs() {
+  teamCarousel.close();
+  philosophyDialog.close();
+  contentDialog.close();
+  contactDialog.close();
 }
 
-function toReadableLabel(value) {
-  return String(value || "")
-    .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .replace(/[-_]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+/*
+ * Moving through the house (docs/house-plan.md, phase C). Each room has its
+ * own address, `?room=<id>`, beside the `from` page the exit leads back to,
+ * and every move is a browser history entry: the browser's Back button steps
+ * back through the rooms, and so does the Back sign in a room. A visit that
+ * began in a room has nothing behind it, so there the Back sign goes outside.
+ *
+ * `restoring` is set while the house is following the history (arriving on a
+ * room's address, or the visitor pressing Back) so that following it does not
+ * write a new entry on top.
+ */
+let restoring = false;
+
+function houseAddress(roomId) {
+  const url = new URL(window.location.href);
+  if (roomId && roomId !== "exterior") url.searchParams.set("room", roomId);
+  else url.searchParams.delete("room");
+  return url;
+}
+
+function recordVisit(roomId) {
+  if (restoring) return;
+  const depth = (window.history.state?.house ? window.history.state.depth : 0) + 1;
+  window.history.pushState({ house: true, room: roomId || "exterior", depth }, "", houseAddress(roomId));
+}
+
+function showRoom(roomId) {
+  if (!roomSceneDefaults.rooms[roomId]) return;
+  if (!insideScene.isActive) {
+    entranceVideo.enterInsideView(roomId);
+    return;
+  }
+  if (insideScene.activeRoomId === roomId) return;
+  closeDialogs();
+  insideScene.setActiveRoom(roomId);
+  markMenuRoom(roomId);
+  preloadNeighbours(roomId);
+}
+
+/*
+ * The rooms a visitor can reach from this one load while the house is idle,
+ * so the cross-fade into them starts at once (docs/house-plan.md, phase G).
+ * Reaching for a door (hovering or focusing a sign or a menu item) loads
+ * that room straight away.
+ */
+function preloadNeighbours(roomId) {
+  const room = roomSceneDefaults.rooms[roomId];
+  if (!room) return;
+  requestIdleTask(() => {
+    room.hotspots.filter((spot) => spot.targetRoom).forEach((spot) => insideScene.preloadRoom(spot.targetRoom));
+  });
+}
+
+function bindDoorPreloading() {
+  const reachFor = (event) => {
+    const door = event.target.closest?.("[data-target-room], .room-menu__room");
+    const roomId = door?.dataset.targetRoom || door?.dataset.room;
+    if (roomId && roomId !== "exterior") insideScene.preloadRoom(roomId);
+  };
+  document.addEventListener("pointerover", reachFor, { passive: true });
+  document.addEventListener("focusin", reachFor);
+}
+
+/** Go to a room, inside or from the exterior, as a step the visitor can take back. */
+function goToRoom(roomId) {
+  const wasInside = insideScene.isActive;
+  showRoom(roomId);
+  // Walking in from outside is recorded by `onEnterInside`.
+  if (wasInside) recordVisit(roomId);
+}
+
+function goOutside() {
+  if (!insideScene.isActive) return;
+  returnToExteriorView();
+  markMenuRoom("exterior");
+  recordVisit("exterior");
+}
+
+/* The Back sign: one step back while there is a step inside the house to take. */
+function stepBack() {
+  if (window.history.state?.house && window.history.state.depth > 0) {
+    window.history.back();
+  } else {
+    goOutside();
+  }
+}
+
+function followHistory(event) {
+  const state = event.state;
+  if (!state?.house) return;
+  restoring = true;
+  try {
+    if (state.room === "exterior") {
+      returnToExteriorView();
+      markMenuRoom("exterior");
+    } else {
+      showRoom(state.room);
+    }
+  } finally {
+    restoring = false;
+  }
+}
+
+/* The rooms menu: a disclosure button and a list of rooms (house.astro). */
+function markMenuRoom(roomId) {
+  roomMenuList?.querySelectorAll(".room-menu__room").forEach((button) => {
+    if (button.dataset.room === (roomId || "exterior")) button.setAttribute("aria-current", "location");
+    else button.removeAttribute("aria-current");
+  });
+}
+
+function setMenuOpen(open) {
+  if (!roomMenuToggle || !roomMenuList) return;
+  roomMenuToggle.setAttribute("aria-expanded", String(open));
+  roomMenuList.hidden = !open;
+}
+
+function bindRoomMenu() {
+  if (!roomMenuToggle || !roomMenuList) return;
+
+  roomMenuToggle.addEventListener("click", () => {
+    setMenuOpen(roomMenuList.hidden);
+    if (!roomMenuList.hidden) roomMenuList.querySelector('[aria-current="location"], .room-menu__room')?.focus();
+  });
+
+  roomMenuList.addEventListener("click", (event) => {
+    const button = event.target.closest(".room-menu__room");
+    if (!button) return;
+    setMenuOpen(false);
+    roomMenuToggle.focus();
+    if (button.dataset.room === "exterior") goOutside();
+    else goToRoom(button.dataset.room);
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !roomMenuList.hidden) {
+      setMenuOpen(false);
+      roomMenuToggle.focus();
+    }
+  });
+
+  document.addEventListener("pointerdown", (event) => {
+    if (!roomMenuList.hidden && !event.target.closest("#roomMenu")) setMenuOpen(false);
+  });
 }
 
 function createTextElement(tagName, text, className) {
@@ -232,203 +368,60 @@ function createTextElement(tagName, text, className) {
   return element;
 }
 
-function isHttpUrl(value) {
-  return /^https?:\/\//i.test(String(value || ""));
-}
-
-function getContentLink(contentKey, value) {
-  const text = String(value || "");
-
-  if (contentKey === "contact.phone") {
-    return { href: phoneHref(text), label: `Call Therapy House on ${text}` };
-  }
-  if (contentKey === "contact.email" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text)) {
-    return { href: `mailto:${text}`, label: `Email ${text}` };
-  }
-  if (contentKey === "contact.bookingUrl") {
-    return { href: text, label: "Book a Therapy House appointment online" };
-  }
-  if (contentKey === "contact.address") {
-    const query = encodeURIComponent(text);
-    return { href: `https://www.google.com/maps/search/?api=1&query=${query}`, label: "Open Therapy House in Google Maps" };
-  }
-  if (isHttpUrl(text)) {
-    return { href: text, label: text.replace(/^https?:\/\//i, "") };
-  }
-
-  return null;
-}
-
-function appendLink(parent, href, label) {
-  const link = document.createElement("a");
-  link.className = "content-modal__button";
+/* A link that leaves the site (the booking portal, a map) opens a new tab; the
+   site's own pages, `tel:` and `mailto:` open where they are. */
+function createLink(href, text, className) {
+  const link = createTextElement("a", text, className);
   link.href = href;
-  link.textContent = label;
-  if (isHttpUrl(href)) {
+  if (/^https?:\/\//i.test(href) && new URL(href, window.location.href).origin !== window.location.origin) {
     link.target = "_blank";
     link.rel = "noopener";
   }
-  parent.appendChild(link);
+  return link;
 }
 
-function appendStringContent(parent, value, contentKey) {
-  const link = getContentLink(contentKey, value);
-  if (link) {
-    appendLink(parent, link.href, link.label);
-    return;
-  }
-
-  parent.appendChild(createTextElement("p", value));
-}
-
-function appendStringList(parent, values) {
-  const list = document.createElement("ul");
-  values.forEach((value) => {
-    const item = document.createElement("li");
-    item.textContent = value;
-    list.appendChild(item);
-  });
-  parent.appendChild(list);
-}
-
-function appendMeta(parent, source) {
-  const metaFields = ["price", "audience", "status", "role", "credentials", "date", "email"];
-  const fields = metaFields.filter((field) => typeof source[field] === "string" && source[field].trim());
-  if (!fields.length) return;
-
-  const list = document.createElement("dl");
-  list.className = "content-modal__meta";
-  fields.forEach((field) => {
-    const item = document.createElement("div");
-    item.appendChild(createTextElement("dt", toReadableLabel(field)));
-    item.appendChild(createTextElement("dd", source[field]));
-    list.appendChild(item);
-  });
-  parent.appendChild(list);
-}
-
-function appendObjectSummary(parent, source, contentKey) {
-  const paragraphFields = ["description", "summary", "excerpt", "intro", "closing"];
-  paragraphFields.forEach((field) => {
-    const value = source[field];
-    if (typeof value === "string" && value.trim()) {
-      parent.appendChild(createTextElement("p", value));
-    } else if (Array.isArray(value) && value.every((item) => typeof item === "string")) {
-      value.forEach((item) => parent.appendChild(createTextElement("p", item)));
-    }
-  });
-
-  appendMeta(parent, source);
-
-  if (typeof source.email === "string") {
-    const link = getContentLink(`${contentKey}.email`, source.email);
-    if (link) appendLink(parent, link.href, link.label);
-  }
-
-  if (source.link && typeof source.link.href === "string") {
-    appendLink(parent, source.link.href, source.link.label || source.link.href);
-  } else if (typeof source.url === "string") {
-    appendLink(parent, source.url, "Read article");
-  } else if (typeof source.sourceUrl === "string") {
-    appendLink(parent, source.sourceUrl, "Open source page");
-  }
-}
-
-function appendObjectCard(parent, source, label, contentKey) {
-  const section = document.createElement("section");
-  section.className = "content-modal__section";
-  const title = source.title || source.name || source.label || label;
-  if (title) {
-    section.appendChild(createTextElement("h3", title, "content-modal__section-title"));
-  }
-
-  appendObjectSummary(section, source, contentKey);
-
-  const nestedListFields = ["inclusions", "details", "topics", "items"];
-  nestedListFields.forEach((field) => {
-    const value = source[field];
-    if (!Array.isArray(value) || !value.length) return;
-
-    section.appendChild(createTextElement("h4", toReadableLabel(field), "content-modal__section-title"));
-    if (value.every((item) => typeof item === "string")) {
-      appendStringList(section, value);
-    }
-  });
-
-  parent.appendChild(section);
-}
-
-function appendArrayContent(parent, values, contentKey) {
-  if (!values.length) {
-    parent.appendChild(createTextElement("p", "This section is being prepared."));
-    return;
-  }
-
-  if (values.every((value) => typeof value === "string")) {
-    appendStringList(parent, values);
-    return;
-  }
-
-  values.forEach((value, index) => {
-    if (value && typeof value === "object" && !Array.isArray(value)) {
-      appendObjectCard(parent, value, `Item ${index + 1}`, `${contentKey}.${index}`);
-    } else {
-      appendStringContent(parent, String(value), `${contentKey}.${index}`);
-    }
-  });
-}
-
-function appendObjectContent(parent, source, contentKey) {
-  appendObjectSummary(parent, source, contentKey);
-
-  Object.entries(source).forEach(([key, value]) => {
-    if (["id", "title", "name", "label", "description", "summary", "excerpt", "intro", "closing", "price", "audience", "status", "role", "credentials", "date", "email", "url", "sourceUrl", "link", "slug"].includes(key)) {
-      return;
-    }
-
-    const sectionTitle = toReadableLabel(key);
-    if (Array.isArray(value)) {
-      const section = document.createElement("section");
-      section.className = "content-modal__section";
-      section.appendChild(createTextElement("h3", sectionTitle, "content-modal__section-title"));
-      appendArrayContent(section, value, `${contentKey}.${key}`);
-      parent.appendChild(section);
-    } else if (value && typeof value === "object") {
-      appendObjectCard(parent, value, sectionTitle, `${contentKey}.${key}`);
-    } else if (typeof value === "string" && value.trim()) {
-      const section = document.createElement("section");
-      section.className = "content-modal__section";
-      section.appendChild(createTextElement("h3", sectionTitle, "content-modal__section-title"));
-      appendStringContent(section, value, `${contentKey}.${key}`);
-      parent.appendChild(section);
-    }
-  });
-}
-
+/*
+ * A sign's preview (src/lib/house-content.js): a heading, perhaps a short fact
+ * under it, a sentence or two, a short list, and the link to the plain page
+ * that holds the whole answer. The house previews; the plain pages explain.
+ */
 function renderContentModal(sign) {
-  const contentKey = sign.dataset.contentKey;
-  const contentValue = getContentByKey(contentKey);
-  if (contentValue === undefined) return false;
+  const preview = previews[sign.dataset.contentKey];
+  if (!preview) return false;
 
   const signLabel = sign.querySelector(".scene-sign__title")?.textContent?.trim() || sign.getAttribute("aria-label") || "Therapy House";
-  const title = contentValue && typeof contentValue === "object" && !Array.isArray(contentValue) && typeof contentValue.title === "string"
-    ? contentValue.title
-    : signLabel;
-
-  contentModalTitle.textContent = title;
+  contentModalTitle.textContent = preview.title || signLabel;
   contentModalEyebrow.textContent = insideScene.activeRoomId
-    ? toReadableLabel(insideScene.activeRoomId)
+    ? roomNavigation.rooms[insideScene.activeRoomId]?.title || "Therapy House"
     : "Therapy House";
-  contentModalBody.replaceChildren();
 
-  if (Array.isArray(contentValue)) {
-    appendArrayContent(contentModalBody, contentValue, contentKey);
-  } else if (contentValue && typeof contentValue === "object") {
-    appendObjectContent(contentModalBody, contentValue, contentKey);
-  } else {
-    appendStringContent(contentModalBody, String(contentValue), contentKey);
+  const body = [];
+  if (preview.meta) body.push(createTextElement("p", preview.meta, "content-modal__meta"));
+  (preview.text ?? []).forEach((paragraph) => body.push(createTextElement("p", paragraph)));
+
+  if (preview.items?.length) {
+    const list = document.createElement("ul");
+    list.className = "content-modal__list";
+    preview.items.forEach((item) => {
+      const entry = document.createElement("li");
+      entry.appendChild(item.href ? createLink(item.href, item.title) : createTextElement("span", item.title, "content-modal__item-title"));
+      if (item.detail) entry.appendChild(createTextElement("span", item.detail, "content-modal__item-detail"));
+      list.appendChild(entry);
+    });
+    body.push(list);
   }
 
+  /* Booking and calling close every preview as an equal pair (PRODUCT.md,
+     DESIGN.md: neither is rendered alone). A preview whose own link is one of
+     the two, such as reception's phone sign, leans on the pair instead. */
+  const actionHrefs = contentModalActions
+    ? Array.from(contentModalActions.querySelectorAll("a"), (link) => link.getAttribute("href"))
+    : [];
+  if (preview.link && !actionHrefs.includes(preview.link.href)) {
+    body.push(createLink(preview.link.href, preview.link.label, "content-modal__more"));
+  }
+
+  contentModalBody.replaceChildren(...body);
   contentDialog.open();
   contentModalPanel.scrollTop = 0;
   return true;
@@ -437,7 +430,7 @@ function renderContentModal(sign) {
 function bindSceneActions() {
   insideScene.setSceneActionHandler((action, sign) => {
     if (action === "back") {
-      returnToExteriorView();
+      stepBack();
     } else if (action === "about") {
       teamCarousel.open();
     } else if (action === "philosophy") {
@@ -445,7 +438,7 @@ function bindSceneActions() {
     } else if (action === "contact") {
       if (insideScene.isActive) contactDialog.open();
     } else if (sign.dataset.targetRoom) {
-      insideScene.setActiveRoom(sign.dataset.targetRoom);
+      goToRoom(sign.dataset.targetRoom);
     } else if (sign.dataset.contentKey) {
       renderContentModal(sign);
     }
@@ -569,9 +562,19 @@ function init() {
   turntable.resizeCanvas();
   bindHouseExit();
 
+  bindRoomMenu();
+  bindDoorPreloading();
   const requestedRoom = readRequestedRoom();
+  window.history.replaceState({ house: true, room: requestedRoom || "exterior", depth: 0 }, "", houseAddress(requestedRoom));
+  window.addEventListener("popstate", followHistory);
+  markMenuRoom(requestedRoom || "exterior");
   if (requestedRoom) {
-    entranceVideo.enterInsideView(requestedRoom);
+    restoring = true;
+    try {
+      entranceVideo.enterInsideView(requestedRoom);
+    } finally {
+      restoring = false;
+    }
   }
   turntable.stageFrameLoads();
   scheduleInteriorLoad();
