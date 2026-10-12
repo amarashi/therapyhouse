@@ -1,5 +1,13 @@
 import { clamp, getImageHeight, getImageWidth, requestIdleTask } from "./utils.js";
 
+/*
+ * The size of every turntable frame (public/assets/turntable/). The frames
+ * are drawn whole, and the exterior hotspots in content-data.js are fractions
+ * of this picture, so a new set of frames at another size changes these.
+ */
+const FRAME_WIDTH = 1108;
+const FRAME_HEIGHT = 756;
+
 export function createTurntableViewer({
   stage,
   canvas,
@@ -11,7 +19,7 @@ export function createTurntableViewer({
   frameCount,
   /*
    * Hold the house still on its front view: one frame instead of 48 (about
-   * 2.8 MB), and no rotation by drag, hover, wheel or keys. For visitors who
+   * 5 MB), and no rotation by drag, hover, wheel or keys. For visitors who
    * ask for reduced motion or for reduced data (Save-Data). The doors and the
    * other exterior hotspots work exactly as before.
    */
@@ -52,10 +60,8 @@ export function createTurntableViewer({
 
   function getSceneRectCss() {
     const rect = stage.getBoundingClientRect();
-    const effectiveImageWidth = 960 - 8 - 28;
-    const effectiveImageHeight = 540 - 8 - 28;
     const stageRatio = rect.width / rect.height;
-    const imageRatio = effectiveImageWidth / effectiveImageHeight;
+    const imageRatio = FRAME_WIDTH / FRAME_HEIGHT;
     const isMobilePortrait = window.matchMedia("(max-width: 720px) and (orientation: portrait)").matches;
     let width = rect.width;
     let height = rect.height;
@@ -140,6 +146,11 @@ export function createTurntableViewer({
       const hotspot = exteriorHotspots.find((candidate) => candidate.id === button.dataset.exteriorHotspotId);
       if (!hotspot) return;
       applyHotspotRect(button, getHotspotRect(hotspot));
+      /* A spot whose door turns out of sight behind something nearer (the
+         side door behind the cloud sign) goes when it does, and leaves the
+         nearer thing clickable. */
+      const until = hotspot.position?.visibleUntil;
+      button.hidden = until != null && displayAngle / (frameCount - 1) > until;
     });
   }
 
@@ -181,13 +192,7 @@ export function createTurntableViewer({
 
     const x = (canvas.width - drawWidth) / 2;
     const y = (canvas.height - drawHeight) / 2;
-    const cropLeft = 8;
-    const cropTop = 8;
-    const cropRight = 28;
-    const cropBottom = 28;
-    const sourceWidth = Math.max(1, getImageWidth(image) - cropLeft - cropRight);
-    const sourceHeight = Math.max(1, getImageHeight(image) - cropTop - cropBottom);
-    context.drawImage(image, cropLeft, cropTop, sourceWidth, sourceHeight, x, y, drawWidth, drawHeight);
+    context.drawImage(image, x, y, drawWidth, drawHeight);
   }
 
   function renderFrame(value, force = false) {

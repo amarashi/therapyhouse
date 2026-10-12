@@ -357,6 +357,10 @@
       transform: translateZ(0);
     }
 
+    .exterior-hotspot[hidden] {
+      display: none;
+    }
+
     .exterior-hotspot::before {
       content: "";
       position: absolute;

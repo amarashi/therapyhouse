@@ -140,7 +140,7 @@ export const exteriorHotspots = [
     targetRoom: "welcome",
     exteriorFeature: "front door",
     contentKey: "rooms.welcome",
-    position: { x: 0.56, y: 0.53, width: 0.16, height: 0.28, shiftX: -0.14 }
+    position: { x: 0.65, y: 0.64, width: 0.1, height: 0.18, shiftX: 0.11 }
   },
   {
     id: "services-window",
@@ -148,31 +148,31 @@ export const exteriorHotspots = [
     targetRoom: "services",
     exteriorFeature: "right services window",
     contentKey: "rooms.services",
-    position: { x: 0.835, y: 0.42, width: 0.19, height: 0.24, shiftX: -0.09 }
+    position: { x: 0.818, y: 0.6, width: 0.12, height: 0.2, shiftX: 0.065 }
   },
   {
     id: "group-window",
     ...signText("exterior", "group-window"),
     targetRoom: "groups",
-    exteriorFeature: "upper group therapy window/sign",
+    exteriorFeature: "group therapy sign on the roof",
     contentKey: "rooms.groups",
-    position: { x: 0.63, y: 0.13, width: 0.22, height: 0.13, shiftX: -0.08 }
+    position: { x: 0.617, y: 0.32, width: 0.2, height: 0.1, shiftX: 0.105 }
   },
   {
     id: "blogs-sign",
     ...signText("exterior", "blogs-sign"),
     targetRoom: "library",
-    exteriorFeature: "left blogs sign / tower window",
+    exteriorFeature: "blogs sign",
     contentKey: "rooms.library",
-    position: { x: 0.35, y: 0.41, width: 0.18, height: 0.18, shiftX: -0.11 }
+    position: { x: 0.4, y: 0.58, width: 0.16, height: 0.12, shiftX: 0.135 }
   },
   {
     id: "team-sign",
     ...signText("exterior", "team-sign"),
     targetRoom: "team",
-    exteriorFeature: "team garden sign",
+    exteriorFeature: "Therapy House cloud sign, beside the children",
     contentKey: "rooms.team",
-    position: { x: 0.45, y: 0.72, width: 0.19, height: 0.15, shiftX: -0.12 }
+    position: { x: 0.44, y: 0.78, width: 0.16, height: 0.18, shiftX: 0.42 }
   },
   {
     id: "mailbox",
@@ -180,15 +180,15 @@ export const exteriorHotspots = [
     targetRoom: "welcome",
     exteriorFeature: "mailbox",
     contentKey: "rooms.welcome",
-    position: { x: 0.835, y: 0.66, width: 0.16, height: 0.22, shiftX: -0.08 }
+    position: { x: 0.712, y: 0.82, width: 0.12, height: 0.2, shiftX: 0.355 }
   },
   {
     id: "staff-side-door",
     ...signText("exterior", "staff-side-door"),
     targetRoom: "work-with-us",
-    exteriorFeature: "side door / staff noticeboard",
+    exteriorFeature: "tower side door",
     contentKey: "rooms.work-with-us",
-    position: { x: 0.19, y: 0.55, width: 0.12, height: 0.27, shiftX: -0.08 }
+    position: { x: 0.25, y: 0.71, width: 0.07, height: 0.16, shiftX: 0.13, visibleUntil: 0.7 }
   }
 ];
 
