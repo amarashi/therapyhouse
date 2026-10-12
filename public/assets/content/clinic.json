@@ -1,0 +1,28 @@
+{
+  "tagline": "Help that doesn't feel like help",
+  "phone": "07 3300 2170",
+  "fax": "07 3319 4640",
+  "email": "admin@therapyhouse.com.au",
+  "address": "1290 Waterworks Rd, The Gap, Brisbane, QLD, 4061",
+  "postalAddress": {
+    "streetAddress": "1290 Waterworks Rd",
+    "addressLocality": "The Gap",
+    "addressRegion": "QLD",
+    "postalCode": "4061",
+    "addressCountry": "AU"
+  },
+  "bookingUrl": "https://my.powerdiary.com/clientportal/3cjz0",
+  "intro": [
+    "Our clinic is located in a Brisbane Western Suburb, on a main road, yet tucked away so you won't hear any road traffic.",
+    "Plenty of street parking, so you don't need to be concerned about finding a park.",
+    "Our clients are from anywhere in the greater Brisbane area."
+  ],
+  "nearbySuburbs": [
+    "Ashgrove",
+    "Bardon",
+    "Keperra",
+    "Ferny Grove",
+    "Mitchelton"
+  ],
+  "openingHours": []
+}

@@ -13,7 +13,7 @@ import {
   teamMembers
 } from "./site-data.js";
 import { requestIdleTask } from "./utils.js";
-import { exteriorHotspots, roomSceneDefaults, siteContent } from "./content-data.js";
+import { exteriorHotspots, phoneHref, roomSceneDefaults, siteContent } from "./content-data.js";
 import { createDogEyeController } from "./dog-eye-controller.js?v=20260529-eye-scale";
 import { createEntranceVideoController } from "./entrance-video.js?v=20261011-reduced-door";
 import { createFirelightController } from "./firelight-controller.js";
@@ -239,7 +239,7 @@ function getContentLink(contentKey, value) {
   const text = String(value || "");
 
   if (contentKey === "contact.phone") {
-    return { href: "tel:+61733002170", label: `Call Therapy House on ${text}` };
+    return { href: phoneHref(text), label: `Call Therapy House on ${text}` };
   }
   if (contentKey === "contact.email" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text)) {
     return { href: `mailto:${text}`, label: `Email ${text}` };

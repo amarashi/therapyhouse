@@ -121,7 +121,11 @@ test("both calls to action reach every plain page", async () => {
   );
 
   assert.ok(cta.includes("book.href") && cta.includes("call.href"), "CallToAction lost a path");
-  assert.ok(siteData.includes("tel:+61733002170"), "site.js lost the phone link");
+  // The link is worked out from the one phone number in clinic.json (issue #94).
+  const { callsToAction, businessFacts } = await import("../src/data/site.js");
+  assert.equal(callsToAction.call.href, "tel:+61733002170", "site.js lost the phone link");
+  assert.equal(businessFacts.telephone, "+61-7-3300-2170");
+  assert.ok(!siteData.includes("3300"), "site.js types out the phone number instead of reading clinic.json");
   assert.ok(
     siteData.includes("bookingUrl"),
     "site.js should read the booking URL from the content model, not hardcode it"
