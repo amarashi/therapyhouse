@@ -467,6 +467,26 @@ export const houseFacts = readHouseFacts();
 
 const packagePrice = (title) => houseFacts.packagePrices?.[title];
 
+/*
+ * "Show on the live website" (issue #95). The team, packages and programs in
+ * house-copy.json are the house's own copies, so the build cannot filter them
+ * the way it filters the collections. /house/ lists instead what this build
+ * switches off (production only; the Preview hides nothing):
+ *   hidden.team    team collection ids, which are also the `id`s in
+ *                  house-copy.json and site-data.js, so renaming someone in
+ *                  the CMS does not undo it;
+ *   hidden.titles  package and program titles. src/content/pages gives these
+ *                  no id, so the title is the link, as it already is for the
+ *                  package prices.
+ */
+const hidden = {
+  team: new Set(houseFacts.hidden?.team ?? []),
+  titles: new Set(houseFacts.hidden?.titles ?? [])
+};
+
+/** Whether the house shows a team member, by their team id. */
+export const teamOnSite = (id) => !hidden.team.has(id);
+
 const feesPointer = {
   title: houseCopy.services.feesPointer.title,
   description: houseCopy.services.feesPointer.description,
@@ -674,7 +694,8 @@ export const siteContent = {
   groups: {
     sourceUrl: asset("group-therapy/"),
     overview: groups.overview,
-    programs: groups.programs,
+    // A copy, so switching a program off never edits the shared JSON module.
+    programs: { ...groups.programs },
     circleOfSecurity: {
       sourceUrl: asset("group-therapy/"),
       title: groups.circleOfSecurity.title,
@@ -691,9 +712,10 @@ export const siteContent = {
   /* A team member's `id` is their profile address under /team/. */
   team: {
     sourceUrl: asset("team/"),
-    availability: team.availability.map(({ name, status }) => ({ name, status })),
-    dogs: team.dogs,
-    members: team.members.map(({ id, name, role, credentials, summary }) => ({
+    availability: team.availability.filter(({ id }) => teamOnSite(id)).map(({ name, status }) => ({ name, status })),
+    // The dogs are listed by name; their id is on their entry in `members`.
+    dogs: team.dogs.filter((name) => teamOnSite(team.members.find((member) => member.name === name)?.id)),
+    members: team.members.filter(({ id }) => teamOnSite(id)).map(({ id, name, role, credentials, summary }) => ({
       name,
       role,
       sourceUrl: asset(`team/${id}/`),
@@ -742,3 +764,27 @@ export const siteContent = {
   }
 };
 
+/* Take out the packages and programs this build switches off (see `hidden`
+   above), and any room sign that would open one of them. */
+if (hidden.titles.size > 0) {
+  const removedKeys = new Set();
+  const removeFrom = (parent, key, contentKey) => {
+    if (!parent[key] || !hidden.titles.has(parent[key].title)) return;
+    delete parent[key];
+    removedKeys.add(contentKey);
+  };
+  const { assessments: shownAssessments, groups: shownGroups } = siteContent;
+  for (const key of Object.keys(shownAssessments.packages)) {
+    removeFrom(shownAssessments.packages, key, `assessments.packages.${key}`);
+  }
+  removeFrom(shownAssessments, "schoolObservations", "assessments.schoolObservations");
+  for (const key of Object.keys(shownGroups.programs)) removeFrom(shownGroups.programs, key, `groups.programs.${key}`);
+
+  for (const rooms of [roomSceneDefaults.rooms, siteContent.rooms]) {
+    for (const room of Object.values(rooms)) {
+      if (Array.isArray(room.hotspots)) {
+        room.hotspots = room.hotspots.filter((spot) => !removedKeys.has(spot.contentKey));
+      }
+    }
+  }
+}

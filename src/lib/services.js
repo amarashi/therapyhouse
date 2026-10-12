@@ -8,20 +8,8 @@
  * is allowed to say about money, is tested from `tests/services.test.mjs`.
  */
 
-/**
- * Whether a build is for the clinic's real domain.
- *
- * The same hostname test the preview `noindex` uses in PlainLayout: GitHub
- * Pages is the preview and anything else is production. Reading the
- * configured site rather than an environment flag means there is no second
- * switch to forget on launch day — pointing `astro.config.mjs` at
- * therapyhouse.com.au flips this and the noindex together.
- */
-export function isProductionSite(site) {
-  if (!site) return false;
-  const hostname = typeof site === 'string' ? new URL(site).hostname : site.hostname;
-  return !hostname.endsWith('github.io');
-}
+/* Whether a build is production, and whether a draft is shown, are decided in
+   src/lib/drafts.js, for services and for every other collection and list. */
 
 /**
  * Where a service page lives. One function, so a link and a route never disagree.
@@ -39,21 +27,12 @@ export function servicePath(kind, id, path) {
 }
 
 /**
- * Drafts are visible on the preview, where the clinic reviews them, and absent
- * from production. A draft that leaked into production would be a page about a
- * clinician's scope of practice that nobody signed off.
- */
-/**
  * Whether an entry is built by the root route (src/pages/[...page].astro)
  * rather than under /therapy/ or /assessments/: audience hubs, and any page
  * whose `path` sets its own address.
  */
 export function builtAtOwnPath(data) {
   return data.kind === 'hub' || Boolean(data.path);
-}
-
-export function includeInBuild(data, production) {
-  return !(data.draft && production);
 }
 
 /**

@@ -15,6 +15,7 @@ import { withBase } from '../lib/base.js';
 import { site } from '../data/site.js';
 import { articleDocumentTitle, articleSchema } from '../lib/articles.js';
 import { missingIds } from '../lib/services.js';
+import { includeInBuild, isProductionSite } from '../lib/drafts.js';
 
 interface Props {
   entry: CollectionEntry<'articles'>;
@@ -31,7 +32,11 @@ if (data.author) {
     throw new Error(`Article "${entry.id}" names an author who is not in the team: ${unknown[0]}`);
   }
 }
-const author = data.author ? await getEntry(data.author) : undefined;
+/* An author switched off ("Show on the live website") has no page in
+   production, so the byline and the structured data leave them out there. */
+const authorEntry = data.author ? await getEntry(data.author) : undefined;
+const author =
+  authorEntry && includeInBuild(authorEntry.data, isProductionSite(Astro.site)) ? authorEntry : undefined;
 const authorHref = author ? withBase(`/team/${author.id}/`) : undefined;
 
 const { Content } = await render(entry);

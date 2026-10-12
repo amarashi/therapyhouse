@@ -4,7 +4,7 @@ import { getCollection, getEntry, render } from 'astro:content';
 import PlainLayout from '../layouts/PlainLayout.astro';
 import HeroReveal from '../components/HeroReveal.astro';
 import LibraryShelf from '../components/LibraryShelf.astro';
-import { includeInBuild, isProductionSite } from '../lib/services.js';
+import { includeInBuild, isProductionSite } from '../lib/drafts.js';
 import { articlePath, groupByYear } from '../lib/articles.js';
 
 const page = await getEntry('pages', 'library');

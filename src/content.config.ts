@@ -13,6 +13,14 @@ import { glob } from 'astro/loaders';
  * table belongs to Services, an assessment package list belongs to Assessments.
  */
 
+/**
+ * "Show on the live website", switched off. Shared by every entry and every
+ * repeatable item inside a page: a draft is shown on the Preview for review
+ * and left out of the production build, so staff can hide something without
+ * deleting it. Every list reads it through src/lib/drafts.js.
+ */
+const draft = z.boolean().default(false);
+
 const feeRow = z.object({
   label: z.string(),
   amount: z.string(),
@@ -27,6 +35,7 @@ const feeRow = z.object({
    * psychologists' session fees, which head the table.
    */
   group: z.enum(['provisional', 'couples-family']).optional(),
+  draft,
 });
 
 const groupProgram = z.object({
@@ -47,6 +56,7 @@ const assessmentPackage = z.object({
    * a $2,400 assessment.
    */
   addOn: z.boolean().default(false),
+  draft,
 });
 
 const pages = defineCollection({
@@ -94,6 +104,7 @@ const pages = defineCollection({
           linkText: z.string(),
           /** The room that heads the destination page, at thumbnail width. */
           image: z.string().optional(),
+          draft,
         })
       )
       .optional(),
@@ -129,7 +140,9 @@ const pages = defineCollection({
     goodToKnow: z.array(z.string()).optional(),
 
     /* ---- Group therapy blocks ---- */
-    programs: z.array(groupProgram).optional(),
+    /* The switch is on each program in the list. The Circle of Security block
+       below is one fixed section of the page and cannot be switched off. */
+    programs: z.array(groupProgram.extend({ draft })).optional(),
     circleOfSecurity: groupProgram.extend({ details: z.array(z.string()) }).optional(),
     workshopTopics: z.array(z.string()).optional(),
 
@@ -200,6 +213,10 @@ const team = defineCollection({
     /** AHPRA registration number. Not yet supplied by the clinic. */
     ahpra: z.string().optional(),
     sourceUrl: z.string().url().optional(),
+    /** In production: left off the team page, the home page, service pages,
+        article bylines and the house, and their own page is not built. The
+        Preview shows them, with their page marked as a draft. */
+    draft,
   }),
 });
 
@@ -278,7 +295,7 @@ const services = defineCollection({
         depression, trauma or self-harm. */
     crisisNote: z.boolean().default(false),
     /** Visible on the preview for review, never built for production. */
-    draft: z.boolean().default(false),
+    draft,
   }),
 });
 
@@ -319,7 +336,7 @@ const articles = defineCollection({
         self-harm. */
     crisisNote: z.boolean().default(false),
     /** Visible on the preview for review, never built for production. */
-    draft: z.boolean().default(false),
+    draft,
   }),
 });
 
@@ -355,7 +372,7 @@ const towns = defineCollection({
     h1: z.string().optional(),
     description: z.string().max(160).optional(),
     lede: z.string().optional(),
-    draft: z.boolean().default(false),
+    draft,
   }),
 });
 

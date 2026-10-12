@@ -39,8 +39,14 @@ export function packagePrice(pkg) {
  * @param {string[]} [input.privateHealth]  fees.md `privateHealth`
  * @param {Array<{title: string, price: string, provisionalPrice?: string}>} input.packages  assessments.md `packages`
  * @param {object} input.medicare  src/data/medicare.js `medicare`
+ * @param {{team?: string[], titles?: string[]}} [input.hidden]  what this build
+ *   switches off (src/lib/drafts.js): team members by collection id, and
+ *   package and program titles. The house's own copies of those lists leave
+ *   them out. Absent from the result when nothing is switched off.
  */
-export function houseFacts({ fees, sessionLength, privateHealth = [], packages, medicare }) {
+export function houseFacts({ fees, sessionLength, privateHealth = [], packages, medicare, hidden = {} }) {
+  const team = hidden.team ?? [];
+  const titles = hidden.titles ?? [];
   const feeCards = fees.map((row) => ({
     title: row.label,
     price: row.amount,
@@ -67,6 +73,7 @@ export function houseFacts({ fees, sessionLength, privateHealth = [], packages, 
     fees: sessionLength ? [sessionLength, ...feeCards] : feeCards,
     rebates,
     packagePrices,
+    ...(team.length || titles.length ? { hidden: { team, titles } } : {}),
   };
 }
 

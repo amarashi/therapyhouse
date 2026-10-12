@@ -22,7 +22,7 @@
  * person, on launch day.
  */
 import { analytics, contact } from '../data/site.js';
-import { isProductionSite } from '../lib/services.js';
+import { isProductionSite } from '../lib/drafts.js';
 
 const enabled = import.meta.env.PROD && isProductionSite(Astro.site);
 const measurementId = analytics.measurementId;

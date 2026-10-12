@@ -16,7 +16,8 @@ import { getCollection, getEntry, render } from 'astro:content';
 import PlainLayout from '../layouts/PlainLayout.astro';
 import { withBase } from '../lib/base.js';
 import { builtPaths } from '../lib/links.js';
-import { businessId, includeInBuild, isProductionSite, serviceLinks } from '../lib/services.js';
+import { businessId, serviceLinks } from '../lib/services.js';
+import { includeInBuild, isProductionSite, shownItems } from '../lib/drafts.js';
 import { contact, site } from '../data/site.js';
 import {
   assertRebatesCurrent,
@@ -45,13 +46,14 @@ const {
   description,
   lede,
   sessionLength,
-  fees = [],
   privateHealth,
   ndis,
   reports,
   cancellation,
   lastReviewed,
 } = page.data;
+/* Rows switched off ("Show on the live website") stay on the Preview only. */
+const fees = shownItems(page.data.fees, production);
 
 const reviewedLabel = lastReviewed
   ? new Intl.DateTimeFormat('en-AU', { month: 'long', year: 'numeric' }).format(lastReviewed)
@@ -69,7 +71,7 @@ const feeGroups = [
 const asAt = formatAsAt(medicare.asAt);
 const checked = formatAsAt(medicare.checked);
 
-const packages = (assessmentsPage?.data.packages ?? []).filter((p) => !p.addOn);
+const packages = shownItems(assessmentsPage?.data.packages, production).filter((p) => !p.addOn);
 const assessmentLinks = serviceLinks(services.filter((e) => e.data.kind === 'assessment'));
 
 const telehealthHref = linkIfBuilt('/telehealth/');

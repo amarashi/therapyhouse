@@ -7,15 +7,19 @@ import { site, isAcceptingNewClients } from '../../data/site.js';
 import { practitionerTitle, personDescription } from '../../lib/seo.js';
 import { personSchema as buildPersonSchema } from '../../lib/structured-data.js';
 import { teamPortrait } from '../../lib/team-portraits.js';
+import { includeInBuild, isProductionSite } from '../../lib/drafts.js';
 
 export async function getStaticPaths() {
-  const everyone = await getCollection('team');
+  /* A team member switched off ("Show on the live website") gets no page in
+     production; the Preview builds it with a draft marker for review. */
+  const production = isProductionSite(import.meta.env.SITE);
+  const everyone = await getCollection('team', (entry) => includeInBuild(entry.data, production));
   return everyone.map((person) => ({ params: { slug: person.id }, props: { person } }));
 }
 
 const { person } = Astro.props;
 const { Content } = await render(person);
-const { name, role, image, imageAlt, credentials, worksWith, worksOn, languages, availability, kind, summary } =
+const { name, role, image, imageAlt, credentials, worksWith, worksOn, languages, availability, kind, summary, draft } =
   person.data;
 
 /* Built per person, from their own published summary, so no two profiles
@@ -83,6 +87,9 @@ const personSchema = buildPersonSchema({ ...person.data, image: photo }, {
       />
 
       <div class="profile__body">
+        {draft && (
+          <p class="profile__draft">Draft for review. This page is not on the clinic's website.</p>
+        )}
         <h1>{name}</h1>
         <p class="profile__role">{role}</p>
         {credentials && credentials !== role && <p class="profile__creds">{credentials}</p>}
@@ -125,6 +132,18 @@ const personSchema = buildPersonSchema({ ...person.data, image: photo }, {
 
   .profile__back {
     margin-bottom: var(--space-xl);
+  }
+
+  /* Loud on purpose: a reviewer must never mistake a draft for the real page. */
+  .profile__draft {
+    display: inline-block;
+    background: var(--surface-sunk);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    padding: var(--space-xs) var(--space-md);
+    font-size: var(--text-secondary);
+    font-weight: 700;
+    color: var(--heading);
   }
 
   .profile__grid {

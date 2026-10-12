@@ -13,7 +13,8 @@ import PlainLayout from '../../layouts/PlainLayout.astro';
 import PersonCard from '../../components/PersonCard.astro';
 import { withBase } from '../../lib/base.js';
 import { builtPaths } from '../../lib/links.js';
-import { businessId, includeInBuild, isProductionSite } from '../../lib/services.js';
+import { businessId } from '../../lib/services.js';
+import { includeInBuild, isProductionSite } from '../../lib/drafts.js';
 import { splitTowns, townPath } from '../../lib/towns.js';
 import { callsToAction, site } from '../../data/site.js';
 import { assertRebatesCurrent, formatAsAt, formatRebate, itemUrl, medicare } from '../../data/medicare.js';
@@ -37,7 +38,7 @@ const townSections = await Promise.all(
   towns.sections.map(async (entry) => ({ entry, Body: (await render(entry)).Content }))
 );
 
-const practitioners = (await getCollection('team'))
+const practitioners = (await getCollection('team', (entry) => includeInBuild(entry.data, production)))
   .filter((p) => p.data.kind === 'practitioner')
   .sort((a, b) => a.data.order - b.data.order);
 

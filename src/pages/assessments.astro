@@ -4,7 +4,8 @@ import { getCollection, getEntry, render } from 'astro:content';
 import PlainLayout from '../layouts/PlainLayout.astro';
 import HeroReveal from '../components/HeroReveal.astro';
 import ServiceList from '../components/ServiceList.astro';
-import { includeInBuild, isProductionSite, serviceLinks } from '../lib/services.js';
+import { serviceLinks } from '../lib/services.js';
+import { includeInBuild, isProductionSite, shownItems } from '../lib/drafts.js';
 
 /* The assessment pages under /assessments/<page>/, listed here because this
    page is their hub and the lift has no drop-downs (issue #4). */
@@ -20,8 +21,9 @@ const page = await getEntry('pages', 'assessments');
 if (!page) throw new Error('Missing content: src/content/pages/assessments.md');
 
 const { Content } = await render(page);
-const { title, description, lede, process, documents, packages, goodToKnow, lastReviewed } =
-  page.data;
+const { title, description, lede, process, documents, goodToKnow, lastReviewed } = page.data;
+/* Packages switched off ("Show on the live website") stay on the Preview only. */
+const packages = shownItems(page.data.packages, production);
 
 const reviewedLabel = lastReviewed
   ? new Intl.DateTimeFormat('en-AU', { month: 'long', year: 'numeric' }).format(lastReviewed)
@@ -29,8 +31,8 @@ const reviewedLabel = lastReviewed
 
 /* A school observation is an extra, not a fifth way to be assessed. Kept as a
    separate row group so the two lists never have to be compared. */
-const corePackages = packages?.filter((pkg) => !pkg.addOn) ?? [];
-const addOns = packages?.filter((pkg) => pkg.addOn) ?? [];
+const corePackages = packages.filter((pkg) => !pkg.addOn);
+const addOns = packages.filter((pkg) => pkg.addOn);
 
 /* What a package covers, as one line under its name. The inclusions are the
    content file's list, joined rather than rewritten — as a bulleted list inside
