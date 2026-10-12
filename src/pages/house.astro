@@ -1,7 +1,7 @@
 ---
 import { withBase, basePrefix } from '../lib/base.js';
 import { getCollection, getEntry } from 'astro:content';
-import { site, contact, businessFacts } from '../data/site.js';
+import { site, contact, businessFacts, callsToAction } from '../data/site.js';
 import { includeInBuild, isProductionSite, shownItems } from '../lib/drafts.js';
 import { businessSchema as buildBusinessSchema } from '../lib/structured-data.js';
 import { assertRebatesCurrent, medicare } from '../data/medicare.js';
@@ -113,7 +113,7 @@ const contactPreview = {
   <script is:inline define:vars={{ assetBase }}>window.__ASSET_BASE__ = assetBase;</script>
   <script is:inline type="application/json" id={HOUSE_CONTENT_ID} set:html={contentJson}></script>
   <title>Explore the House | Therapy House, The Gap, Brisbane</title>
-  <link rel="stylesheet" href={withBase("/assets/styles/main.css?v=20261011-reduced-door")}>
+  <link rel="stylesheet" href={withBase("/assets/styles/main.css?v=20261013-previews")}>
   <script type="application/ld+json" set:html={JSON.stringify(businessSchema)} />
   <Analytics />
 </head>
@@ -206,9 +206,8 @@ const contactPreview = {
       <div class="philosophy-modal" id="philosophyModal" role="dialog" aria-modal="true" aria-labelledby="philosophyTitle" aria-hidden="true" hidden>
         <section class="philosophy-modal__panel">
           <button class="philosophy-modal__close" id="philosophyModalClose" type="button" aria-label="Close philosophy window">&times;</button>
-          <p class="philosophy-modal__eyebrow">Therapy House</p>
           <h2 class="philosophy-modal__title" id="philosophyTitle">{philosophy.title}</h2>
-          <div class="philosophy-modal__rule" aria-hidden="true">o</div>
+          <span class="content-modal__rule" aria-hidden="true"></span>
           <img class="philosophy-modal__image" src={withBase("/assets/media/bookworm.png")} width="600" height="450" loading="lazy" alt="Friendly reader with books, representing Therapy House's warm psychology and counselling approach">
           <p class="philosophy-modal__intro">{philosophy.lede}</p>
           <ul class="philosophy-modal__list">
@@ -219,7 +218,11 @@ const contactPreview = {
             ))}
           </ul>
           {philosophy.closing && <p class="philosophy-modal__closing">{philosophy.closing}</p>}
-          <a class="content-modal__button philosophy-modal__more" href={withBase('/philosophy/')}>{houseCopy.links.philosophy}</a>
+          <a class="content-modal__more" href={withBase('/philosophy/')}>{houseCopy.links.philosophy}</a>
+          <div class="house-actions" aria-label="Book or call">
+            <a class="house-action" href={contactPreview.booking} target="_blank" rel="noopener">{callsToAction.book.label}</a>
+            <a class="house-action" href={contactPreview.tel}>{callsToAction.call.label}</a>
+          </div>
         </section>
       </div>
       <div class="content-modal" id="contentModal" role="dialog" aria-modal="true" aria-labelledby="contentModalTitle" aria-hidden="true" hidden>
@@ -227,8 +230,12 @@ const contactPreview = {
           <button class="content-modal__close" id="contentModalClose" type="button" aria-label="Close content window">&times;</button>
           <p class="content-modal__eyebrow" id="contentModalEyebrow">Therapy House</p>
           <h2 class="content-modal__title" id="contentModalTitle">Therapy House</h2>
-          <div class="content-modal__rule" aria-hidden="true">o</div>
+          <span class="content-modal__rule" aria-hidden="true"></span>
           <div class="content-modal__body" id="contentModalBody"></div>
+          <div class="house-actions" id="contentModalActions" aria-label="Book or call">
+            <a class="house-action" href={contactPreview.booking} target="_blank" rel="noopener">{callsToAction.book.label}</a>
+            <a class="house-action" href={contactPreview.tel}>{callsToAction.call.label}</a>
+          </div>
         </section>
       </div>
       <div class="contact-modal" id="contactModal" role="dialog" aria-modal="true" aria-labelledby="contactTitle" aria-hidden="true" hidden>
@@ -238,12 +245,11 @@ const contactPreview = {
             <img src={withBase("/assets/media/phone.webp")} alt="Illustration for contacting Therapy House reception" width="660" height="660" loading="lazy" decoding="async">
           </div>
           <div class="contact-modal__body">
-            <p class="contact-modal__eyebrow">Visit or call</p>
             <h2 class="contact-modal__title" id="contactTitle">Contact Us</h2>
             <p class="contact-modal__intro">{pages.contact.lede}</p>
-            <div class="contact-modal__actions" aria-label="Contact actions">
-              <a class="contact-modal__button" href={contactPreview.booking} target="_blank" rel="noopener">{houseCopy.links.book}</a>
-              <a class="contact-modal__button" href={contactPreview.tel}>{houseCopy.links.call} on {contactPreview.phone}</a>
+            <div class="house-actions" aria-label="Book or call">
+              <a class="house-action" href={contactPreview.booking} target="_blank" rel="noopener">{callsToAction.book.label}</a>
+              <a class="house-action" href={contactPreview.tel}>{callsToAction.call.label}</a>
             </div>
             <dl class="contact-modal__details">
               <div class="contact-modal__detail">
@@ -259,7 +265,7 @@ const contactPreview = {
                 <dd><a href={contactPreview.map} target="_blank" rel="noopener">{contactPreview.address}</a></dd>
               </div>
             </dl>
-            <a class="contact-modal__more" href={withBase('/contact/')}>{houseCopy.links.contact}</a>
+            <a class="content-modal__more" href={withBase('/contact/')}>{houseCopy.links.contact}</a>
           </div>
         </section>
       </div>
@@ -269,7 +275,7 @@ const contactPreview = {
 
   {/* Development only: the tuning panel and its scripts never reach the build. */}
   {import.meta.env.DEV && <DebugPanel />}
-  <script type="module" src={withBase("/assets/scripts/app.js?v=20261012-show-on-site")}></script>
+  <script type="module" src={withBase("/assets/scripts/app.js?v=20261013-previews")}></script>
 </body>
 </html>
 

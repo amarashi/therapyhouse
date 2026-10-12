@@ -47,3 +47,15 @@ assert.match(appScript, /function renderContentModal/);
 assert.match(appScript, /contentDialog\.open/);
 assert.match(styles, /\.content-modal__panel/);
 assert.match(styles, /\.content-modal__button/);
+
+// Phase B (docs/house-plan.md): booking and calling close every pop-up as an
+// equal pair, and neither is ever shown alone.
+for (const id of ["philosophyModal", "contentModal", "contactModal"]) {
+  const start = indexHtml.indexOf(`id="${id}"`);
+  assert.notEqual(start, -1, `house.astro has no #${id}`);
+  const dialog = indexHtml.slice(start, indexHtml.indexOf("</section>", start));
+  const actions = dialog.match(/class="house-action"[^>]*href=\{([^}]+)\}|class="house-action" href=\{([^}]+)\}/g) ?? [];
+  assert.equal(actions.length, 2, `#${id} should carry the booking and calling pair`);
+}
+assert.doesNotMatch(appScript, /contentModalActions\.hidden/, "the pair must never be hidden, leaving one action alone");
+assert.match(styles, /\.house-action \{/);

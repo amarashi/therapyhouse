@@ -50,6 +50,7 @@ const contentModalClose = document.getElementById("contentModalClose");
 const contentModalEyebrow = document.getElementById("contentModalEyebrow");
 const contentModalTitle = document.getElementById("contentModalTitle");
 const contentModalBody = document.getElementById("contentModalBody");
+const contentModalActions = document.getElementById("contentModalActions");
 const contactModal = document.getElementById("contactModal");
 const contactModalClose = document.getElementById("contactModalClose");
 const cursorSparkleLayer = document.getElementById("cursorSparkleLayer");
@@ -255,7 +256,15 @@ function renderContentModal(sign) {
     body.push(list);
   }
 
-  if (preview.link) body.push(createLink(preview.link.href, preview.link.label, "content-modal__button"));
+  /* Booking and calling close every preview as an equal pair (PRODUCT.md,
+     DESIGN.md: neither is rendered alone). A preview whose own link is one of
+     the two, such as reception's phone sign, leans on the pair instead. */
+  const actionHrefs = contentModalActions
+    ? Array.from(contentModalActions.querySelectorAll("a"), (link) => link.getAttribute("href"))
+    : [];
+  if (preview.link && !actionHrefs.includes(preview.link.href)) {
+    body.push(createLink(preview.link.href, preview.link.label, "content-modal__more"));
+  }
 
   contentModalBody.replaceChildren(...body);
   contentDialog.open();

@@ -1391,38 +1391,6 @@
       list-style: none;
     }
 
-    .philosophy-modal__item {
-      min-height: 96px;
-      padding: 13px 16px;
-      border: 1px solid rgba(255, 255, 255, 0.56);
-      border-radius: 16px;
-      background:
-        linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06)),
-        rgba(255, 255, 255, 0.08);
-      box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.56),
-        0 10px 22px rgba(60, 35, 12, 0.08);
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
-    }
-
-    .philosophy-modal__item:last-child:nth-child(odd) {
-      grid-column: 1 / -1;
-      min-height: 0;
-    }
-
-    .philosophy-modal__item h3 {
-      margin: 0 0 7px;
-      color: rgba(35, 58, 22, 0.96);
-      font: 800 16px/1.2 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-
-    .philosophy-modal__item p {
-      margin: 0;
-      color: rgba(55, 36, 18, 0.9);
-      font: 500 14px/1.48 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-
     .philosophy-modal__close:hover,
     .philosophy-modal__close:focus-visible,
     .content-modal__close:hover,
@@ -1479,41 +1447,6 @@
       font: 800 16px/1.22 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
-    .content-modal__meta {
-      margin: 0;
-      color: rgba(92, 58, 24, 0.86);
-      font: 800 14px/1.35 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-
-    .content-modal__body .content-modal__list {
-      list-style: none;
-      padding: 0;
-      gap: 0;
-      border-top: 1px solid rgba(92, 58, 24, 0.16);
-    }
-
-    .content-modal__list li {
-      display: grid;
-      gap: 2px;
-      padding: 9px 0;
-      border-bottom: 1px solid rgba(92, 58, 24, 0.16);
-    }
-
-    .content-modal__list a,
-    .content-modal__item-title {
-      color: rgba(35, 58, 22, 0.98);
-      font-weight: 700;
-    }
-
-    .content-modal__list a {
-      text-underline-offset: 3px;
-    }
-
-    .content-modal__item-detail {
-      color: rgba(76, 51, 22, 0.82);
-      font-size: 0.92em;
-    }
-
     .content-modal__link-list {
       list-style: none;
       padding: 0;
@@ -1540,24 +1473,6 @@
       background: rgba(255, 255, 255, 0.9);
       outline: 3px solid var(--focus-ring);
       outline-offset: 2px;
-    }
-
-    .team-card__availability {
-      margin: 0;
-      color: rgba(76, 51, 22, 0.88);
-      font: 700 13px/1.4 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-
-    .team-card__profile,
-    .contact-modal__more {
-      width: fit-content;
-      color: rgba(35, 58, 22, 0.98);
-      font: 800 14px/1.3 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      text-underline-offset: 3px;
-    }
-
-    .philosophy-modal__more {
-      margin: 18px auto 0;
     }
 
     .contact-modal {
@@ -2521,3 +2436,324 @@
       }
     }
 
+    /* ---------------------------------------------------------------
+       House pop-ups (docs/house-plan.md, phase B)
+
+       A sign opens a short preview of a page and leads on to it. Content
+       stands on solid Lamplit Cream rather than glass (DESIGN.md, The Glass
+       Drift Rule); the title is a serif name in sentence case; the preview
+       ends with a link to its page; and booking and calling close every
+       pop-up as two equal primary buttons. Last in the file so the compact
+       rules above cannot undo it; it carries its own.
+       --------------------------------------------------------------- */
+    .philosophy-modal__panel,
+    .content-modal__panel,
+    .contact-modal__panel {
+      border: 1px solid rgba(255, 255, 255, 0.66);
+      background: #fffcf4;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      color: #2b2118;
+      box-shadow:
+        0 30px 72px rgba(25, 13, 5, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    }
+
+    .philosophy-modal__panel::before,
+    .content-modal__panel::before,
+    .contact-modal__panel::before {
+      content: none;
+    }
+
+    .philosophy-modal__panel,
+    .content-modal__panel {
+      width: min(660px, 100%);
+      padding: clamp(26px, 4vw, 44px);
+      text-align: left;
+    }
+
+    .content-modal__eyebrow {
+      margin: 0 0 8px;
+      color: #7d6d5f;
+      text-align: left;
+    }
+
+    .philosophy-modal__title,
+    .content-modal__title,
+    .contact-modal__title {
+      margin: 0;
+      padding-right: 48px;
+      color: #203914;
+      font: 700 clamp(28px, 3.6vw, 40px)/1.06 Georgia, "Times New Roman", serif;
+      letter-spacing: -0.01em;
+      text-align: left;
+      text-transform: none;
+    }
+
+    .content-modal__rule {
+      display: block;
+      width: 56px;
+      height: 2px;
+      margin: 14px 0 18px;
+      background: #7c4b27;
+    }
+
+    .content-modal__body {
+      max-width: none;
+      margin: 0;
+      gap: 12px;
+      color: #2b2118;
+      font: 400 16px/1.55 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overflow-wrap: break-word;
+    }
+
+    .content-modal__meta {
+      color: #7c4b27;
+      font-weight: 700;
+    }
+
+    .content-modal__body .content-modal__list {
+      list-style: none;
+      margin: 2px 0 0;
+      padding: 0;
+      gap: 0;
+      border-top: 1px solid rgba(90, 74, 60, 0.18);
+    }
+
+    .content-modal__list li {
+      display: grid;
+      gap: 2px;
+      padding: 9px 0;
+      border-bottom: 1px solid rgba(90, 74, 60, 0.18);
+      break-inside: avoid;
+    }
+
+    .content-modal__list a {
+      color: #124c3a;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .content-modal__item-title {
+      color: #2b2118;
+      font-weight: 500;
+    }
+
+    .content-modal__list a:hover,
+    .content-modal__list a:focus-visible {
+      color: #0b2f21;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .content-modal__item-detail {
+      color: #5a4a3c;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    /* A long list (the therapy pages, the fee rows) runs in two columns once
+       there is room, so the preview stays about one screen tall. */
+    @media (min-width: 721px) {
+      .content-modal__body .content-modal__list:has(> li:nth-child(6)) {
+        display: block;
+        columns: 2;
+        column-gap: 28px;
+      }
+    }
+
+    .content-modal__more {
+      justify-self: start;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      margin-top: 6px;
+      color: #234f2f;
+      font: 700 15px/1.3 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 4px;
+    }
+
+    .content-modal__more::after {
+      content: "\2192";
+      display: inline-block;
+      transition: transform 180ms ease;
+    }
+
+    .content-modal__more:hover,
+    .content-modal__more:focus-visible {
+      color: #17391f;
+      text-decoration-thickness: 2px;
+    }
+
+    .content-modal__more:hover::after,
+    .content-modal__more:focus-visible::after {
+      transform: translateX(3px);
+    }
+
+    .philosophy-modal__panel > .content-modal__more {
+      margin-top: 18px;
+    }
+
+    .house-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 22px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(90, 74, 60, 0.18);
+    }
+
+    .contact-modal__body .house-actions {
+      margin-top: 4px;
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    .house-action {
+      display: inline-flex;
+      flex: 1 1 0;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 10px 24px;
+      border: 2px solid #234f2f;
+      border-radius: 999px;
+      background: #234f2f;
+      color: #fffdf7;
+      font: 700 15px/1.2 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      text-align: center;
+      text-decoration: none;
+      transition: background-color 160ms ease, border-color 160ms ease;
+    }
+
+    .house-action:hover,
+    .house-action:focus-visible {
+      border-color: #17391f;
+      background: #17391f;
+    }
+
+    .house-action:focus-visible,
+    .content-modal__more:focus-visible,
+    .content-modal__list a:focus-visible,
+    .team-card__profile:focus-visible {
+      outline: 3px solid #005fcc;
+      outline-offset: 2px;
+    }
+
+    .philosophy-modal__intro,
+    .philosophy-modal__closing {
+      margin: 0;
+      max-width: none;
+      color: #2b2118;
+      text-align: left;
+    }
+
+    .philosophy-modal__closing {
+      margin-top: 14px;
+      color: #5a4a3c;
+    }
+
+    .philosophy-modal__image {
+      float: right;
+      width: clamp(110px, 18vw, 170px);
+      margin: -6px 0 8px 18px;
+    }
+
+    .philosophy-modal__list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 18px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .philosophy-modal__item,
+    .philosophy-modal__item:last-child:nth-child(odd) {
+      grid-column: auto;
+      padding: 7px 14px;
+      border: 1px solid rgba(90, 74, 60, 0.18);
+      border-radius: 999px;
+      background: #ffffff;
+      box-shadow: none;
+    }
+
+    .philosophy-modal__item h3 {
+      margin: 0;
+      color: #203914;
+      font: 600 14px/1.3 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .contact-modal__body {
+      color: #2b2118;
+    }
+
+    .contact-modal__intro {
+      color: #5a4a3c;
+    }
+
+    .contact-modal__detail {
+      border: 1px solid rgba(90, 74, 60, 0.14);
+      background: #ffffff;
+      box-shadow: none;
+    }
+
+    .contact-modal__detail dd a {
+      color: #124c3a;
+    }
+
+    .team-card__availability {
+      margin: 0;
+      color: #7c4b27;
+      font: 700 13px/1.4 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .team-card__profile {
+      width: fit-content;
+      color: #234f2f;
+      font: 700 14px/1.3 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      text-underline-offset: 4px;
+    }
+
+    @media (max-width: 720px), (max-height: 520px) and (orientation: landscape) {
+      .philosophy-modal__panel,
+      .content-modal__panel {
+        padding: 22px 20px;
+      }
+
+      .philosophy-modal__title,
+      .content-modal__title,
+      .contact-modal__title {
+        font-size: 26px;
+      }
+
+      .content-modal__body {
+        font-size: 15px;
+      }
+
+      .philosophy-modal__image {
+        display: none;
+      }
+
+      .house-actions {
+        margin-top: 16px;
+        padding-top: 14px;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .house-action {
+        flex-basis: 100%;
+      }
+    }
+
+    /* An open pop-up has its own close button, and "Back to the website"
+       would sit on top of its title on a phone. It steps aside meanwhile. */
+    body:has([role="dialog"].is-open) .house-exit {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }

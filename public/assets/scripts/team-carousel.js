@@ -59,7 +59,6 @@ export function createTeamCarousel({
 
       const header = element("header");
       header.append(
-        element("p", "team-card__eyebrow", "Therapy House team"),
         element("h3", "team-card__name", teamMember.name),
         element("p", "team-card__role", teamMember.role)
       );
