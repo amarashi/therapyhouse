@@ -211,7 +211,7 @@ const businessSchema = notFound
       class="garden-edge"
       src={withBase("/assets/home/border-720.webp")}
       srcset={`${withBase("/assets/home/border-720.webp")} 720w, ${withBase("/assets/home/border-1440.webp")} 1440w`}
-      sizes="(min-width: 60rem) 60rem, 100vw"
+      sizes="(min-width: 48rem) 48rem, 100vw"
       alt=""
       width="1440"
       height="281"
@@ -221,15 +221,13 @@ const businessSchema = notFound
 
     <footer class="site-footer">
       <div class="wrap site-footer__inner">
-        <div>
+        <div class="site-footer__clinic">
           <p class="site-footer__name">{site.name}</p>
           <p>
             <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contact.address)}`}>
               {contact.address}
             </a>
           </p>
-        </div>
-        <div>
           <p><a href={callsToAction.call.href}>{contact.phone}</a></p>
           <p><a href={`mailto:${contact.email}`}>{contact.email}</a></p>
           <p class="site-footer__fax">Fax {contact.fax}</p>
@@ -243,21 +241,23 @@ const businessSchema = notFound
             is here. Marked `aria-current` so the page you are on is stated
             rather than guessed at. */}
         <nav class="site-footer__nav" aria-label="All pages">
-          <p class="site-footer__navhead">Pages</p>
-          <ul>
-            {footerNav.map((item) => (
-              <li>
-                <a
-                  href={withBase(item.href)}
-                  aria-current={stripBase(Astro.url.pathname) === item.href ? 'page' : undefined}
-                >{item.label}</a>
-              </li>
-            ))}
-          </ul>
+          <div class="site-footer__group site-footer__group--pages">
+            <p class="site-footer__navhead">Pages</p>
+            <ul>
+              {footerNav.map((item) => (
+                <li>
+                  <a
+                    href={withBase(item.href)}
+                    aria-current={stripBase(Astro.url.pathname) === item.href ? 'page' : undefined}
+                  >{item.label}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
           {footerServices.length > 0 && (
-            <>
+            <div class="site-footer__group site-footer__group--services">
               <p class="site-footer__navhead">Therapy and assessments</p>
-              <ul class="site-footer__services">
+              <ul>
                 {footerServices.map((item) => (
                   <li>
                     <a
@@ -267,12 +267,12 @@ const businessSchema = notFound
                   </li>
                 ))}
               </ul>
-            </>
+            </div>
           )}
           {footerTowns.length > 0 && (
-            <>
+            <div class="site-footer__group site-footer__group--towns">
               <p class="site-footer__navhead">Regional Queensland</p>
-              <ul class="site-footer__services">
+              <ul>
                 {footerTowns.map((item) => (
                   <li>
                     <a
@@ -282,17 +282,20 @@ const businessSchema = notFound
                   </li>
                 ))}
               </ul>
-            </>
+            </div>
           )}
-          {/* Not a page of the site — a separate, logged-in handbook for the
-              therapists and admin. It sits under the map rather than in it,
-              labelled with who it is for, so staff can reach it from any page
-              without a parent mistaking it for something they should read. */}
-          <p class="site-footer__staff">
-            <a href={staffLink.href} rel="noopener">{staffLink.label}</a>
-            <span class="site-footer__staffnote">{staffLink.note}</span>
-          </p>
         </nav>
+      </div>
+      {/* Not a page of the site — a separate, logged-in handbook for the
+          therapists and admin. It sits on the footer's last line, below the
+          map rather than in it, labelled with who it is for, so staff can reach
+          it from any page without a parent mistaking it for something they
+          should read. */}
+      <div class="wrap site-footer__base">
+        <p class="site-footer__staff">
+          <a href={staffLink.href} rel="noopener">{staffLink.label}</a>
+          <span class="site-footer__staffnote">{staffLink.note}</span>
+        </p>
       </div>
     </footer>
     </div>
@@ -359,7 +362,7 @@ const businessSchema = notFound
          grass line sits exactly on the footer's top rule. */
       .garden-edge {
         display: block;
-        width: min(100%, 60rem);
+        width: min(100%, 48rem);
         height: auto;
         margin: var(--space-2xl) auto -1px;
         position: relative;
@@ -377,55 +380,70 @@ const businessSchema = notFound
         justify-content: center;
       }
 
+      /* ---- The footer ----
+         A colophon, not a second page. The clinic's details stand in one
+         column and the map in three beside it, so the whole site is a single
+         glance at the height of its longest list. The links lose their
+         underline at rest: in a list of nothing but links the underline marks
+         nothing, and twenty-nine of them stacked read as a wall. They keep it
+         on hover and focus, and the green says what they are. */
       .site-footer {
         border-top: 1px solid var(--line);
         background: var(--surface-raised);
-        padding-block: var(--space-2xl);
-        font-size: var(--text-secondary);
+        padding-block: var(--space-2xl) var(--space-lg);
+        font-size: var(--text-meta);
+        line-height: 1.35;
       }
 
       .site-footer__inner {
-        display: flex;
-        flex-wrap: wrap;
+        display: grid;
         gap: var(--space-2xl);
-        justify-content: space-between;
       }
 
       .site-footer p {
-        margin: 0 0 var(--space-xs);
+        margin: 0;
       }
 
-      /* The address, the number and the email were 20 to 22px tall at every
-         width — under the 24px a pointer is owed, let alone the 44 a thumb is.
-         Padding on an inline-block grows the target without touching the type;
-         the phone figure below takes it further. */
+      /* Rows 26px tall at reading widths: clear of the 24px WCAG 2.5.8 asks a
+         pointer target for, and tight enough that a list reads as one list. A
+         phone takes them to 44 below. */
       .site-footer a {
         display: inline-block;
-        padding-block: 6px;
+        padding-block: 4px;
+        text-decoration: none;
       }
 
-      /* Opted out of the global standalone-link target rule. Here the links are
-         stacked six pixels apart, so growing each hit area to 44px would have
-         them overlap and the lower one would take the band belonging to the
-         one above — a thumb aimed at the email address dialling the phone.
-         This block sizes its own targets instead: 32px at reading widths, and
-         the full 44 on a phone, where the paragraph gives up its margin to pay
-         for it. */
+      .site-footer a:hover,
+      .site-footer a:focus-visible {
+        text-decoration: underline;
+      }
+
+      /* Opted out of the global standalone-link target rule. The links sit
+         close together, so growing each hit area to 44px would have them
+         overlap and the lower one would take the band belonging to the one
+         above. This block sizes its own targets instead. */
       .site-footer a::after {
         content: none;
       }
 
-      .site-footer__name {
+      .site-footer p.site-footer__name {
         font-family: var(--font-display);
+        font-size: var(--text-cardtitle);
         font-weight: 700;
         color: var(--heading);
+        margin-bottom: var(--space-xs);
       }
 
-      /* ---- The site map ----
-         Two columns of short links rather than one long one: eight destinations
-         stacked run the footer past the height of the block beside it and turn
-         the last thing on the page into a list to read. In two columns the
-         whole site is one glance. */
+      .site-footer__fax {
+        color: var(--ink-faint);
+        padding-block: 4px;
+      }
+
+      .site-footer__nav {
+        display: grid;
+        gap: var(--space-xl) var(--space-2xl);
+      }
+
       .site-footer__nav ul {
         list-style: none;
         margin: 0;
@@ -435,20 +453,13 @@ const businessSchema = notFound
         column-gap: var(--space-xl);
       }
 
-      .site-footer__navhead {
+      .site-footer p.site-footer__navhead {
         font-size: var(--text-label);
         font-weight: 800;
         letter-spacing: var(--track-label);
         text-transform: uppercase;
         color: var(--ink-faint);
         margin-bottom: var(--space-xs);
-      }
-
-      /* The second list — every therapy and assessment page — opens on its own
-         heading with a small step above it, so it reads as a second map
-         rather than as more pages in the first. */
-      .site-footer__nav ul + .site-footer__navhead {
-        margin-top: var(--space-md);
       }
 
       /* The page you are on is named, not linked away from — and it keeps the
@@ -458,16 +469,12 @@ const businessSchema = notFound
         font-weight: 700;
       }
 
-      .site-footer__fax {
-        color: var(--ink-faint);
-      }
-
-      /* Spans the two columns of the map above it, set apart by a rule so it
-         reads as a different kind of destination rather than a ninth page. */
-      .site-footer__staff {
-        margin-top: var(--space-md);
-        padding-top: var(--space-sm);
-        border-top: 1px solid var(--line);
+      /* The last line: the staff handbook, set apart by a rule so it reads as
+         a different kind of destination rather than one more page. */
+      .site-footer__base {
+        margin-top: var(--space-2xl);
+        padding-top: var(--space-md);
+        border-top: 1px solid var(--line-soft);
       }
 
       .site-footer__staffnote {
@@ -478,23 +485,78 @@ const businessSchema = notFound
         text-transform: uppercase;
       }
 
+      /* The service names are long and some wrap, so that list flows down its
+         columns like a newspaper rather than across a grid: a wrapped name
+         pushes only its own column down instead of opening a hole beside it. */
+      .site-footer__group--services ul {
+        display: block;
+        columns: 1;
+        column-gap: var(--space-xl);
+      }
+
+      .site-footer__group--services li {
+        break-inside: avoid;
+      }
+
+      /* Tablet: the pages and the towns side by side, every therapy and
+         assessment page in three columns underneath. */
+      @media (min-width: 44rem) {
+        .site-footer__nav {
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        }
+
+        .site-footer__group--services {
+          grid-column: 1 / -1;
+          grid-row: 2;
+        }
+
+        .site-footer__group--services ul {
+          columns: 3;
+        }
+
+        .site-footer__group--towns ul {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+
+      /* Laptop: the clinic in its own column beside the map. */
+      @media (min-width: 64rem) {
+        .site-footer__inner {
+          grid-template-columns: minmax(12rem, 1fr) minmax(0, 3.4fr);
+        }
+
+        .site-footer__group--services ul {
+          columns: 2;
+        }
+      }
+
+      /* Wide: one row — the clinic, the pages, every service, the towns —
+         all at the height of the service list. */
+      @media (min-width: 90rem) {
+        .site-footer__inner {
+          grid-template-columns: minmax(12rem, 0.8fr) minmax(0, 4.2fr);
+        }
+
+        .site-footer__nav {
+          grid-template-columns: minmax(0, 1.25fr) minmax(0, 2.6fr) minmax(9rem, 0.8fr);
+        }
+
+        .site-footer__group--services {
+          grid-column: auto;
+          grid-row: auto;
+        }
+      }
+
       /* ---- Phones ----
          The footer reserves the action bar's strip, so the bar stands on the
          footer's own white rather than on a band of page ground below it, and
-         the last line of the page is never hidden behind it.
-
-         The links here were the smallest targets on the site — 20 to 21px tall,
-         a phone number, an email and a street address stacked close enough that
-         a thumb aimed at one could take the next. Padding on an inline-block
-         expands the target without changing the type; the paragraph gives up
-         its margin to pay for it, so the block is the same height it was. */
+         the last line of the page is never hidden behind it. Every link takes
+         the full 44px a thumb is owed, and the service names, which are long,
+         keep the single column they flow into by default. */
       @media (max-width: 44rem) {
         .site-footer {
-          padding-bottom: calc(var(--space-2xl) + var(--action-bar-h));
-        }
-
-        .site-footer p {
-          margin-bottom: 0;
+          padding-bottom: calc(var(--space-lg) + var(--action-bar-h));
+          font-size: var(--text-secondary);
         }
 
         .site-footer a {
