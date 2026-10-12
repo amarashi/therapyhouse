@@ -9,8 +9,6 @@ import { contact, callsToAction, isAcceptingNewClients, nearbySuburbs } from '..
 import { listOf } from '../lib/seo.js';
 import { hubLinks } from '../lib/services.js';
 import { includeInBuild, isProductionSite, shownItems } from '../lib/drafts.js';
-// PROTOTYPE — throwaway, remove with WelcomeHeroPrototype.astro.
-import WelcomeHeroPrototype from '../components/WelcomeHeroPrototype.astro';
 
 const page = await getEntry('pages', 'home');
 if (!page) throw new Error('Missing content: src/content/pages/home.md');
@@ -73,7 +71,9 @@ const faces = [
     enterLabel="Explore the house"
     slot="hero"
     layout="anchored"
-    title="Welcome to Therapy House"
+    greeting="Welcome to"
+    title="Therapy House"
+    lamplight
     titleSub="Psychologists for children, teenagers and adults — in The Gap, Brisbane, and by video anywhere in Australia"
     lede="A place for all children, and anyone who has once been a child."
     image={withBase("/assets/media/house-hero-loop-poster.webp")}
@@ -85,9 +85,6 @@ const faces = [
     videoSmall={withBase("/assets/media/house-hero-loop-720.mp4")}
     showCue
   />
-
-  {/* PROTOTYPE — throwaway. Dev-only; delete this line and the import above. */}
-  <WelcomeHeroPrototype />
 
   <div class="wrap">
     <div class="intro">
