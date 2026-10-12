@@ -11,7 +11,7 @@ links to `/house/`. The home page opens the exterior; the therapy, assessments,
 group therapy, library, philosophy, team, contact and work-with-us hubs open
 their own room (`?room=<id>`). `?from=<path>` is where "Back to the website" leads.
 
-**How the rooms connect.** The exterior is a 48-frame turntable with seven
+**How the rooms connect.** The exterior is a 61-frame turntable with seven
 spots on it. Each spot opens one room. Inside, signs open pop-ups. Only two
 signs lead from one room to another (consulting room to assessment room,
 library to attic). Every "Back" sign leaves for the exterior, even from the

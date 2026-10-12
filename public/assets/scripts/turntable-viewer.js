@@ -18,8 +18,8 @@ export function createTurntableViewer({
   frames,
   frameCount,
   /*
-   * Hold the house still on its front view: one frame instead of 48 (about
-   * 5 MB), and no rotation by drag, hover, wheel or keys. For visitors who
+   * Hold the house still on its front view: one frame instead of 61 (about
+   * 5.5 MB), and no rotation by drag, hover, wheel or keys. For visitors who
    * ask for reduced motion or for reduced data (Save-Data). The doors and the
    * other exterior hotspots work exactly as before.
    */
@@ -30,7 +30,7 @@ export function createTurntableViewer({
   const imageLoadPromises = new Array(frameCount);
   const loadedFrameIndexes = new Set();
   const centreAngle = (frameCount - 1) / 2;
-  const hoverMaxFramesPerSecond = 22;
+  const hoverMaxFramesPerSecond = 28; // about as fast round as 22 was with 48 frames
   const hoverMinimumStrength = 0.22;
   const hoverVelocitySmoothing = 14;
   const springStiffness = 92;
