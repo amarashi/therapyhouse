@@ -87,8 +87,7 @@ interface Props {
    * A short greeting set small above the title ("Welcome to", over "Therapy
    * House"), so the name reads as the name and the greeting introduces it.
    * The heading's text, and so its accessible name, is the greeting, the
-   * title and the subtitle in order, as before. Its words rise into place
-   * once on arrival, unless motion is reduced.
+   * title and the subtitle in order, as before.
    */
   greeting?: string;
   /**
@@ -748,15 +747,13 @@ const sizes = imageSmall
     );
   }
 
-  /* The copy does not rise with the words: it arrives once they have settled,
-     so the two never fall out of step. Its words are not clipped either, or
-     the soft shadow would stop at each word's edge in a hard rectangle. */
+  /* The copy's words are not clipped, or the soft shadow would stop at each
+     word's edge in a hard rectangle. */
   .hero__words--lit .hero__word {
     overflow: visible;
   }
 
   .hero__words--lit .hero__word-in {
-    animation: none;
     text-shadow: calc((0.5 - var(--lamp-nx, 0.5)) * 16px) calc((0.5 - var(--lamp-ny, 0.5)) * 12px) 20px
       rgba(60, 35, 12, 0.26);
   }
@@ -765,24 +762,8 @@ const sizes = imageSmall
     color: #a9713f;
   }
 
-  /* Arrival: each word rises out of its line, then the rule draws and the
-     lede follows. Once, on load; under reduced motion the heading is simply
-     there. */
+  /* The lamp comes up gently a moment after the page arrives. */
   @media (prefers-reduced-motion: no-preference) {
-    .hero__word-in {
-      animation: hero-word-rise 900ms cubic-bezier(0.16, 0.86, 0.24, 1) both;
-      animation-delay: calc(var(--i, 0) * 78ms + 90ms);
-    }
-
-    .hero__title--welcome::after {
-      transform-origin: left center;
-      animation: hero-rule-draw 760ms cubic-bezier(0.16, 0.86, 0.24, 1) 420ms both;
-    }
-
-    .hero__copy:has(.hero__title--welcome) .lede {
-      animation: hero-lede-in 800ms cubic-bezier(0.16, 0.86, 0.24, 1) 560ms both;
-    }
-
     .hero__words--lit {
       animation: hero-lamp-in 900ms ease 1200ms both;
     }
@@ -793,42 +774,6 @@ const sizes = imageSmall
       opacity: 0;
     }
     to {
-      opacity: 1;
-    }
-  }
-
-  @keyframes hero-word-rise {
-    from {
-      transform: translateY(0.66em) rotate(1.1deg);
-      filter: blur(7px);
-      opacity: 0;
-    }
-    55% {
-      filter: blur(0);
-    }
-    to {
-      transform: none;
-      filter: blur(0);
-      opacity: 1;
-    }
-  }
-
-  @keyframes hero-rule-draw {
-    from {
-      transform: scaleX(0);
-    }
-    to {
-      transform: scaleX(1);
-    }
-  }
-
-  @keyframes hero-lede-in {
-    from {
-      transform: translateY(14px);
-      opacity: 0;
-    }
-    to {
-      transform: none;
       opacity: 1;
     }
   }
