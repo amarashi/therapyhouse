@@ -6,6 +6,7 @@ import CallToAction from '../../components/CallToAction.astro';
 import { site, isAcceptingNewClients } from '../../data/site.js';
 import { practitionerTitle, personDescription } from '../../lib/seo.js';
 import { personSchema as buildPersonSchema } from '../../lib/structured-data.js';
+import { teamPortrait } from '../../lib/team-portraits.js';
 
 export async function getStaticPaths() {
   const everyone = await getCollection('team');
@@ -32,6 +33,12 @@ const facts = [
 
 const accepting = isAcceptingNewClients(availability);
 
+/* The photograph's two steps: hand-made, or made by the build from the one
+   upload the CMS takes (src/lib/team-portraits.js). */
+const portrait = teamPortrait(image);
+const photo = portrait.photo ?? image;
+const photo280 = portrait.photo280 ?? photo;
+
 /**
  * Person-level structured data. This is the page a parent lands on from a
  * search for a named practitioner, so the machine-readable identity belongs
@@ -39,7 +46,7 @@ const accepting = isAcceptingNewClients(availability);
  * record by its id; the AHPRA number goes in only once the clinic supplies it.
  * See src/lib/structured-data.js.
  */
-const personSchema = buildPersonSchema(person.data, {
+const personSchema = buildPersonSchema({ ...person.data, image: photo }, {
   id: person.id,
   origin: site.origin,
   siteUrl: Astro.site ?? site.origin,
@@ -66,8 +73,8 @@ const personSchema = buildPersonSchema(person.data, {
           takes a photograph wider than the page can paint. */}
       <img
         class="profile__photo"
-        src={withBase(image)}
-        srcset={`${withBase(image.replace(/\.webp$/, '-280.webp'))} 280w, ${withBase(image)} 560w`}
+        src={withBase(photo)}
+        srcset={`${withBase(photo280)} 280w, ${withBase(photo)} 560w`}
         sizes="(max-width: 46rem) 14rem, 18rem"
         alt={imageAlt}
         width="420"
