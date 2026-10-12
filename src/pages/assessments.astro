@@ -1,5 +1,6 @@
 ---
 import { withBase } from '../lib/base.js';
+import { inlineHtml } from '../lib/inline-text.js';
 import { getCollection, getEntry, render } from 'astro:content';
 import PlainLayout from '../layouts/PlainLayout.astro';
 import HeroReveal from '../components/HeroReveal.astro';
@@ -22,7 +23,9 @@ const page = await getEntry('pages', 'assessments');
 if (!page) throw new Error('Missing content: src/content/pages/assessments.md');
 
 const { Content } = await render(page);
-const { title, description, lede, process, documents, goodToKnow, lastReviewed } = page.data;
+const { title, description, lede, process, documents, goodToKnow, lastReviewed, assessmentsText: text } =
+  page.data;
+if (!text) throw new Error('Missing assessmentsText in src/content/pages/assessments.md');
 /* Packages switched off ("Show on the live website") stay on the Preview only. */
 const packages = shownItems(page.data.packages, production);
 
@@ -53,7 +56,7 @@ const detailFor = (pkg: (typeof corePackages)[number]) =>
    what can be added to it. */
 const groups = [
   { label: null, items: corePackages },
-  ...(addOns.length > 0 ? [{ label: 'Add-ons', items: addOns }] : []),
+  ...(addOns.length > 0 ? [{ label: text.addOnsHeading, items: addOns }] : []),
 ];
 ---
 
@@ -85,7 +88,7 @@ const groups = [
 
     {assessmentLinks.length > 0 && (
       <section aria-labelledby="assessment-types">
-        <h2 id="assessment-types">Assessments we offer</h2>
+        <h2 id="assessment-types">{text.typesHeading}</h2>
         <ServiceList links={assessmentLinks} />
       </section>
     )}
@@ -99,7 +102,7 @@ const groups = [
     */}
     <div class="your-part">
       <section aria-labelledby="process">
-        <h2 id="process">How the process works</h2>
+        <h2 id="process">{text.processHeading}</h2>
         {/*
           `--i` and `--last` are the thread's arithmetic, not decoration: each
           step's connector reads its own place in the sequence against a single
@@ -116,8 +119,8 @@ const groups = [
       <aside class="bring" aria-labelledby="documents">
         {/* Stood on the box's top edge, as if just put down on the table. */}
         <Vignette class="bring__art" name="bring" sizes="140px" />
-        <h2 id="documents">What to bring</h2>
-        <p>Anything you already have that describes how things have been going:</p>
+        <h2 id="documents">{text.documentsHeading}</h2>
+        <p set:html={inlineHtml(text.documentsIntro)} />
         <ul class="tick-list bring__list">
           {documents?.map((item) => <li>{item}</li>)}
         </ul>
@@ -132,24 +135,24 @@ const groups = [
       session fees do not.
     */}
     <section class="fees" aria-labelledby="packages">
-      <h2 id="packages">Assessment packages</h2>
+      <h2 id="packages">{text.packagesHeading}</h2>
 
       <div class="table-scroll">
         <table class="fee-table fees__table">
           <caption>
             {reviewedLabel && <>Prices current as of {reviewedLabel}. </>}
-            Every report is signed off by a fully registered psychologist.
+            {text.packagesNote}
           </caption>
           <thead>
             <tr>
-              <th scope="col">Assessment</th>
+              <th scope="col">{text.packageColumn}</th>
               <th scope="col" class="amount">
-                <span class="fees__hd">With a registered psychologist</span>
-                <span class="fees__hd-short" aria-hidden="true">Registered</span>
+                <span class="fees__hd">{text.registeredColumn}</span>
+                <span class="fees__hd-short" aria-hidden="true">{text.registeredColumnShort}</span>
               </th>
               <th scope="col" class="amount">
-                <span class="fees__hd">With a provisional psychologist</span>
-                <span class="fees__hd-short" aria-hidden="true">Provisional</span>
+                <span class="fees__hd">{text.provisionalColumn}</span>
+                <span class="fees__hd-short" aria-hidden="true">{text.provisionalColumnShort}</span>
               </th>
             </tr>
           </thead>
@@ -194,16 +197,13 @@ const groups = [
           ))}
         </table>
       </div>
-      <p class="fees__more">
-        Medicare, private health and NDIS:{' '}
-        <a href={withBase('/fees/')}>fees and Medicare rebates</a>.
-      </p>
+      <p class="fees__more" set:html={inlineHtml(text.fundingNote)} />
     </section>
 
     <section class="notes" aria-labelledby="good-to-know">
       <Vignette class="notes__art" name="good-to-know" sizes="(min-width: 64rem) 160px, 110px" />
       <div>
-        <h2 id="good-to-know">Good to know</h2>
+        <h2 id="good-to-know">{text.goodToKnowHeading}</h2>
         <ul class="tick-list notes__list">
           {goodToKnow?.map((item) => <li>{item}</li>)}
         </ul>

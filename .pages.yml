@@ -21,6 +21,14 @@
 # positions and tuning (public/assets/scripts/), and the library shelf's shapes
 # and colours (src/data/library-shelf.js).
 #
+# Headings and sentences a template prints around a page's content are here
+# too: each page's own in its "Headings and short text" group, and those many
+# pages share (service, audience and town pages, the crisis note) in "Wording
+# shared across pages" (src/data/shared-text.json). A sentence there may hold
+# a link written [words](/page/); src/lib/inline-text.js turns it into a link
+# and escapes everything else. Sentences that state a Medicare figure stay in
+# the templates, beside src/data/medicare.js.
+#
 # "Show on the live website" (issue #95): the files store `draft: true` for
 # "switched off". Pages CMS shows a boolean as one switch and cannot invert it
 # or relabel its two positions, and a select would save the text "false"
@@ -863,6 +871,97 @@ content:
             description: The illustrated house shows the same list (House > House text > Services); change both the same way.
             type: text
             list: true
+          - name: therapyHubText
+            label: Headings and short text
+            description: >-
+              The headings and short sentences around the lists on this
+              page. The lists of pages fill themselves in from "Therapy and
+              assessment pages".
+            type: object
+            fields:
+              - name: audienceHeading
+                label: "Heading over the pages for children, adults and so on"
+                type: string
+                required: true
+              - name: groupsHeading
+                label: "Heading over the therapy pages"
+                type: string
+                required: true
+              - name: groupHeadings
+                label: "Headings of the groups of therapy pages"
+                description: >-
+                  Which group a page is in is set on the page itself, as
+                  "Heading it sits under on the Therapy page".
+                type: object
+                fields:
+                  - name: adults
+                    label: "Pages for adults"
+                    type: string
+                    required: true
+                  - name: childrenFamilies
+                    label: "Pages for children and families"
+                    type: string
+                    required: true
+                  - name: couples
+                    label: "Pages for couples"
+                    type: string
+                    required: true
+                  - name: howWeWork
+                    label: "Pages about how we work"
+                    type: string
+                    required: true
+                  - name: more
+                    label: "Pages not yet put in a group"
+                    type: string
+                    required: true
+              - name: offeringsHeading
+                label: "Heading over \"What we help with\""
+                type: string
+                required: true
+              - name: assessmentsNote
+                label: "Sentence under that list, pointing to assessments"
+                description: >-
+                  To add a link, write the words in square brackets and the
+                  address after them in round brackets, for example [contact
+                  the clinic](/contact/).
+                type: text
+                required: true
+              - name: modelsHeading
+                label: "Heading over the therapy models"
+                type: string
+                required: true
+              - name: feesHeading
+                label: "Fees box: heading"
+                type: string
+                required: true
+              - name: feesText
+                label: "Fees box: sentence"
+                description: >-
+                  To add a link, write the words in square brackets and the
+                  address after them in round brackets, for example [contact
+                  the clinic](/contact/).
+                type: text
+                required: true
+              - name: feesLinkText
+                label: "Fees box: wording of the link to the fees page"
+                type: string
+                required: true
+              - name: videoHeading
+                label: "Video box: heading"
+                type: string
+                required: true
+              - name: videoText
+                label: "Video box: sentence"
+                description: >-
+                  To add a link, write the words in square brackets and the
+                  address after them in round brackets, for example [contact
+                  the clinic](/contact/).
+                type: text
+                required: true
+              - name: videoLinkText
+                label: "Video box: wording of the link to the telehealth page"
+                type: string
+                required: true
           - name: body
             label: Page text
             type: rich-text
@@ -952,6 +1051,136 @@ content:
                 label: Notes
                 type: text
                 list: true
+                required: true
+          - name: feesText
+            label: Headings and short text
+            description: >-
+              The headings and sentences around the fee table and the lists
+              on this page. The Medicare amounts, MBS item numbers, the
+              yearly session limit and the sentences that state them are
+              kept up to date by the developer and are not here.
+            type: object
+            fields:
+              - name: sessionFeesHeading
+                label: "Heading over the session fees"
+                type: string
+                required: true
+              - name: sessionColumn
+                label: "Fee table: first column heading"
+                type: string
+                required: true
+              - name: costColumn
+                label: "Fee table: price column heading"
+                type: string
+                required: true
+              - name: unconfirmedNote
+                label: "Note above the fee table when the page has no review date"
+                type: text
+                required: true
+              - name: provisionalHeading
+                label: "Fee table: heading over the provisional psychologists' fees"
+                type: string
+                required: true
+              - name: couplesFamilyHeading
+                label: "Fee table: heading over the couples and family fees"
+                type: string
+                required: true
+              - name: adjustmentsHeading
+                label: "Fee table: heading over the extras added to a session fee"
+                type: string
+                required: true
+              - name: medicareHeading
+                label: "Medicare section: heading"
+                type: string
+                required: true
+              - name: medicareIntro
+                label: "Medicare section: opening paragraph"
+                description: >-
+                  To add a link, write the words in square brackets and the
+                  address after them in round brackets, for example [contact
+                  the clinic](/contact/).
+                type: text
+                required: true
+              - name: medicareNotes
+                label: "Medicare section: points under the rebate table"
+                description: >-
+                  Listed after the first point, which states the yearly
+                  session limit and is kept up to date by the developer.
+                type: text
+                list: true
+                required: true
+              - name: referralHeading
+                label: "GP referral section: heading"
+                type: string
+                required: true
+              - name: referralSteps
+                label: "GP referral section: steps, in order"
+                type: text
+                list: true
+                required: true
+              - name: videoHeading
+                label: "Video box: heading"
+                type: string
+                required: true
+              - name: videoText
+                label: "Video box: sentence"
+                description: >-
+                  To add a link, write the words in square brackets and the
+                  address after them in round brackets, for example [contact
+                  the clinic](/contact/).
+                type: text
+                required: true
+              - name: videoLinkText
+                label: "Video box: wording of the link to the telehealth page"
+                type: string
+                required: true
+              - name: privateHealthHeading
+                label: "Private health box: heading"
+                type: string
+                required: true
+              - name: ndisHeading
+                label: "NDIS box: heading"
+                type: string
+                required: true
+              - name: ndisLinkText
+                label: "NDIS box: wording of the link to the NDIS page"
+                type: string
+                required: true
+              - name: assessmentsHeading
+                label: "Assessments section: heading"
+                type: string
+                required: true
+              - name: assessmentsIntro
+                label: "Assessments section: opening sentence"
+                description: >-
+                  To add a link, write the words in square brackets and the
+                  address after them in round brackets, for example [contact
+                  the clinic](/contact/).
+                type: text
+                required: true
+              - name: assessmentsLinkText
+                label: "Assessments section: wording of the link to the assessments page"
+                type: string
+                required: true
+              - name: reportsHeading
+                label: "Heading over reports and letters"
+                type: string
+                required: true
+              - name: cancellationHeading
+                label: "Heading over the cancellation policy"
+                type: string
+                required: true
+              - name: questionsHeading
+                label: "Last section: heading"
+                type: string
+                required: true
+              - name: questionsText
+                label: "Last section: sentence"
+                description: >-
+                  To add a link, write the words in square brackets and the
+                  address after them in round brackets, for example [contact
+                  the clinic](/contact/).
+                type: text
                 required: true
           - name: body
             label: Page text
@@ -1048,6 +1277,80 @@ content:
             label: Good to know
             type: text
             list: true
+          - name: assessmentsText
+            label: Headings and short text
+            description: >-
+              The headings and short sentences around the lists and the
+              price table on this page.
+            type: object
+            fields:
+              - name: typesHeading
+                label: "Heading over the list of assessment pages"
+                type: string
+                required: true
+              - name: processHeading
+                label: "Heading over the steps"
+                type: string
+                required: true
+              - name: documentsHeading
+                label: "Heading of the \"What to bring\" box"
+                type: string
+                required: true
+              - name: documentsIntro
+                label: "Sentence above the list of things to bring"
+                description: >-
+                  To add a link, write the words in square brackets and the
+                  address after them in round brackets, for example [contact
+                  the clinic](/contact/).
+                type: text
+                required: true
+              - name: packagesHeading
+                label: "Heading over the price table"
+                type: string
+                required: true
+              - name: packagesNote
+                label: "Note above the price table"
+                description: >-
+                  Shown after "Prices current as of", when the page has a
+                  review date.
+                type: text
+                required: true
+              - name: packageColumn
+                label: "Price table: first column heading"
+                type: string
+                required: true
+              - name: registeredColumn
+                label: "Price table: registered psychologist column"
+                type: string
+                required: true
+              - name: registeredColumnShort
+                label: "Price table: registered psychologist column, short form for phones"
+                type: string
+                required: true
+              - name: provisionalColumn
+                label: "Price table: provisional psychologist column"
+                type: string
+                required: true
+              - name: provisionalColumnShort
+                label: "Price table: provisional psychologist column, short form for phones"
+                type: string
+                required: true
+              - name: addOnsHeading
+                label: "Price table: heading over the add-ons"
+                type: string
+                required: true
+              - name: fundingNote
+                label: "Sentence under the price table, pointing to the fees page"
+                description: >-
+                  To add a link, write the words in square brackets and the
+                  address after them in round brackets, for example [contact
+                  the clinic](/contact/).
+                type: text
+                required: true
+              - name: goodToKnowHeading
+                label: "Heading of the \"Good to know\" box"
+                type: string
+                required: true
           - name: body
             label: Page text
             type: rich-text
@@ -1173,6 +1476,86 @@ content:
             label: Steps, in order
             type: text
             list: true
+          - name: telehealthText
+            label: Headings and short text
+            description: >-
+              The headings and short sentences around the page text. The
+              Medicare amounts and the sentences that state them are kept up
+              to date by the developer and are not here.
+            type: object
+            fields:
+              - name: moreHelpIntro
+                label: "Words before the list of therapy pages under the page text"
+                type: string
+                required: true
+              - name: medicareHeading
+                label: "Medicare box: heading"
+                type: string
+                required: true
+              - name: referralLinkText
+                label: "Medicare box: wording of the link to the GP referral steps"
+                type: string
+                required: true
+              - name: feesHeading
+                label: "Fees box: heading"
+                type: string
+                required: true
+              - name: feesText
+                label: "Fees box: sentence"
+                description: >-
+                  To add a link, write the words in square brackets and the
+                  address after them in round brackets, for example [contact
+                  the clinic](/contact/).
+                type: text
+                required: true
+              - name: feesLinkText
+                label: "Fees box: wording of the link to the fees page"
+                type: string
+                required: true
+              - name: processHeading
+                label: "Heading over the steps"
+                type: string
+                required: true
+              - name: regionalHeading
+                label: "Heading over the regional towns"
+                type: string
+                required: true
+              - name: regionalText
+                label: "Sentence under that heading"
+                description: >-
+                  To add a link, write the words in square brackets and the
+                  address after them in round brackets, for example [contact
+                  the clinic](/contact/).
+                type: text
+                required: true
+              - name: townPagesHeading
+                label: "Heading over the links to the town pages"
+                type: string
+                required: true
+              - name: cliniciansHeading
+                label: "Heading over the clinicians"
+                type: string
+                required: true
+              - name: cliniciansText
+                label: "Sentence under that heading"
+                description: >-
+                  To add a link, write the words in square brackets and the
+                  address after them in round brackets, for example [contact
+                  the clinic](/contact/).
+                type: text
+                required: true
+              - name: bookingHeading
+                label: "Heading of the booking section"
+                type: string
+                required: true
+              - name: bookingText
+                label: "Booking section text"
+                description: >-
+                  To add a link, write the words in square brackets and the
+                  address after them in round brackets, for example [contact
+                  the clinic](/contact/).
+                type: text
+                required: true
           - name: body
             label: Page text
             description: The first paragraph must contain the words "psychologist", "video" and "online psychologist".
@@ -1394,6 +1777,173 @@ content:
           - name: body
             label: Policy
             type: rich-text
+
+  # ------------------------------------------------- Wording shared across pages
+  - name: shared-text
+    label: Wording shared across pages
+    description: >-
+      Headings and sentences that are the same on many pages: every therapy,
+      assessment and audience page (such as Adults or Children), every
+      telehealth town page, and the crisis support note. A change here shows
+      on all of those pages.
+    type: file
+    path: src/data/shared-text.json
+    format: json
+    operations:
+      delete: false
+    fields:
+      - name: crisisNote
+        label: "Crisis support note"
+        description: >-
+          Shown on pages and articles about depression, trauma or self-harm,
+          where "Show the crisis support note" is switched on. Check any
+          change with a clinician. Phone numbers are links written like [13
+          11 14](tel:131114).
+        type: text
+        required: true
+      - name: servicePages
+        label: "Therapy and assessment pages"
+        description: >-
+          The headings and sentences every therapy, assessment and audience
+          page shares. Each page's own text is under "Therapy and assessment
+          pages".
+        type: object
+        fields:
+          - name: contentsHeading
+            label: "Heading of the \"On this page\" list"
+            type: string
+            required: true
+          - name: therapyPagesHeading
+            label: "Audience pages: heading over their therapy pages"
+            type: string
+            required: true
+          - name: assessmentPagesHeading
+            label: "Audience pages: heading over their assessment pages"
+            type: string
+            required: true
+          - name: cliniciansHeading
+            label: "Heading over the clinicians"
+            type: string
+            required: true
+          - name: formatsHeading
+            label: "Heading over the ways to attend"
+            type: string
+            required: true
+          - name: inRoom
+            label: "In person at the clinic"
+            type: object
+            fields:
+              - name: label
+                label: "Wording on the tile"
+                type: string
+                required: true
+              - name: short
+                label: "Short form, under the opening sentence"
+                type: string
+                required: true
+              - name: linkText
+                label: "Wording of the link to the contact page"
+                type: string
+                required: true
+          - name: video
+            label: "By video"
+            type: object
+            fields:
+              - name: label
+                label: "Wording on the tile"
+                type: string
+                required: true
+              - name: short
+                label: "Short form, under the opening sentence"
+                type: string
+                required: true
+              - name: linkText
+                label: "Wording of the link to the telehealth page"
+                type: string
+                required: true
+          - name: processHeading
+            label: "Heading over the steps"
+            type: string
+            required: true
+          - name: feesHeading
+            label: "Heading over the fees"
+            type: string
+            required: true
+          - name: sessionFeesText
+            label: "Fees sentence for pages charged at the usual session fees"
+            description: >-
+              To add a link, write the words in square brackets and the
+              address after them in round brackets, for example [contact the
+              clinic](/contact/).
+            type: text
+            required: true
+          - name: quoteText
+            label: "Fees sentence for pages with no published price"
+            description: >-
+              To add a link, write the words in square brackets and the
+              address after them in round brackets, for example [contact the
+              clinic](/contact/).
+            type: text
+            required: true
+          - name: feesLinkText
+            label: "Wording of the link to the fees page"
+            type: string
+            required: true
+          - name: medicareHeading
+            label: "Heading over Medicare and other funding"
+            type: string
+            required: true
+          - name: questionsHeading
+            label: "Heading over the questions"
+            type: string
+            required: true
+          - name: relatedHeading
+            label: "Heading over the related pages"
+            type: string
+            required: true
+      - name: townPages
+        label: "Telehealth town pages"
+        description: >-
+          The headings and links every town page shares. The rebate sentence
+          is kept up to date by the developer and is not here.
+        type: object
+        fields:
+          - name: contentsHeading
+            label: "Heading of the \"On this page\" list"
+            type: string
+            required: true
+          - name: sessionFact
+            label: "Session length, under the opening sentence"
+            type: string
+            required: true
+          - name: medicareHeading
+            label: "Heading over the Medicare rebate"
+            type: string
+            required: true
+          - name: feesLinkText
+            label: "Wording of the link to the fees page"
+            type: string
+            required: true
+          - name: couplesLinkText
+            label: "Wording of the link to couples therapy"
+            type: string
+            required: true
+          - name: cliniciansHeading
+            label: "Heading over the clinicians"
+            type: string
+            required: true
+          - name: cliniciansText
+            label: "Sentence under that heading"
+            description: >-
+              To add a link, write the words in square brackets and the
+              address after them in round brackets, for example [contact the
+              clinic](/contact/).
+            type: text
+            required: true
+          - name: sourcesHeading
+            label: "Heading over the sources"
+            type: string
+            required: true
 
   # --------------------------------------------------------- Clinic details
   - name: clinic

@@ -19,6 +19,24 @@ therapyModels:
   - Emotionally focused therapy for couples, families and individuals (EFT)
   - Eye Movement Desensitisation Reprocessing with people who have experienced trauma (EMDR)
   - Short term psychodynamic therapy for deeper problems that can be manifested as anxiety, depression, personality disorders and relationship problems
+therapyHubText:
+  audienceHeading: Start from who the help is for
+  groupsHeading: Find the right kind of help
+  groupHeadings:
+    adults: For adults
+    childrenFamilies: For children and families
+    couples: For couples
+    howWeWork: How we work
+    more: More therapy
+  offeringsHeading: What we help with
+  assessmentsNote: Assessments have their own process, timeline and pricing — [see the assessment packages](/assessments/).
+  modelsHeading: Therapy models
+  feesHeading: Fees and Medicare
+  feesText: Session fees, Medicare rebates with a GP referral, private health, NDIS and cancellations are all on one page.
+  feesLinkText: Fees and Medicare rebates
+  videoHeading: Sessions by video
+  videoText: If you live outside Brisbane, or the trip to The Gap is hard, you can see a psychologist by video from anywhere in Australia.
+  videoLinkText: How video sessions work
 ---
 
 Therapy House is a boutique psychology clinic for people of all ages. We work

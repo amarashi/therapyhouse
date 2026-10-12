@@ -13,6 +13,21 @@ process:
   - Reception sends you the details for joining the video call.
   - A few minutes before the session, go to a quiet, private room, check that your camera and microphone work, and join the call.
   - In the first session the psychologist asks what has brought you, what you would like to change, and how video is working for you. Together you decide on the next steps.
+telehealthText:
+  moreHelpIntro: "More about what we help with:"
+  medicareHeading: Medicare rebates for video sessions
+  referralLinkText: How to get a GP referral
+  feesHeading: Fees
+  feesText: Session fees are on the fees page. Whether a video session costs the same as a session in the room is something reception will confirm when you book.
+  feesLinkText: Fees and Medicare rebates
+  processHeading: Your first video session, step by step
+  regionalHeading: Regional Queensland
+  regionalText: Outside the south-east, the nearest psychologist can be a long drive away. A video session takes the drive out of it.
+  townPagesHeading: Pages for regional towns
+  cliniciansHeading: The clinicians
+  cliniciansText: These are the Therapy House clinicians. Each card shows who they work with and whether they are taking new clients. Reception can tell you who has video times.
+  bookingHeading: Booking a video session
+  bookingText: Book online or call reception, and say you would like a video session. Calling suits you better if you would rather talk it through first. You can also [contact the clinic](/contact/) by email.
 ---
 
 Therapy House is a psychology clinic in The Gap, Brisbane, and you do not

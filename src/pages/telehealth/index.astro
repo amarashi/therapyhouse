@@ -15,6 +15,7 @@ import IllustratedHead from '../../components/IllustratedHead.astro';
 import Vignette from '../../components/Vignette.astro';
 import art from '../../data/service-art.json';
 import { withBase } from '../../lib/base.js';
+import { inlineHtml } from '../../lib/inline-text.js';
 import { builtPaths } from '../../lib/links.js';
 import { businessId } from '../../lib/services.js';
 import { includeInBuild, isProductionSite } from '../../lib/drafts.js';
@@ -32,7 +33,8 @@ const linkIfBuilt = (path: string) => (built.has(path) ? withBase(path) : null);
 const page = await getEntry('pages', 'telehealth');
 if (!page) throw new Error('Missing content: src/content/pages/telehealth.md');
 const { Content } = await render(page);
-const { title, documentTitle, description, lede, process } = page.data;
+const { title, documentTitle, description, lede, process, telehealthText: text } = page.data;
+if (!text) throw new Error('Missing telehealthText in src/content/pages/telehealth.md');
 
 const towns = splitTowns(
   await getCollection('towns', (entry) => includeInBuild(entry.data, production))
@@ -82,7 +84,7 @@ const schema = {
       <Content />
       {forWhom.length > 0 && (
         <p>
-          More about what we help with:{' '}
+          {text.moreHelpIntro}{' '}
           {forWhom.map((link, i) => (
             <>{i > 0 && ', '}<a href={link.href}>{link.label.toLowerCase()}</a></>
           ))}.
@@ -95,7 +97,7 @@ const schema = {
     <div class="money">
     <section class="money__box" aria-labelledby="medicare">
       <Vignette class="money__art" name="medicare" sizes="104px" />
-      <h2 id="medicare">Medicare rebates for video sessions</h2>
+      <h2 id="medicare">{text.medicareHeading}</h2>
       <div class="prose--flush prose stack">
         <p>
           Medicare pays the same rebate for a video session as for a session in the room. With a
@@ -115,27 +117,24 @@ const schema = {
           <a href={medicare.source}>{medicare.sourceName}</a>.
         </p>
         <p>
-          <a class="standalone-link" href={withBase('/fees/#referral')}>How to get a GP referral</a>
+          <a class="standalone-link" href={withBase('/fees/#referral')}>{text.referralLinkText}</a>
         </p>
       </div>
     </section>
 
     <section class="money__box" aria-labelledby="fees">
       <Vignette class="money__art" name="fees" sizes="104px" />
-      <h2 id="fees">Fees</h2>
+      <h2 id="fees">{text.feesHeading}</h2>
+      <p set:html={inlineHtml(text.feesText)} />
       <p>
-        Session fees are on the fees page. Whether a video session costs the same as a session in
-        the room is something reception will confirm when you book.
-      </p>
-      <p>
-        <a class="standalone-link" href={withBase('/fees/')}>Fees and Medicare rebates</a>
+        <a class="standalone-link" href={withBase('/fees/')}>{text.feesLinkText}</a>
       </p>
     </section>
     </div>
 
     {process && process.length > 0 && (
       <section aria-labelledby="first-session">
-        <h2 id="first-session">Your first video session, step by step</h2>
+        <h2 id="first-session">{text.processHeading}</h2>
         <div class="first-session">
           <ol class="step-list">
             {process.map((step) => <li>{step}</li>)}
@@ -148,11 +147,8 @@ const schema = {
 
     {townSections.length > 0 && (
       <section aria-labelledby="regional">
-        <h2 id="regional">Regional Queensland</h2>
-        <p>
-          Outside the south-east, the nearest psychologist can be a long drive away. A video
-          session takes the drive out of it.
-        </p>
+        <h2 id="regional">{text.regionalHeading}</h2>
+        <p set:html={inlineHtml(text.regionalText)} />
         {/* A card for each town, its picture on top: the cane and palms of
             Mackay, the harbour at Gladstone, the red earth of Mount Isa. */}
         <div class="towns">
@@ -177,7 +173,7 @@ const schema = {
 
     {towns.pages.length > 0 && (
       <nav aria-labelledby="town-pages">
-        <h2 id="town-pages">Pages for regional towns</h2>
+        <h2 id="town-pages">{text.townPagesHeading}</h2>
         <ul class="telehealth__towns">
           {towns.pages.map((entry) => (
             <li>
@@ -189,11 +185,8 @@ const schema = {
     )}
 
     <section aria-labelledby="who">
-      <h2 id="who">The clinicians</h2>
-      <p>
-        These are the Therapy House clinicians. Each card shows who they work with and whether
-        they are taking new clients. Reception can tell you who has video times.
-      </p>
+      <h2 id="who">{text.cliniciansHeading}</h2>
+      <p set:html={inlineHtml(text.cliniciansText)} />
       <ul class="people">
         {practitioners.map((person) => (
           <li><PersonCard person={person} /></li>
@@ -202,11 +195,8 @@ const schema = {
     </section>
 
     <section aria-labelledby="booking">
-      <h2 id="booking">Booking a video session</h2>
-      <p>
-        Book online or call reception, and say you would like a video session. Calling suits you
-        better if you would rather talk it through first. You can also <a href={withBase('/contact/')}>contact the clinic</a> by email.
-      </p>
+      <h2 id="booking">{text.bookingHeading}</h2>
+      <p set:html={inlineHtml(text.bookingText)} />
     </section>
   </div>
 </PlainLayout>

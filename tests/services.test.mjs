@@ -258,8 +258,11 @@ test("every link in a service page's body leads to a page the site builds", asyn
 test("pages about trauma and depression point to urgent help", async () => {
   const layout = await readFile(new URL("../src/layouts/ServicePage.astro", import.meta.url), "utf8");
   assert.match(layout, /data\.crisisNote &&/);
-  assert.match(layout, /tel:131114/);
-  assert.match(layout, /tel:000/);
+  assert.match(layout, /inlineHtml\(sharedText\.crisisNote\)/);
+  // The note's wording is edited in the CMS; its two numbers must stay links.
+  const { crisisNote } = JSON.parse(await readFile(new URL("../src/data/shared-text.json", import.meta.url), "utf8"));
+  assert.match(crisisNote, /\]\(tel:131114\)/, "the crisis note must link Lifeline, 13 11 14");
+  assert.match(crisisNote, /\]\(tel:000\)/, "the crisis note must link 000");
   const files = (await readdir(servicesDir)).filter((f) => ["trauma.md", "depression.md"].includes(f));
   assert.ok(files.length > 0);
   for (const file of files) {

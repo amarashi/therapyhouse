@@ -12,7 +12,9 @@ import { getCollection, getEntry, render } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
 import PlainLayout from './PlainLayout.astro';
 import { withBase } from '../lib/base.js';
+import { inlineHtml } from '../lib/inline-text.js';
 import { site } from '../data/site.js';
+import sharedText from '../data/shared-text.json';
 import { articleDocumentTitle, articleSchema } from '../lib/articles.js';
 import { missingIds } from '../lib/services.js';
 import { includeInBuild, isProductionSite } from '../lib/drafts.js';
@@ -97,10 +99,7 @@ const formatDate = (date: Date) =>
 
     {data.crisisNote && (
       <aside class="article__crisis" aria-label="If you need help now">
-        <p>
-          If you need to talk to someone now, call Lifeline on <a href="tel:131114">13 11 14</a>
-          (any time, day or night). In an emergency, call <a href="tel:000">000</a>.
-        </p>
+        <p set:html={inlineHtml(sharedText.crisisNote)} />
       </aside>
     )}
 

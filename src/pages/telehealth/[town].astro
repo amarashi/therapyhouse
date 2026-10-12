@@ -20,12 +20,20 @@ import PlainLayout from '../../layouts/PlainLayout.astro';
 import IllustratedHead from '../../components/IllustratedHead.astro';
 import Vignette from '../../components/Vignette.astro';
 import { withBase } from '../../lib/base.js';
+import { inlineHtml } from '../../lib/inline-text.js';
 import { builtPaths } from '../../lib/links.js';
 import { businessId } from '../../lib/services.js';
 import { includeInBuild, isProductionSite } from '../../lib/drafts.js';
 import { assertTownPage } from '../../lib/towns.js';
 import { site } from '../../data/site.js';
+import sharedText from '../../data/shared-text.json';
 import { assertRebatesCurrent, formatAsAt, formatRebate, medicare } from '../../data/medicare.js';
+
+/* Headings and links shared by every town page, edited in the CMS as
+   "Wording shared across pages" (src/data/shared-text.json). The sentences
+   with a rebate in them stay here: their figures come from
+   src/data/medicare.js. */
+const text = sharedText.townPages;
 
 export async function getStaticPaths() {
   const production = isProductionSite(import.meta.env.SITE);
@@ -55,9 +63,9 @@ const { Content, headings } = await render(entry);
 /* "On this page": the town's own headings, then the three sections below. */
 const contents = [
   ...headings.filter((h) => h.depth === 2).map((h) => ({ id: h.slug, label: h.text })),
-  { id: 'medicare', label: 'Medicare rebate' },
-  { id: 'clinicians', label: 'The clinicians' },
-  { id: 'sources', label: 'Where these facts come from' },
+  { id: 'medicare', label: text.medicareHeading },
+  { id: 'clinicians', label: text.cliniciansHeading },
+  { id: 'sources', label: text.sourcesHeading },
 ];
 
 const [psychologist, clinical] = medicare.rebates;
@@ -90,9 +98,9 @@ const schema = {
         <p slot="before" class="town-page__draft">Draft for review. This page is not on the clinic's website.</p>
       )}
       <ul class="town-page__facts" aria-label="At a glance">
-        <li class="fact">50-minute video sessions</li>
+        <li class="fact">{text.sessionFact}</li>
         <li class="fact fact--fee"><a href="#medicare">{formatRebate(psychologist.rebate)} Medicare rebate</a></li>
-        <li class="fact fact--link"><a href="#clinicians">The clinicians</a></li>
+        <li class="fact fact--link"><a href="#clinicians">{text.cliniciansHeading}</a></li>
       </ul>
     </IllustratedHead>
 
@@ -107,29 +115,26 @@ const schema = {
         <div class="money">
           <section class="money__box" aria-labelledby="medicare" data-town-body>
             <Vignette class="money__art" name="medicare" sizes="104px" />
-            <h2 id="medicare">Medicare rebate</h2>
+            <h2 id="medicare">{text.medicareHeading}</h2>
             <p>
               Per video session of 50 minutes or more, as at {formatAsAt(medicare.asAt)}:{' '}
               {formatRebate(psychologist.rebate)} with a psychologist, {formatRebate(clinical.rebate)} with
               a clinical psychologist.{' '}
-              <a href={withBase('/fees/')}>Fees and Medicare rebates</a>
-              {couplesHref && <>{' · '}<a href={couplesHref}>Couples therapy</a></>}
+              <a href={withBase('/fees/')}>{text.feesLinkText}</a>
+              {couplesHref && <>{' · '}<a href={couplesHref}>{text.couplesLinkText}</a></>}
             </p>
           </section>
 
           <section class="money__box" aria-labelledby="clinicians" data-town-body>
             <Vignette class="money__art" name="video" sizes="104px" />
-            <h2 id="clinicians">The clinicians</h2>
-            <p>
-              <a href={withBase('/team/')}>Meet the team</a>, or read{' '}
-              <a href={withBase('/telehealth/')}>how video sessions work</a>.
-            </p>
+            <h2 id="clinicians">{text.cliniciansHeading}</h2>
+            <p set:html={inlineHtml(text.cliniciansText)} />
           </section>
         </div>
 
         {/* The footnotes: small print on a card of their own. */}
         <section class="town-page__sources-box" aria-labelledby="sources" data-town-body>
-          <h2 id="sources">Where these facts come from</h2>
+          <h2 id="sources">{text.sourcesHeading}</h2>
           <ul class="town-page__sources">
             {data.facts.map((fact) => (
               <li>{fact.text} <a href={fact.sourceUrl}>{fact.sourceName}</a></li>
@@ -139,7 +144,7 @@ const schema = {
       </div>
 
       <nav class="toc" aria-labelledby="toc-title">
-        <p class="toc__title" id="toc-title">On this page</p>
+        <p class="toc__title" id="toc-title">{text.contentsHeading}</p>
         <ol class="toc__list">
           {contents.map((item) => (
             <li><a href={`#${item.id}`}>{item.label}</a></li>

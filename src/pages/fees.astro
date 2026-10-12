@@ -18,6 +18,7 @@ import IllustratedHead from '../components/IllustratedHead.astro';
 import ServiceList from '../components/ServiceList.astro';
 import Vignette from '../components/Vignette.astro';
 import { withBase } from '../lib/base.js';
+import { inlineHtml } from '../lib/inline-text.js';
 import { builtPaths } from '../lib/links.js';
 import { businessId, serviceLinks } from '../lib/services.js';
 import { includeInBuild, isProductionSite, shownItems } from '../lib/drafts.js';
@@ -54,7 +55,9 @@ const {
   reports,
   cancellation,
   lastReviewed,
+  feesText: text,
 } = page.data;
+if (!text) throw new Error('Missing feesText in src/content/pages/fees.md');
 /* Rows switched off ("Show on the live website") stay on the Preview only. */
 const fees = shownItems(page.data.fees, production);
 
@@ -66,9 +69,9 @@ const reviewedLabel = lastReviewed
    evening surcharge on its own: it is added to a fee, it is not a fee. */
 const feeGroups = [
   { label: null, rows: fees.filter((r) => !r.adjustment && !r.group) },
-  { label: 'Provisional psychologists', rows: fees.filter((r) => r.group === 'provisional') },
-  { label: 'Couples and families', rows: fees.filter((r) => r.group === 'couples-family') },
-  { label: 'Adjustments', rows: fees.filter((r) => r.adjustment) },
+  { label: text.provisionalHeading, rows: fees.filter((r) => r.group === 'provisional') },
+  { label: text.couplesFamilyHeading, rows: fees.filter((r) => r.group === 'couples-family') },
+  { label: text.adjustmentsHeading, rows: fees.filter((r) => r.adjustment) },
 ].filter((g) => g.rows.length > 0);
 
 const asAt = formatAsAt(medicare.asAt);
@@ -108,19 +111,19 @@ const schema = {
     </div>
 
     <section aria-labelledby="session-fees">
-      <h2 id="session-fees">Session fees</h2>
+      <h2 id="session-fees">{text.sessionFeesHeading}</h2>
       <div class="table-scroll">
         <table class="fee-table">
           <caption>
             {sessionLength}
             {reviewedLabel
               ? ` Fees current as of ${reviewedLabel}.`
-              : ' These are the fees the clinic publishes. Reception confirms the fee when you book.'}
+              : ` ${text.unconfirmedNote}`}
           </caption>
           <thead>
             <tr>
-              <th scope="col">Session</th>
-              <th scope="col" class="amount">Cost</th>
+              <th scope="col">{text.sessionColumn}</th>
+              <th scope="col" class="amount">{text.costColumn}</th>
             </tr>
           </thead>
           {feeGroups.map((group) => (
@@ -148,16 +151,10 @@ const schema = {
     <section aria-labelledby="medicare">
       <div class="art-head">
         <Vignette class="art-head__art" name="medicare" sizes="64px" />
-        <h2 id="medicare">Medicare rebates</h2>
+        <h2 id="medicare">{text.medicareHeading}</h2>
       </div>
       <div class="prose--flush prose stack">
-        <p>
-          A Medicare rebate is the amount Medicare pays back to you for a session. It comes
-          through Better Access, the Australian Government program that subsidises psychology
-          sessions for people with a diagnosed mental health condition. The rebate depends on
-          how the psychologist is registered with Medicare, and it is the same for a session in
-          the room and a session by video.
-        </p>
+        <p set:html={inlineHtml(text.medicareIntro)} />
       </div>
 
       <div class="table-scroll">
@@ -197,12 +194,7 @@ const schema = {
             Medicare pays a rebate on up to {medicare.sessionsPerYear} individual sessions each
             calendar year (January to December), however many psychologists you see.
           </li>
-          <li>Medicare does not cover couple and family sessions.</li>
-          <li>No Medicare rebate applies to sessions with a provisional psychologist.</li>
-          <li>
-            Whether the psychologist rate or the clinical psychologist rate applies depends on
-            the clinician you see. Reception can tell you before you book.
-          </li>
+          {text.medicareNotes.map((note) => <li set:html={inlineHtml(note)} />)}
         </ul>
         <p>
           The amounts are set by the government and change each July. The item numbers in the
@@ -213,28 +205,11 @@ const schema = {
     </section>
 
     <section aria-labelledby="referral">
-      <h2 id="referral">How to get a GP referral and a Mental Health Treatment Plan</h2>
+      <h2 id="referral">{text.referralHeading}</h2>
       {/* The GP's bag beside the steps that start with the GP. */}
       <div class="referral">
       <ol class="step-list">
-        <li>
-          Book a longer appointment with your usual GP, or a GP at the practice you are
-          registered with through MyMedicare, and say you want to talk about your mental health.
-        </li>
-        <li>
-          If the GP agrees psychology sessions would help, they write a Mental Health Treatment
-          Plan (sometimes still called a Mental Health Care Plan) and a referral to a
-          psychologist. A psychiatrist or a paediatrician can also refer you directly.
-        </li>
-        <li>Send the referral to the clinic before your first session, or bring it with you.</li>
-        <li>
-          You pay the session fee, and Medicare pays the rebate back into your bank account.
-          Reception can tell you how the claim is lodged.
-        </li>
-        <li>
-          At the end of each course of sessions, your GP reviews how things are going and
-          refers you again if you need more.
-        </li>
+        {text.referralSteps.map((step) => <li set:html={inlineHtml(step)} />)}
       </ol>
       <Vignette class="referral__art" name="gp" sizes="200px" />
       </div>
@@ -249,16 +224,12 @@ const schema = {
     <div class="ways">
     <section class="way" aria-labelledby="video">
       <Vignette class="way__art" name="video" sizes="120px" />
-      <h2 id="video">Video sessions</h2>
+      <h2 id="video">{text.videoHeading}</h2>
       <div class="prose--flush prose stack">
-        <p>
-          Medicare pays the same rebate for a video session as for a session in the room, so
-          the amounts above apply wherever you live in Australia. Whether a video session costs
-          the same as an in-room session is something reception will confirm when you book.
-        </p>
+        <p set:html={inlineHtml(text.videoText)} />
         {telehealthHref && (
           <p>
-            <a class="standalone-link" href={telehealthHref}>How video sessions work</a>
+            <a class="standalone-link" href={telehealthHref}>{text.videoLinkText}</a>
           </p>
         )}
       </div>
@@ -266,7 +237,7 @@ const schema = {
 
     <section class="way" aria-labelledby="private-health">
       <Vignette class="way__art" name="private-health" sizes="120px" />
-      <h2 id="private-health">Private health insurance</h2>
+      <h2 id="private-health">{text.privateHealthHeading}</h2>
       <ul class="tick-list">
         {privateHealth?.map((item) => <li>{item}</li>)}
       </ul>
@@ -274,12 +245,12 @@ const schema = {
 
     <section class="way" aria-labelledby="ndis">
       <Vignette class="way__art" name="ndis" sizes="120px" />
-      <h2 id="ndis">NDIS</h2>
+      <h2 id="ndis">{text.ndisHeading}</h2>
       <ul class="tick-list">
         {ndis?.map((item) => <li>{item}</li>)}
       </ul>
       {ndisHref && (
-        <p><a class="standalone-link" href={ndisHref}>NDIS at Therapy House</a></p>
+        <p><a class="standalone-link" href={ndisHref}>{text.ndisLinkText}</a></p>
       )}
     </section>
     </div>
@@ -287,13 +258,10 @@ const schema = {
     <section aria-labelledby="assessments">
       <div class="art-head">
         <Vignette class="art-head__art" name="assess-intro" sizes="64px" />
-        <h2 id="assessments">Assessments</h2>
+        <h2 id="assessments">{text.assessmentsHeading}</h2>
       </div>
       <div class="prose--flush prose stack">
-        <p>
-          Assessments are priced as packages, separately from therapy sessions. The
-          assessments page lists what each package includes.
-        </p>
+        <p set:html={inlineHtml(text.assessmentsIntro)} />
         <ul class="tick-list">
           {packages.map((pkg) => (
             <li>
@@ -310,7 +278,7 @@ const schema = {
           Ask reception before you book whether any part of your assessment can be claimed.
         </p>
         <p>
-          <a class="standalone-link" href={withBase('/assessments/')}>How assessment works, and every package in full</a>
+          <a class="standalone-link" href={withBase('/assessments/')}>{text.assessmentsLinkText}</a>
         </p>
       </div>
       {/* The assessment pages as the same tiles /assessments/ shows. */}
@@ -324,7 +292,7 @@ const schema = {
     <section aria-labelledby="reports">
       <div class="art-head">
         <Vignette class="art-head__art" name="letters" sizes="64px" />
-        <h2 id="reports">Reports and letters</h2>
+        <h2 id="reports">{text.reportsHeading}</h2>
       </div>
       <div class="prose--flush prose stack">
         {reports?.map((item) => <p>{item}</p>)}
@@ -335,7 +303,7 @@ const schema = {
       <section aria-labelledby="cancellation">
         <div class="art-head">
           <Vignette class="art-head__art" name="cancellations" sizes="64px" />
-          <h2 id="cancellation">Cancellations</h2>
+          <h2 id="cancellation">{text.cancellationHeading}</h2>
         </div>
         <p>
           This is the cancellation policy the clinic published in {cancellation.published}. The
@@ -355,11 +323,8 @@ const schema = {
     )}
 
     <section aria-labelledby="questions">
-      <h2 id="questions">Questions about fees</h2>
-      <p>
-        Call reception or <a href={withBase('/contact/')}>contact the clinic</a> and ask. They
-        will tell you what a session will cost before anything is booked.
-      </p>
+      <h2 id="questions">{text.questionsHeading}</h2>
+      <p set:html={inlineHtml(text.questionsText)} />
     </section>
   </div>
 </PlainLayout>

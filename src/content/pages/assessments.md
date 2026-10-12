@@ -56,6 +56,21 @@ goodToKnow:
   - Reports may take up to four weeks after the last assessment session.
   - People pursue assessment for self-understanding, validation, funding, school or work adjustments.
   - Paediatricians or psychiatrists may need to be involved when medication or funding is sought.
+assessmentsText:
+  typesHeading: Assessments we offer
+  processHeading: How the process works
+  documentsHeading: What to bring
+  documentsIntro: "Anything you already have that describes how things have been going:"
+  packagesHeading: Assessment packages
+  packagesNote: Every report is signed off by a fully registered psychologist.
+  packageColumn: Assessment
+  registeredColumn: With a registered psychologist
+  registeredColumnShort: Registered
+  provisionalColumn: With a provisional psychologist
+  provisionalColumnShort: Provisional
+  addOnsHeading: Add-ons
+  fundingNote: "Medicare, private health and NDIS: [fees and Medicare rebates](/fees/)."
+  goodToKnowHeading: Good to know
 ---
 
 Therapy House is located in The Gap, Brisbane Northside and has provisional

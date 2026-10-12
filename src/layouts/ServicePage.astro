@@ -24,7 +24,9 @@ import ServiceList from '../components/ServiceList.astro';
 import Vignette from '../components/Vignette.astro';
 import IllustratedHead from '../components/IllustratedHead.astro';
 import { withBase } from '../lib/base.js';
+import { inlineHtml } from '../lib/inline-text.js';
 import { site } from '../data/site.js';
+import sharedText from '../data/shared-text.json';
 import {
   assertFeesPublishable,
   hubMembers,
@@ -71,7 +73,11 @@ const isHub = data.kind === 'hub';
 const memberGroups = isHub
   ? hubMembers(entry, await getCollection('services', (other) => includeInBuild(other.data, production)))
   : [];
-const groupHeading = (label: string) => (label === 'Therapy' ? 'Therapy pages' : 'Assessment pages');
+/* The layout's own headings and sentences, the same on every page: edited in
+   the CMS as "Wording shared across pages" (src/data/shared-text.json). */
+const text = sharedText.servicePages;
+const groupHeading = (label: string) =>
+  label === 'Therapy' ? text.therapyPagesHeading : text.assessmentPagesHeading;
 
 const { Content, headings } = await render(entry);
 
@@ -84,18 +90,12 @@ const items = memberGroups
   .map((link) => ({ name: link.label, url: new URL(withBase(link.href), Astro.site ?? site.origin).href }));
 const schema = serviceSchema(data, { url, origin, items });
 
-const formatLabels = {
-  'in-room': 'In person at the clinic in The Gap',
-  video: 'By video, from home',
-} as const;
-
-/* Each way of meeting, with its picture and where to read more about it. */
+/* Each way of meeting, with its picture, its wording and where to read more
+   about it. */
 const formatTiles = {
-  'in-room': { art: 'in-room', href: '/contact/', more: 'Finding the clinic' },
-  video: { art: 'video', href: '/telehealth/', more: 'How video sessions work' },
+  'in-room': { art: 'in-room', href: '/contact/', ...text.inRoom },
+  video: { art: 'video', href: '/telehealth/', ...text.video },
 } as const;
-
-const shortFormat = { 'in-room': 'In person in The Gap', video: 'By video' } as const;
 
 const showFees = !(isHub && !fees.length);
 
@@ -111,13 +111,13 @@ const leadFee =
 const contents = [
   ...headings.filter((h) => h.depth === 2).map((h) => ({ id: h.slug, label: h.text })),
   ...memberGroups.map((group) => ({ id: `pages-${group.key}`, label: groupHeading(group.label) })),
-  ...(clinicians.length ? [{ id: 'who', label: 'Who you would see' }] : []),
-  { id: 'formats', label: 'In person or by video' },
-  ...(data.process?.length ? [{ id: 'process', label: 'What happens' }] : []),
-  ...(showFees ? [{ id: 'fees', label: 'What it costs' }] : []),
-  ...(data.medicare?.length ? [{ id: 'medicare', label: 'Medicare and other funding' }] : []),
-  ...(data.faqs?.length ? [{ id: 'questions', label: 'Questions people ask' }] : []),
-  ...(relatedLinks.length ? [{ id: 'related', label: 'Related' }] : []),
+  ...(clinicians.length ? [{ id: 'who', label: text.cliniciansHeading }] : []),
+  { id: 'formats', label: text.formatsHeading },
+  ...(data.process?.length ? [{ id: 'process', label: text.processHeading }] : []),
+  ...(showFees ? [{ id: 'fees', label: text.feesHeading }] : []),
+  ...(data.medicare?.length ? [{ id: 'medicare', label: text.medicareHeading }] : []),
+  ...(data.faqs?.length ? [{ id: 'questions', label: text.questionsHeading }] : []),
+  ...(relatedLinks.length ? [{ id: 'related', label: text.relatedHeading }] : []),
 ];
 
 const reviewedLabel = data.lastReviewed
@@ -136,22 +136,19 @@ const reviewedLabel = data.lastReviewed
         <p slot="before" class="service__draft">Draft for review. This page is not on the clinic's website.</p>
       )}
       <ul class="service__facts" aria-label="At a glance">
-        {data.formats.map((f) => <li class="fact">{shortFormat[f]}</li>)}
+        {data.formats.map((f) => <li class="fact">{formatTiles[f].short}</li>)}
         {leadFee && (
           <li class="fact fact--fee"><a href="#fees">{leadFee}</a></li>
         )}
         {clinicians.length > 0 && (
-          <li class="fact fact--link"><a href="#who">Who you would see</a></li>
+          <li class="fact fact--link"><a href="#who">{text.cliniciansHeading}</a></li>
         )}
       </ul>
     </IllustratedHead>
 
     {data.crisisNote && (
       <aside class="service__crisis" aria-label="If you need help now">
-        <p>
-          If you need to talk to someone now, call Lifeline on <a href="tel:131114">13 11 14</a>
-          (any time, day or night). In an emergency, call <a href="tel:000">000</a>.
-        </p>
+        <p set:html={inlineHtml(sharedText.crisisNote)} />
       </aside>
     )}
 
@@ -170,7 +167,7 @@ const reviewedLabel = data.lastReviewed
 
         {clinicians.length > 0 && (
           <section aria-labelledby="who">
-            <h2 id="who">Who you would see</h2>
+            <h2 id="who">{text.cliniciansHeading}</h2>
             <ul class="people">
               {clinicians.map((person) => (
                 <li><PersonCard person={person} /></li>
@@ -182,15 +179,15 @@ const reviewedLabel = data.lastReviewed
         {/* Each way in, shown as the place it happens: the armchairs or the
             laptop. A page offered in person only shows one. */}
         <section aria-labelledby="formats">
-          <h2 id="formats">In person or by video</h2>
+          <h2 id="formats">{text.formatsHeading}</h2>
           <ul class="formats">
             {data.formats.map((f) => (
               <li class="format">
                 <Vignette class="format__art" name={formatTiles[f].art} sizes="100px" />
                 <div>
-                  <p class="format__label">{formatLabels[f]}</p>
+                  <p class="format__label">{formatTiles[f].label}</p>
                   <a class="standalone-link format__more" href={withBase(formatTiles[f].href)}>
-                    {formatTiles[f].more}
+                    {formatTiles[f].linkText}
                   </a>
                 </div>
               </li>
@@ -200,7 +197,7 @@ const reviewedLabel = data.lastReviewed
 
         {data.process && data.process.length > 0 && (
           <section class="process" aria-labelledby="process">
-            <h2 id="process">What happens</h2>
+            <h2 id="process">{text.processHeading}</h2>
             <div class="process__split">
               <ol class="step-list">
                 {data.process.map((step) => <li>{step}</li>)}
@@ -215,18 +212,12 @@ const reviewedLabel = data.lastReviewed
           <section class="costs" aria-labelledby="fees">
             <div class="art-head">
               <Vignette class="art-head__art" name="fees" sizes="72px" />
-              <h2 id="fees">What it costs</h2>
+              <h2 id="fees">{text.feesHeading}</h2>
             </div>
             {data.sessionFees && !fees.length ? (
-              <p>
-                Sessions are charged at the clinic's usual session fees, which are listed with what
-                Medicare pays back on the fees page.
-              </p>
+              <p set:html={inlineHtml(text.sessionFeesText)} />
             ) : data.feeStatus === 'quote' || !fees.length ? (
-              <p>
-                Call reception for a quote. Fees depend on what is involved, and reception will tell
-                you before anything is booked.
-              </p>
+              <p set:html={inlineHtml(text.quoteText)} />
             ) : (
               <div class="table-scroll">
                 <table class="fee-table">
@@ -257,7 +248,7 @@ const reviewedLabel = data.lastReviewed
               </div>
             )}
             <p class="service__fees-link">
-              <a class="standalone-link" href={withBase('/fees/')}>All fees and Medicare rebates</a>
+              <a class="standalone-link" href={withBase('/fees/')}>{text.feesLinkText}</a>
             </p>
           </section>
         )}
@@ -267,7 +258,7 @@ const reviewedLabel = data.lastReviewed
         {data.medicare && data.medicare.length > 0 && (
           <section class="funding" aria-labelledby="medicare">
             <Vignette class="funding__art" name="medicare" sizes="104px" />
-            <h2 id="medicare">Medicare and other funding</h2>
+            <h2 id="medicare">{text.medicareHeading}</h2>
             <ul class="tick-list">
               {data.medicare.map((line) => <li>{line}</li>)}
             </ul>
@@ -281,7 +272,7 @@ const reviewedLabel = data.lastReviewed
           <section aria-labelledby="questions">
             <div class="art-head">
               <Vignette class="art-head__art" name="faq" sizes="72px" />
-              <h2 id="questions">Questions people ask</h2>
+              <h2 id="questions">{text.questionsHeading}</h2>
             </div>
             <dl class="service__faqs">
               {data.faqs.map((faq) => (
@@ -296,7 +287,7 @@ const reviewedLabel = data.lastReviewed
 
         {relatedLinks.length > 0 && (
           <nav aria-labelledby="related">
-            <h2 id="related">Related</h2>
+            <h2 id="related">{text.relatedHeading}</h2>
             <ServiceList links={relatedLinks} />
           </nav>
         )}
@@ -304,7 +295,7 @@ const reviewedLabel = data.lastReviewed
 
       {contents.length > 3 && (
         <nav class="toc" aria-labelledby="toc-title">
-          <p class="toc__title" id="toc-title">On this page</p>
+          <p class="toc__title" id="toc-title">{text.contentsHeading}</p>
           <ol class="toc__list">
             {contents.map((item) => (
               <li><a href={`#${item.id}`}>{item.label}</a></li>

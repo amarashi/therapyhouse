@@ -148,8 +148,9 @@ test("the therapy hub points at /fees/ where the fee table used to be", async ()
   const hub = await read("src/pages/therapy/index.astro");
   assert.match(hub, /withBase\('\/fees\/'\)/);
   assert.ok(!hub.includes("fee-table"), "the fee table should have moved to /fees/");
-  const assessments = await read("src/pages/assessments.astro");
-  assert.match(assessments, /withBase\('\/fees\/'\)/);
+  // The assessments page's pointer is a sentence staff edit in the CMS.
+  const assessments = await read("src/content/pages/assessments.md");
+  assert.match(assessments, /^  fundingNote: .*\]\(\/fees\/\)/m);
   const servicePage = await read("src/layouts/ServicePage.astro");
   assert.match(servicePage, /withBase\('\/fees\/'\)/);
 });
