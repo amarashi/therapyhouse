@@ -51,4 +51,4 @@ with adults, children, teenagers, couples and families. We believe therapy is no
 
 Therapy is a space to thrive, not a simple diagnoses of problems.
 
-If you haven't had therapy before, it is understandable to be apprehensive and feel that it's daunting to think about. Deep and long lasting therapy is "experiential", it happens in the space of therapy. That means, we are here knowing all of these first step barriers and we are here to make you comfortable and create a journey with you that is unique to your situation. 
+If you haven't had therapy before, it is understandable to be apprehensive and feel that it's daunting to think about. Deep and long lasting therapy is "experiential", it happens in the space of therapy. That means, we are here knowing all of the barriers of taking the first step and we are aware to make you comfortable and create a journey with you that is unique to your situation. 
